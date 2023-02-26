@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "proto/items";
+
+package proto;
+
+message Password {
+  string name = 1;
+  string login = 2;
+  string password = 3;
+  string metadata = 4;
+}
+
+message CardInfo {
+  string name = 1;
+  string number = 2;
+  int32 expiration_month = 3;
+  int32 expiration_year = 4;
+  int32 cvv = 5;
+  string metadata = 6;
+}
+
+message TextInfo {
+  string name = 1;
+  string text = 2;
+  string metadata = 3;
+}
+
+message Response {
+  string error = 1;
+}
+
+message EmptyRequest{}
+
+message Item {
+  message Password{
+    string login = 1;
+    string password = 2;
+  }
+
+  message TextInfo{
+    string text = 1;
+  }
+
+  string name = 1;
+  Password password = 2;
+  TextInfo textInfo = 3;
+}
+
+// todo: rename to ItemsList
+message ListItemResponse {
+    repeated Password passwords = 1;
+    repeated TextInfo texts = 2;
+    string error = 3;
+}
+
+service ItemsManagement {
+  rpc AddPassword(Password) returns (Response);
+  rpc AddCardInfo(CardInfo) returns (Response);
+  rpc AddTextInfo (TextInfo) returns (Response);
+  rpc ListItems(EmptyRequest) returns (ListItemResponse);
+}
