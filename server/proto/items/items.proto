@@ -49,9 +49,8 @@ message Item {
 
 // todo: rename to ItemsList
 message ListItemResponse {
-    repeated Password passwords = 1;
-    repeated TextInfo texts = 2;
-    string error = 3;
+    repeated Item items = 1;
+    string error = 2;
 }
 
 service ItemsManagement {

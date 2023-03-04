@@ -11,10 +11,12 @@ type ItemsView interface {
 	AddPasswordPage()
 	ListItemsPage()
 	AddTextInfoPage()
+	AddCardInfoPage()
 }
 
 type AuthView interface {
 	RegisterUserPage()
+	LoginUserPage()
 }
 
 type CommandParser struct {
@@ -64,6 +66,16 @@ func (p *CommandParser) initAuthCommands(view AuthView) error {
 		"Register new user",
 		"The add command registers new user.",
 		registerCmd,
+	)
+	if err != nil {
+		return err
+	}
+	loginCmd := NewLoginCommand(view)
+	_, err = p.parser.AddCommand(
+		"login",
+		"Login user",
+		"The login command logins user.",
+		loginCmd,
 	)
 	if err != nil {
 		return err

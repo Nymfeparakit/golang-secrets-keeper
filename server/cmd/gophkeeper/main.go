@@ -30,9 +30,9 @@ func main() {
 	itemsStorage := storage.NewItemsStorage(db)
 	userStorage := storage.NewUsersStorage(db)
 	itemsService := services.NewItemsService(itemsStorage)
-	authService := services.NewAuthService(userStorage)
-	server := api.NewServer()
-	server.RegisterHandlers(itemsService, authService)
+	// todo: get secret key from env
+	authService := services.NewAuthService(userStorage, "123")
+	server := api.NewServer(authService, itemsService)
 	if err = server.Start(cfg.ServerAddress); err != nil {
 		log.Fatal().Err(err).Msg("can not start server:")
 		return

@@ -8,6 +8,7 @@ import (
 type ItemsStorage interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
+	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
 }
 
@@ -25,6 +26,10 @@ func (s *ItemsService) AddPassword(ctx context.Context, password *dto.LoginPassw
 
 func (s *ItemsService) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
 	return s.storage.AddTextInfo(ctx, textInfo)
+}
+
+func (s *ItemsService) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+	return s.storage.AddCardInfo(ctx, cardInfo)
 }
 
 func (s *ItemsService) ListItems(ctx context.Context, user string) (dto.ItemsList, error) {

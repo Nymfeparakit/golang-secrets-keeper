@@ -20,6 +20,8 @@ func (c *AddCommand) Execute(args []string) error {
 		c.view.AddPasswordPage()
 	case "text":
 		c.view.AddTextInfoPage()
+	case "card":
+		c.view.AddCardInfoPage()
 	}
 
 	return nil

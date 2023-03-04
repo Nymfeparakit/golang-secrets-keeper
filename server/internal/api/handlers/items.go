@@ -11,6 +11,7 @@ import (
 type ItemsService interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
+	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
 }
 
@@ -70,6 +71,35 @@ func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*it
 	}
 
 	err := s.itemsService.AddTextInfo(ctx, &textInfo)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal server error")
+	}
+
+	return &response, nil
+}
+
+func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*items2.Response, error) {
+	var response items2.Response
+
+	user, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	item := dto.Item{
+		Name:     in.Name,
+		User:     user,
+		Metadata: in.Metadata,
+	}
+	cardInfo := dto.CardInfo{
+		Item:            item,
+		CardNumber:      in.Number,
+		CVV:             in.Cvv,
+		ExpirationMonth: in.ExpirationMonth,
+		ExpirationYear:  in.ExpirationYear,
+	}
+
+	err := s.itemsService.AddCardInfo(ctx, &cardInfo)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}

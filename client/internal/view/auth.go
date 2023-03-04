@@ -9,6 +9,7 @@ import (
 
 type AuthService interface {
 	Register(user *dto.User) error
+	Login(email string, pwd string) error
 }
 
 type AuthView struct {
@@ -39,6 +40,31 @@ func (v *AuthView) RegisterUserPage() {
 			v.ResultPage(resultMsg)
 		})
 	v.pages.AddPage("Register user", form, true, true)
+	err := v.app.Run()
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+}
+
+func (v *AuthView) LoginUserPage() {
+	var userEmail string
+	var userPwd string
+	form := tview.NewForm().
+		AddInputField("Email", "", 32, nil, func(email string) {
+			userEmail = email
+		}).
+		AddInputField("Password", "", 128, nil, func(pwd string) {
+			userPwd = pwd
+		}).
+		AddButton("Save", func() {
+			err := v.authService.Login(userEmail, userPwd)
+			resultMsg := "User credentials saved"
+			if err != nil {
+				resultMsg = fmt.Sprintf("An error occurred during login: %v", err)
+			}
+			v.ResultPage(resultMsg)
+		})
+	v.pages.AddPage("Login user", form, true, true)
 	err := v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")

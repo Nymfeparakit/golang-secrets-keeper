@@ -4,7 +4,7 @@ import "github.com/golang-jwt/jwt/v5"
 
 type JWTClaims struct {
 	jwt.RegisteredClaims
-	Username string
+	Email string
 }
 
 type AuthJWTTokenService struct {
@@ -17,7 +17,7 @@ func NewAuthJWTTokenService(secretKey string) *AuthJWTTokenService {
 
 func (s *AuthJWTTokenService) generateAuthToken(login string) (string, error) {
 	claims := JWTClaims{
-		Username:         login,
+		Email:            login,
 		RegisteredClaims: jwt.RegisteredClaims{},
 	}
 
@@ -38,7 +38,7 @@ func (s *AuthJWTTokenService) parseJWTToken(tokenString string) (string, error) 
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims.Username, nil
+		return claims.Email, nil
 	}
 
 	return "", ErrInvalidAccessToken
