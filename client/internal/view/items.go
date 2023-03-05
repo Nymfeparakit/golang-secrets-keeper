@@ -4,23 +4,36 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/services"
+	"github.com/Nymfeparakit/gophkeeper/client/internal/view/forms"
 	"github.com/Nymfeparakit/gophkeeper/dto"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/rs/zerolog/log"
-	"strconv"
 )
 
 type ItemsService interface {
+	ListItems() (dto.ItemsList, error)
 	AddPassword(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
-	ListItems() (dto.ItemsList, error)
+}
+
+type FlexWithHint struct {
+	tview.Flex
+}
+
+func NewFlexWithHint(mainView tview.Primitive, hint string) *FlexWithHint {
+	flex := tview.NewFlex()
+	flex.AddItem(mainView, 0, 6, true)
+	hintView := tview.NewTextView().SetText(hint)
+	flex.AddItem(hintView, 0, 1, false)
+	return &FlexWithHint{Flex: *flex}
 }
 
 type ItemsView struct {
 	PagesView
 	itemsService ItemsService
-	items        []interface{}
+	items        dto.ItemsList
 }
 
 func NewItemsView(itemsService ItemsService) *ItemsView {
@@ -28,27 +41,18 @@ func NewItemsView(itemsService ItemsService) *ItemsView {
 	return &ItemsView{PagesView: *pagesView, itemsService: itemsService}
 }
 
-func (v *ItemsView) AddPasswordPage() {
-	form := v.loginPasswordForm()
-	v.pages.AddPage("Add login-password", form, true, true)
-	err := v.app.Run()
-	if err != nil {
-		log.Fatal().Err(err).Msg("")
+func (v *ItemsView) AddItemPage(itemType dto.ItemType) {
+	var form forms.SaveItemForm
+	switch itemType {
+	case dto.PASSWORD:
+		form = forms.NewLoginPasswordForm(v.itemsService)
+	case dto.TEXT:
+		form = forms.NewTextInfoForm(v.itemsService)
+	case dto.CARD:
+		form = forms.NewCardInfoForm(v.itemsService)
 	}
-}
-
-func (v *ItemsView) AddTextInfoPage() {
-	form := v.textInfoForm()
-	v.pages.AddPage("Add text info", form, true, true)
-	err := v.app.Run()
-	if err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
-}
-
-func (v *ItemsView) AddCardInfoPage() {
-	form := v.cardInfoForm()
-	v.pages.AddPage("Add card info", form, true, true)
+	forms.FillSaveItemForm(form, forms.CREATE, v.processSaveItemResult)
+	v.pages.AddPage("Add item", form, true, true)
 	err := v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
@@ -56,9 +60,6 @@ func (v *ItemsView) AddCardInfoPage() {
 }
 
 func (v *ItemsView) ListItemsPage() {
-	listView := tview.NewList().ShowSecondaryText(false)
-	v.pages.AddPage("List items", listView, true, true)
-
 	resultItems, err := v.itemsService.ListItems()
 	if errors.Is(err, services.ErrTokenNotFound) {
 		v.ResultPage("You are not authenticated - use 'login' command to set credentials")
@@ -68,15 +69,31 @@ func (v *ItemsView) ListItemsPage() {
 		v.ResultPage(fmt.Sprintf("can not list items: %v", err.Error()))
 		return
 	}
+	v.items = resultItems
 
+	var pwdNames []string
 	for _, pwd := range resultItems.Passwords {
-		listView.AddItem(pwd.Name, "", 0, nil)
-		v.items = append(v.items, pwd)
+		pwdNames = append(pwdNames, pwd.Name)
 	}
+	listPwdView := v.listItemsView(pwdNames, v.detailedLoginPasswordView)
+	v.pages.AddPage("List passwords", listPwdView, true, true)
+
+	var txtNames []string
 	for _, txt := range resultItems.Texts {
-		listView.AddItem(txt.Name, "", 0, nil)
-		v.items = append(v.items, txt)
+		txtNames = append(txtNames, txt.Name)
 	}
+	listTxtView := v.listItemsView(txtNames, v.detailedLoginPasswordView)
+	v.pages.AddPage("List texts", listTxtView, true, true)
+
+	buttonsList := tview.NewList()
+	// todo: return to list items page on backspace
+	buttonsList.AddItem("Passwords", "", 0, func() {
+		v.pages.SwitchToPage("List passwords")
+	})
+	buttonsList.AddItem("Texts", "", 0, func() {
+		v.pages.SwitchToPage("List passwords")
+	})
+	v.pages.AddPage("List items", buttonsList, true, true)
 
 	err = v.app.Run()
 	if err != nil {
@@ -84,93 +101,65 @@ func (v *ItemsView) ListItemsPage() {
 	}
 }
 
-// todo: make basic add item form
-func (v *ItemsView) loginPasswordForm() *tview.Form {
-	var loginPwd dto.LoginPassword
-	form := tview.NewForm()
-	// todo: make base name input field?
-	form.AddInputField("Name", "", 64, nil, func(name string) {
-		loginPwd.Name = name
-	})
-	form.AddInputField("Login", "", 32, nil, func(login string) {
-		loginPwd.Login = login
-	})
-	form.AddInputField("Password", "", 64, nil, func(pwd string) {
-		loginPwd.Password = pwd
-	})
-	form.AddButton("Save", func() {
-		err := v.itemsService.AddPassword(&loginPwd)
-		resultMsg := "Successfully added new item!"
-		if err != nil {
-			resultMsg = fmt.Sprintf("Error happened on adding new item: %v", err)
-		}
-		v.ResultPage(resultMsg)
-	})
-
-	return form
+func (v *ItemsView) processSaveItemResult(saveAction forms.SaveAction, err error) {
+	var resultMsg string
+	switch saveAction {
+	case forms.CREATE:
+		resultMsg = "Successfully added new item!"
+	case forms.UPDATE:
+		resultMsg = "Successfully updated item!"
+	}
+	if err != nil {
+		resultMsg = fmt.Sprintf("Error happened on saving item: %v", err)
+	}
+	v.ResultPage(resultMsg)
 }
 
-func (v *ItemsView) textInfoForm() *tview.Form {
-	var textInfo dto.TextInfo
-	form := tview.NewForm()
-	// todo: make base name input field?
-	form.AddInputField("Name", "", 64, nil, func(name string) {
-		textInfo.Name = name
+func (v *ItemsView) listItemsView(
+	itemsNames []string,
+	getDetailedItemView func(i int) *tview.Flex,
+) *tview.Flex {
+	listView := tview.NewList()
+	for _, name := range itemsNames {
+		listView.AddItem(name, "", 0, nil)
+	}
+
+	flex := tview.NewFlex()
+	flex.AddItem(listView, 0, 1, true)
+	listView.SetSelectedFunc(func(i int, s string, s2 string, r rune) {
+		flex.Clear()
+		flex.AddItem(listView, 0, 1, true)
+		flex.AddItem(getDetailedItemView(i), 0, 4, false)
 	})
-	form.AddInputField("Text", "", 128, nil, func(text string) {
-		textInfo.Text = text
-	})
-	form.AddButton("Save", func() {
-		err := v.itemsService.AddTextInfo(&textInfo)
-		resultMsg := "Successfully added new item!"
-		if err != nil {
-			resultMsg = fmt.Sprintf("Error happened on adding new item: %v", err)
+	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape {
+			v.pages.SwitchToPage("List items")
+			return nil
 		}
-		v.ResultPage(resultMsg)
+		return event
 	})
 
-	return form
+	return flex
 }
 
-func (v *ItemsView) cardInfoForm() *tview.Form {
-	var cardInfo dto.CardInfo
-	form := tview.NewForm()
-	form.AddInputField("Name", "", 64, nil, func(name string) {
-		cardInfo.Name = name
-	})
-	form.AddInputField("Card number", "", 16, nil, func(number string) {
-		cardInfo.CardNumber = number
-	})
-	// todo: how to validate value correctly?
-	form.AddInputField("CVV", "", 3, nil, func(cvv string) {
-		cvvNum, err := strconv.Atoi(cvv)
-		if err != nil {
-			v.ResultPage("Wrong value for cvv code")
-		}
-		cardInfo.CVV = int32(cvvNum)
-	})
-	form.AddInputField("Expiration Month", "", 2, nil, func(monthStr string) {
-		month, err := strconv.Atoi(monthStr)
-		if err != nil {
-			v.ResultPage("Wrong value for expiration month")
-		}
-		cardInfo.ExpirationMonth = int32(month)
-	})
-	form.AddInputField("Expiration Year", "", 4, nil, func(yearStr string) {
-		year, err := strconv.Atoi(yearStr)
-		if err != nil {
-			v.ResultPage("Wrong value for expiration month")
-		}
-		cardInfo.ExpirationYear = int32(year)
-	})
-	form.AddButton("Save", func() {
-		err := v.itemsService.AddCardInfo(&cardInfo)
-		resultMsg := "Successfully added new item!"
-		if err != nil {
-			resultMsg = fmt.Sprintf("Error happened on adding new item: %v", err)
-		}
-		v.ResultPage(resultMsg)
-	})
+func (v *ItemsView) detailedLoginPasswordView(i int) *tview.Flex {
+	pwd := v.items.Passwords[i]
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Name).SetLabel("Name"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Login).SetLabel("Login"), 0, 1, false)
+	// todo: don't show password
+	flex.AddItem(tview.NewTextView().SetText(pwd.Password).SetLabel("Password"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Metadata).SetLabel("Metadata"), 0, 1, false)
 
-	return form
+	return flex
+}
+
+func (v *ItemsView) detailedTextInfoView(i int) *tview.Flex {
+	text := v.items.Texts[i]
+	flex := tview.NewFlex()
+	flex.AddItem(tview.NewTextView().SetText(text.Name).SetLabel("Name"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(text.Text).SetLabel("Text"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(text.Metadata).SetLabel("Metadata"), 0, 1, false)
+
+	return flex
 }

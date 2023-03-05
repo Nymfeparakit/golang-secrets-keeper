@@ -1,6 +1,9 @@
 package commands
 
-import "github.com/jessevdk/go-flags"
+import (
+	"github.com/Nymfeparakit/gophkeeper/dto"
+	"github.com/jessevdk/go-flags"
+)
 
 type Options struct {
 }
@@ -8,10 +11,8 @@ type Options struct {
 var options Options
 
 type ItemsView interface {
-	AddPasswordPage()
 	ListItemsPage()
-	AddTextInfoPage()
-	AddCardInfoPage()
+	AddItemPage(itemType dto.ItemType)
 }
 
 type AuthView interface {

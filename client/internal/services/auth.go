@@ -8,45 +8,49 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type TokenStorage interface {
+type CredentialsStorage interface {
 	SaveToken(token string) error
 	GetToken() (string, error)
 }
 
 type AuthService struct {
-	storageClient auth.AuthManagementClient
-	userToken     string
-	tokenStorage  TokenStorage
+	storageClient      auth.AuthManagementClient
+	userToken          string
+	credentialsStorage CredentialsStorage
+	cryptoService      CryptoService
 }
 
-func NewAuthService(client auth.AuthManagementClient, storage TokenStorage) *AuthService {
-	return &AuthService{storageClient: client, tokenStorage: storage}
+func NewAuthService(client auth.AuthManagementClient, storage CredentialsStorage, cryptoService CryptoService) *AuthService {
+	return &AuthService{storageClient: client, credentialsStorage: storage}
 }
 
 func (s *AuthService) Register(user *dto.User) error {
+	errorMsg := "error occurred on registering user: %s"
+
 	request := auth.SignUpRequest{
 		Login:    user.Email,
 		Password: user.Password,
 	}
 	response, err := s.storageClient.SignUp(context.Background(), &request)
-	errorMsg := "error occurred on registering user: %s"
 	if err != nil {
 		return fmt.Errorf(errorMsg, err)
 	}
 	if response.Error != "" {
 		return fmt.Errorf(errorMsg, response.Error)
 	}
+
 	return nil
 }
 
 // Login saves user credentials (such as access token) in local storage.
 func (s *AuthService) Login(email string, pwd string) error {
+	errorMsg := "error occurred during user login: %s"
+
 	request := auth.LoginRequest{
 		Login:    email,
 		Password: pwd,
 	}
 	response, err := s.storageClient.Login(context.Background(), &request)
-	errorMsg := "error occurred during user login: %s"
 	if err != nil {
 		return fmt.Errorf(errorMsg, err)
 	}
@@ -55,7 +59,7 @@ func (s *AuthService) Login(email string, pwd string) error {
 	}
 
 	token := response.Token
-	err = s.tokenStorage.SaveToken(token)
+	err = s.credentialsStorage.SaveToken(token)
 	if err != nil {
 		return fmt.Errorf("failed to save token in local storage: %s", err)
 	}
@@ -66,7 +70,7 @@ func (s *AuthService) Login(email string, pwd string) error {
 func (s *AuthService) getUserToken() (string, error) {
 	if s.userToken == "" {
 		errorMsg := "could not get user token: %s"
-		token, err := s.tokenStorage.GetToken()
+		token, err := s.credentialsStorage.GetToken()
 		if err != nil {
 			return "", fmt.Errorf(errorMsg, err)
 		}

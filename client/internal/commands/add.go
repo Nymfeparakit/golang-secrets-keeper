@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/Nymfeparakit/gophkeeper/dto"
 )
 
 type AddCommand struct {
@@ -15,14 +16,10 @@ func NewAddCommand(view ItemsView) *AddCommand {
 
 func (c *AddCommand) Execute(args []string) error {
 	fmt.Println("adding new item")
-	switch c.Type {
-	case "password":
-		c.view.AddPasswordPage()
-	case "text":
-		c.view.AddTextInfoPage()
-	case "card":
-		c.view.AddCardInfoPage()
+	itemType, err := dto.ItemTypeFromString(c.Type)
+	if err != nil {
+		return err
 	}
-
+	c.view.AddItemPage(itemType)
 	return nil
 }

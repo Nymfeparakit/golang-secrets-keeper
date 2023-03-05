@@ -22,7 +22,7 @@ func main() {
 	defer conn.Close()
 
 	itemsClient := items.NewItemsManagementClient(conn)
-	tokenStorage := storage.NewTokenStorage()
+	tokenStorage := storage.NewCredentialsStorage()
 	authClient := auth.NewAuthManagementClient(conn)
 
 	authService := services.NewAuthService(authClient, tokenStorage)
