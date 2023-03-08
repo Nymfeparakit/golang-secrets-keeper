@@ -24,21 +24,23 @@ func NewAuthView(authService AuthService) *AuthView {
 
 func (v *AuthView) RegisterUserPage() {
 	var user dto.User
-	form := tview.NewForm().
-		AddInputField("Email", "", 32, nil, func(email string) {
-			user.Email = email
-		}).
-		AddInputField("Password", "", 128, nil, func(pwd string) {
-			user.Password = pwd
-		}).
-		AddButton("Save", func() {
-			err := v.authService.Register(&user)
-			resultMsg := "New user has been successfully registered"
-			if err != nil {
-				resultMsg = fmt.Sprintf("An error occurred during registration: %v", err)
-			}
-			v.ResultPage(resultMsg)
-		})
+	form := tview.NewForm()
+	emailInput := v.newEmailInput().SetChangedFunc(func(email string) {
+		user.Email = email
+	})
+	form.AddFormItem(emailInput)
+	pwdInput := v.newPasswordInput().SetChangedFunc(func(pwd string) {
+		user.Password = pwd
+	})
+	form.AddFormItem(pwdInput)
+	form.AddButton("Sign up", func() {
+		err := v.authService.Register(&user)
+		resultMsg := "New user has been successfully registered"
+		if err != nil {
+			resultMsg = fmt.Sprintf("An error occurred during registration: %v", err)
+		}
+		v.ResultPage(resultMsg)
+	})
 	v.pages.AddPage("Register user", form, true, true)
 	err := v.app.Run()
 	if err != nil {
@@ -49,24 +51,34 @@ func (v *AuthView) RegisterUserPage() {
 func (v *AuthView) LoginUserPage() {
 	var userEmail string
 	var userPwd string
-	form := tview.NewForm().
-		AddInputField("Email", "", 32, nil, func(email string) {
-			userEmail = email
-		}).
-		AddInputField("Password", "", 128, nil, func(pwd string) {
-			userPwd = pwd
-		}).
-		AddButton("Save", func() {
-			err := v.authService.Login(userEmail, userPwd)
-			resultMsg := "User credentials saved"
-			if err != nil {
-				resultMsg = fmt.Sprintf("An error occurred during login: %v", err)
-			}
-			v.ResultPage(resultMsg)
-		})
+	form := tview.NewForm()
+	emailInput := v.newEmailInput().SetChangedFunc(func(email string) {
+		userEmail = email
+	})
+	form.AddFormItem(emailInput)
+	pwdInput := v.newPasswordInput().SetChangedFunc(func(pwd string) {
+		userPwd = pwd
+	})
+	form.AddFormItem(pwdInput)
+	form.AddButton("Login", func() {
+		err := v.authService.Login(userEmail, userPwd)
+		resultMsg := "User credentials saved"
+		if err != nil {
+			resultMsg = fmt.Sprintf("An error occurred during login: %v", err)
+		}
+		v.ResultPage(resultMsg)
+	})
 	v.pages.AddPage("Login user", form, true, true)
 	err := v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+}
+
+func (v *AuthView) newEmailInput() *tview.InputField {
+	return tview.NewInputField().SetLabel("Email").SetFieldWidth(32)
+}
+
+func (v *AuthView) newPasswordInput() *tview.InputField {
+	return tview.NewInputField().SetLabel("Password").SetFieldWidth(64).SetMaskCharacter('*')
 }

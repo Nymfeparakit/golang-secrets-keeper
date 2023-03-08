@@ -69,12 +69,12 @@ func TestItemsService_AddCardInfo(t *testing.T) {
 	authServiceMock.EXPECT().AddAuthMetadata(gomock.Any()).Return(context.Background(), nil)
 	item := dto.Item{Name: "cardinfo", Metadata: "metadata"}
 	cardInfo := dto.CardInfo{
-		Item:       item,
-		CardNumber: "123123",
+		Item:   item,
+		Number: "123123",
 	}
 	expectedRequest := items.CardInfo{
 		Name:     cardInfo.Name,
-		Number:   cardInfo.CardNumber,
+		Number:   cardInfo.Number,
 		Metadata: cardInfo.Metadata,
 	}
 	authClientMock := mock_items.NewMockItemsManagementClient(ctrl)

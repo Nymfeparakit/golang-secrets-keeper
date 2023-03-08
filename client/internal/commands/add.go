@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 )
 
@@ -15,7 +14,6 @@ func NewAddCommand(view ItemsView) *AddCommand {
 }
 
 func (c *AddCommand) Execute(args []string) error {
-	fmt.Println("adding new item")
 	itemType, err := dto.ItemTypeFromString(c.Type)
 	if err != nil {
 		return err

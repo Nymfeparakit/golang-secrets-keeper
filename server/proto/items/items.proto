@@ -14,9 +14,9 @@ message Password {
 message CardInfo {
   string name = 1;
   string number = 2;
-  int32 expiration_month = 3;
-  int32 expiration_year = 4;
-  int32 cvv = 5;
+  string expiration_month = 3;
+  string expiration_year = 4;
+  string cvv = 5;
   string metadata = 6;
 }
 
@@ -32,25 +32,11 @@ message Response {
 
 message EmptyRequest{}
 
-message Item {
-  message Password{
-    string login = 1;
-    string password = 2;
-  }
-
-  message TextInfo{
-    string text = 1;
-  }
-
-  string name = 1;
-  Password password = 2;
-  TextInfo textInfo = 3;
-}
-
-// todo: rename to ItemsList
 message ListItemResponse {
-    repeated Item items = 1;
-    string error = 2;
+    repeated Password passwords = 1;
+    repeated TextInfo texts = 2;
+    repeated CardInfo cards = 3;
+    string error = 4;
 }
 
 service ItemsManagement {

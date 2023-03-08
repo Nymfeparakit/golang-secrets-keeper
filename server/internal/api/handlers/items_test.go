@@ -122,8 +122,8 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 		Metadata: "metadata",
 	}
 	cardInfo := dto.CardInfo{
-		Item:       item,
-		CardNumber: "123123",
+		Item:   item,
+		Number: "123123",
 	}
 
 	tests := []struct {
@@ -141,7 +141,7 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 			},
 			request: &items.CardInfo{
 				Name:     cardInfo.Name,
-				Number:   cardInfo.CardNumber,
+				Number:   cardInfo.Number,
 				Metadata: cardInfo.Metadata,
 			},
 			expResponse: &items.Response{},

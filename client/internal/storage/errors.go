@@ -2,4 +2,4 @@ package storage
 
 import "fmt"
 
-var ErrTokenNotFound = fmt.Errorf("there is no user token in local storage")
+var ErrItemNotFound = fmt.Errorf("there is no such item in local storage")

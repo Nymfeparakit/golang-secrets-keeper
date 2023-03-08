@@ -24,9 +24,13 @@ func (f *LoginPasswordForm) AddInputs() {
 	f.AddInputField("Login", "", 32, nil, func(login string) {
 		f.loginPwd.Login = login
 	})
-	f.AddInputField("Password", "", 64, nil, func(pwd string) {
-		f.loginPwd.Password = pwd
-	})
+	pwdInput := tview.NewInputField().
+		SetLabel("Password").
+		SetFieldWidth(64).
+		SetChangedFunc(func(pwd string) {
+			f.loginPwd.Password = pwd
+		}).SetMaskCharacter('*')
+	f.AddFormItem(pwdInput)
 }
 
 func (f *LoginPasswordForm) Save(saveAction SaveAction) error {

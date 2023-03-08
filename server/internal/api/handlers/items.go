@@ -93,7 +93,7 @@ func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*it
 	}
 	cardInfo := dto.CardInfo{
 		Item:            item,
-		CardNumber:      in.Number,
+		Number:          in.Number,
 		CVV:             in.Cvv,
 		ExpirationMonth: in.ExpirationMonth,
 		ExpirationYear:  in.ExpirationYear,
@@ -119,8 +119,6 @@ func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
-	// todo: we have to parse every item to change it's type. What to do with it?
-	// maybe don't use dto, but use just structs from proto
 	for _, pwd := range itemsList.Passwords {
 		pwdCopy := items2.Password{
 			Name:     pwd.Name,
@@ -137,6 +135,17 @@ func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*
 			Metadata: txt.Metadata,
 		}
 		response.Texts = append(response.Texts, &txtCopy)
+	}
+	for _, crd := range itemsList.Cards {
+		crdCopy := items2.CardInfo{
+			Name:            crd.Name,
+			Metadata:        crd.Metadata,
+			Number:          crd.Number,
+			ExpirationMonth: crd.ExpirationMonth,
+			ExpirationYear:  crd.ExpirationYear,
+			Cvv:             crd.CVV,
+		}
+		response.Cards = append(response.Cards, &crdCopy)
 	}
 
 	return &response, nil

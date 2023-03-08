@@ -39,7 +39,7 @@ func (s *ItemsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) 
 func (s *ItemsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
 	query := `INSERT INTO card_info (name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
 VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
-	_, err := s.db.ExecContext(ctx, query, &cardInfo)
+	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
 	if err != nil {
 		return err
 	}

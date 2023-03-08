@@ -49,10 +49,10 @@ type TextInfo struct {
 
 type CardInfo struct {
 	Item
-	CardNumber      string `db:"card_number"`
-	CVV             int32  `db:"cvv"`
-	ExpirationMonth int32  `db:"expiration_month"`
-	ExpirationYear  int32  `db:"expiration_year"`
+	Number          string `db:"card_number"`
+	CVV             string `db:"cvv"`
+	ExpirationMonth string `db:"expiration_month" json:"expiration_month"`
+	ExpirationYear  string `db:"expiration_year" json:"expiration_year"`
 }
 
 type ItemsList struct {

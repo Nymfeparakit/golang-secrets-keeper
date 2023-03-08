@@ -22,20 +22,20 @@ func main() {
 	defer conn.Close()
 
 	itemsClient := items.NewItemsManagementClient(conn)
-	tokenStorage := storage.NewCredentialsStorage()
+	credentialStorage := storage.NewCredentialsStorage()
 	authClient := auth.NewAuthManagementClient(conn)
 
-	authService := services.NewAuthService(authClient, tokenStorage)
-	itemsService := services.NewItemsService(itemsClient, authService)
+	cryptoService := services.NewCryptoService(credentialStorage)
+	authService := services.NewAuthService(authClient, credentialStorage, cryptoService)
+	itemsService := services.NewItemsService(itemsClient, authService, cryptoService)
 
 	authView := view.NewAuthView(authService)
 	itemsView := view.NewItemsView(itemsService)
 
 	commandParser := commands.NewCommandParser()
 	if err := commandParser.InitCommands(itemsView, authView); err != nil {
-		log.Fatal().Err(err).Msg("")
+		log.Fatal().Err(err).Msg("can't init commands")
 	}
-	// todo: refactor this code
 	if _, err := commandParser.Parse(); err != nil {
 		switch flagsErr := err.(type) {
 		case flags.ErrorType:

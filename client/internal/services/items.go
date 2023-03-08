@@ -14,22 +14,32 @@ type AuthMetadataService interface {
 type ItemsService struct {
 	authService   AuthMetadataService
 	storageClient items.ItemsManagementClient
+	cryptoService *CryptoService
 }
 
-func NewItemsService(client items.ItemsManagementClient, service AuthMetadataService) *ItemsService {
-	return &ItemsService{storageClient: client, authService: service}
+func NewItemsService(
+	client items.ItemsManagementClient,
+	service AuthMetadataService,
+	cryptoService *CryptoService,
+) *ItemsService {
+	return &ItemsService{storageClient: client, authService: service, cryptoService: cryptoService}
 }
 
 func (s *ItemsService) AddPassword(loginPwd *dto.LoginPassword) error {
+	// todo: context should be passed from argument
 	ctx, err := s.authService.AddAuthMetadata(context.Background())
 	if err != nil {
 		return err
 	}
-	// todo: context should be passed from argument
+	err = s.cryptoService.encryptItem(loginPwd)
+	if err != nil {
+		return fmt.Errorf("can't encrypt item: %s", err)
+	}
 	request := items.Password{
 		Name:     loginPwd.Name,
 		Login:    loginPwd.Login,
 		Password: loginPwd.Password,
+		Metadata: loginPwd.Metadata,
 	}
 	response, err := s.storageClient.AddPassword(ctx, &request)
 	if err != nil {
@@ -46,7 +56,10 @@ func (s *ItemsService) AddTextInfo(text *dto.TextInfo) error {
 	if err != nil {
 		return err
 	}
-	// todo: context should be passed from argument
+	err = s.cryptoService.encryptItem(text)
+	if err != nil {
+		return fmt.Errorf("can't encrypt item: %s", err)
+	}
 	request := items.TextInfo{
 		Name:     text.Name,
 		Text:     text.Text,
@@ -67,10 +80,13 @@ func (s *ItemsService) AddCardInfo(card *dto.CardInfo) error {
 	if err != nil {
 		return err
 	}
-	// todo: context should be passed from argument
+	err = s.cryptoService.encryptItem(card)
+	if err != nil {
+		return fmt.Errorf("can't encrypt item: %s", err)
+	}
 	request := items.CardInfo{
 		Name:            card.Name,
-		Number:          card.CardNumber,
+		Number:          card.Number,
 		ExpirationMonth: card.ExpirationMonth,
 		ExpirationYear:  card.ExpirationYear,
 		Cvv:             card.CVV,
@@ -100,27 +116,53 @@ func (s *ItemsService) ListItems() (dto.ItemsList, error) {
 
 	var itemsList dto.ItemsList
 	for _, pwd := range response.Passwords {
-		item := dto.Item{
+		itemDest := dto.Item{
 			Name:     pwd.Name,
 			Metadata: pwd.Metadata,
 		}
-		pwdCopy := &dto.LoginPassword{
+		pwdDest := dto.LoginPassword{
+			Item:     itemDest,
 			Login:    pwd.Login,
 			Password: pwd.Password,
-			Item:     item,
 		}
-		itemsList.Passwords = append(itemsList.Passwords, pwdCopy)
+		err := s.cryptoService.decryptItem(&pwdDest)
+		if err != nil {
+			return dto.ItemsList{}, err
+		}
+		itemsList.Passwords = append(itemsList.Passwords, &pwdDest)
 	}
-	for _, txt := range itemsList.Texts {
-		item := dto.Item{
+	for _, txt := range response.Texts {
+		itemDest := dto.Item{
 			Name:     txt.Name,
 			Metadata: txt.Metadata,
 		}
-		txtCopy := &dto.TextInfo{
+		txtDest := &dto.TextInfo{
 			Text: txt.Text,
-			Item: item,
+			Item: itemDest,
 		}
-		itemsList.Texts = append(itemsList.Texts, txtCopy)
+		err := s.cryptoService.decryptItem(txtDest)
+		if err != nil {
+			return dto.ItemsList{}, err
+		}
+		itemsList.Texts = append(itemsList.Texts, txtDest)
+	}
+	for _, crd := range response.Cards {
+		itemDest := dto.Item{
+			Name:     crd.Name,
+			Metadata: crd.Metadata,
+		}
+		crdDest := &dto.CardInfo{
+			Item:            itemDest,
+			Number:          crd.Number,
+			CVV:             crd.Cvv,
+			ExpirationMonth: crd.ExpirationMonth,
+			ExpirationYear:  crd.ExpirationYear,
+		}
+		err := s.cryptoService.decryptItem(crdDest)
+		if err != nil {
+			return dto.ItemsList{}, err
+		}
+		itemsList.Cards = append(itemsList.Cards, crdDest)
 	}
 
 	return itemsList, nil

@@ -18,16 +18,12 @@ type ItemsService interface {
 	AddCardInfo(card *dto.CardInfo) error
 }
 
-type FlexWithHint struct {
-	tview.Flex
-}
-
-func NewFlexWithHint(mainView tview.Primitive, hint string) *FlexWithHint {
-	flex := tview.NewFlex()
+func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(mainView, 0, 6, true)
 	hintView := tview.NewTextView().SetText(hint)
 	flex.AddItem(hintView, 0, 1, false)
-	return &FlexWithHint{Flex: *flex}
+	return flex
 }
 
 type ItemsView struct {
@@ -82,16 +78,25 @@ func (v *ItemsView) ListItemsPage() {
 	for _, txt := range resultItems.Texts {
 		txtNames = append(txtNames, txt.Name)
 	}
-	listTxtView := v.listItemsView(txtNames, v.detailedLoginPasswordView)
+	listTxtView := v.listItemsView(txtNames, v.detailedTextInfoView)
 	v.pages.AddPage("List texts", listTxtView, true, true)
 
+	var cardNames []string
+	for _, crd := range resultItems.Cards {
+		cardNames = append(cardNames, crd.Name)
+	}
+	listCardView := v.listItemsView(cardNames, v.detailedCardInfoView)
+	v.pages.AddPage("List cards", listCardView, true, true)
+
 	buttonsList := tview.NewList()
-	// todo: return to list items page on backspace
 	buttonsList.AddItem("Passwords", "", 0, func() {
 		v.pages.SwitchToPage("List passwords")
 	})
 	buttonsList.AddItem("Texts", "", 0, func() {
-		v.pages.SwitchToPage("List passwords")
+		v.pages.SwitchToPage("List texts")
+	})
+	buttonsList.AddItem("Cards", "", 0, func() {
+		v.pages.SwitchToPage("List cards")
 	})
 	v.pages.AddPage("List items", buttonsList, true, true)
 
@@ -138,28 +143,40 @@ func (v *ItemsView) listItemsView(
 		}
 		return event
 	})
+	hintFlex := NewFlexWithHint(flex, "press ENTER to choose item; press ESC to exit")
 
-	return flex
+	return hintFlex
 }
 
 func (v *ItemsView) detailedLoginPasswordView(i int) *tview.Flex {
 	pwd := v.items.Passwords[i]
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
-	flex.AddItem(tview.NewTextView().SetText(pwd.Name).SetLabel("Name"), 0, 1, false)
-	flex.AddItem(tview.NewTextView().SetText(pwd.Login).SetLabel("Login"), 0, 1, false)
-	// todo: don't show password
-	flex.AddItem(tview.NewTextView().SetText(pwd.Password).SetLabel("Password"), 0, 1, false)
-	flex.AddItem(tview.NewTextView().SetText(pwd.Metadata).SetLabel("Metadata"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Name).SetLabel("Name:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Login).SetLabel("Login:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Password).SetLabel("Password:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(pwd.Metadata).SetLabel("Metadata:"), 0, 1, false)
 
 	return flex
 }
 
 func (v *ItemsView) detailedTextInfoView(i int) *tview.Flex {
 	text := v.items.Texts[i]
-	flex := tview.NewFlex()
-	flex.AddItem(tview.NewTextView().SetText(text.Name).SetLabel("Name"), 0, 1, false)
-	flex.AddItem(tview.NewTextView().SetText(text.Text).SetLabel("Text"), 0, 1, false)
-	flex.AddItem(tview.NewTextView().SetText(text.Metadata).SetLabel("Metadata"), 0, 1, false)
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.AddItem(tview.NewTextView().SetText(text.Name).SetLabel("Name:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(text.Text).SetLabel("Text:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(text.Metadata).SetLabel("Metadata:"), 0, 1, false)
+
+	return flex
+}
+
+func (v *ItemsView) detailedCardInfoView(i int) *tview.Flex {
+	card := v.items.Cards[i]
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.AddItem(tview.NewTextView().SetText(card.Name).SetLabel("Name:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(card.Number).SetLabel("Number:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(card.CVV).SetLabel("CVV:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(card.ExpirationMonth).SetLabel("Expiration month:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(card.ExpirationYear).SetLabel("Expiration year:"), 0, 1, false)
 
 	return flex
 }

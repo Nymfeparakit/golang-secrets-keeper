@@ -3,8 +3,6 @@ package forms
 import (
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
-	"github.com/rs/zerolog/log"
-	"strconv"
 )
 
 type CardInfoForm struct {
@@ -24,29 +22,16 @@ func (f *CardInfoForm) AddInputs() {
 		f.cardInfo.Name = name
 	})
 	f.AddInputField("Card number", "", 16, nil, func(number string) {
-		f.cardInfo.CardNumber = number
+		f.cardInfo.Number = number
 	})
-	// todo: how to validate value correctly?
 	f.AddInputField("CVV", "", 3, nil, func(cvv string) {
-		cvvNum, err := strconv.Atoi(cvv)
-		if err != nil {
-			log.Fatal().Err(err).Msg("wrong value for cvv")
-		}
-		f.cardInfo.CVV = int32(cvvNum)
+		f.cardInfo.CVV = cvv
 	})
 	f.AddInputField("Expiration Month", "", 2, nil, func(monthStr string) {
-		month, err := strconv.Atoi(monthStr)
-		if err != nil {
-			log.Fatal().Err(err).Msg("wrong value for expiration month")
-		}
-		f.cardInfo.ExpirationMonth = int32(month)
+		f.cardInfo.ExpirationMonth = monthStr
 	})
 	f.AddInputField("Expiration Year", "", 4, nil, func(yearStr string) {
-		year, err := strconv.Atoi(yearStr)
-		if err != nil {
-			log.Fatal().Err(err).Msg("wrong value for expiration year")
-		}
-		f.cardInfo.ExpirationYear = int32(year)
+		f.cardInfo.ExpirationYear = yearStr
 	})
 }
 

@@ -62,7 +62,7 @@ func (a *AuthService) Register(ctx context.Context, user *dto.User) error {
 func (a *AuthService) Login(ctx context.Context, email string, pwd string) (string, error) {
 	// находим пользователя по логину
 	existingUser, err := a.userStorage.GetUserByEmail(ctx, email)
-	if errors.Is(err, ErrUserDoesNotExist) {
+	if errors.Is(err, storage.ErrUserDoesNotExist) {
 		return "", ErrInvalidCredentials
 	}
 	if err != nil {
