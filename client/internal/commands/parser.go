@@ -41,7 +41,7 @@ func (p *CommandParser) InitCommands(itemsView ItemsView, authView AuthView) err
 func (p *CommandParser) initItemsCommands(view ItemsView) error {
 	addCmd := NewAddCommand(view)
 	_, err := p.parser.AddCommand("add",
-		"Add a file",
+		"Add new item",
 		"The add command adds new item.",
 		addCmd,
 	)
