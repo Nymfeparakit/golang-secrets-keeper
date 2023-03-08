@@ -28,7 +28,8 @@ func TestAuthService_Register(t *testing.T) {
 	authClientMock.EXPECT().SignUp(gomock.Any(), &expectedRequest).Return(&response, nil)
 
 	tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
-	authService := NewAuthService(authClientMock, tokenStorageMock)
+	userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
+	authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
 
 	err := authService.Register(user)
 
@@ -52,8 +53,10 @@ func TestAuthService_Login(t *testing.T) {
 
 	tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
 	tokenStorageMock.EXPECT().SaveToken(token).Return(nil)
+	userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
+	userCryptoMock.EXPECT().CreateUserKey(pwd).Return(nil)
 
-	authService := NewAuthService(authClientMock, tokenStorageMock)
+	authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
 
 	err := authService.Login(email, pwd)
 
@@ -88,7 +91,8 @@ func TestAuthService_getUserToken(t *testing.T) {
 			authClientMock := mock_auth.NewMockAuthManagementClient(ctrl)
 			tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
 			tt.setupMocks(tokenStorageMock)
-			authService := NewAuthService(authClientMock, tokenStorageMock)
+			userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
+			authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
 			authService.userToken = tt.initialTokenValue
 
 			actualResult, err := authService.getUserToken()

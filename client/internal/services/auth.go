@@ -13,17 +13,21 @@ type CredentialsStorage interface {
 	GetToken() (string, error)
 }
 
+type UserCryptoService interface {
+	CreateUserKey(string) error
+}
+
 type AuthService struct {
 	storageClient      auth.AuthManagementClient
 	userToken          string
 	credentialsStorage CredentialsStorage
-	cryptoService      *CryptoService
+	cryptoService      UserCryptoService
 }
 
 func NewAuthService(
 	client auth.AuthManagementClient,
 	storage CredentialsStorage,
-	cryptoService *CryptoService,
+	cryptoService UserCryptoService,
 ) *AuthService {
 	return &AuthService{storageClient: client, credentialsStorage: storage, cryptoService: cryptoService}
 }
@@ -67,7 +71,7 @@ func (s *AuthService) Login(email string, pwd string) error {
 	if err != nil {
 		return fmt.Errorf("failed to save user credentials in local storage: %s", err)
 	}
-	err = s.cryptoService.createUserKey(pwd)
+	err = s.cryptoService.CreateUserKey(pwd)
 	if err != nil {
 		return fmt.Errorf("failed to save user credentials in local storage: %s", err)
 	}

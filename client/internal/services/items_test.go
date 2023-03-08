@@ -30,8 +30,10 @@ func TestItemsService_AddPassword(t *testing.T) {
 	authClientMock := mock_items.NewMockItemsManagementClient(ctrl)
 	response := items.Response{}
 	authClientMock.EXPECT().AddPassword(gomock.Any(), &request).Return(&response, nil)
+	itemCryptoMock := mock_services.NewMockItemCryptoService(ctrl)
+	itemCryptoMock.EXPECT().EncryptItem(&pwd).Return(nil)
 
-	itemsService := NewItemsService(authClientMock, authServiceMock)
+	itemsService := NewItemsService(authClientMock, authServiceMock, itemCryptoMock)
 	err := itemsService.AddPassword(&pwd)
 
 	require.NoError(t, err)
@@ -55,8 +57,10 @@ func TestItemsService_AddTextInfo(t *testing.T) {
 	authClientMock := mock_items.NewMockItemsManagementClient(ctrl)
 	response := items.Response{}
 	authClientMock.EXPECT().AddTextInfo(gomock.Any(), &expectedRequest).Return(&response, nil)
+	itemCryptoMock := mock_services.NewMockItemCryptoService(ctrl)
+	itemCryptoMock.EXPECT().EncryptItem(&textInfo).Return(nil)
 
-	itemsService := NewItemsService(authClientMock, authServiceMock)
+	itemsService := NewItemsService(authClientMock, authServiceMock, itemCryptoMock)
 	err := itemsService.AddTextInfo(&textInfo)
 
 	require.NoError(t, err)
@@ -80,8 +84,10 @@ func TestItemsService_AddCardInfo(t *testing.T) {
 	authClientMock := mock_items.NewMockItemsManagementClient(ctrl)
 	response := items.Response{}
 	authClientMock.EXPECT().AddCardInfo(gomock.Any(), &expectedRequest).Return(&response, nil)
+	itemCryptoMock := mock_services.NewMockItemCryptoService(ctrl)
+	itemCryptoMock.EXPECT().EncryptItem(&cardInfo).Return(nil)
 
-	itemsService := NewItemsService(authClientMock, authServiceMock)
+	itemsService := NewItemsService(authClientMock, authServiceMock, itemCryptoMock)
 	err := itemsService.AddCardInfo(&cardInfo)
 
 	require.NoError(t, err)

@@ -25,7 +25,7 @@ func NewCryptoService(keyStorage KeyStorage) *CryptoService {
 	return &CryptoService{keyStorage: keyStorage}
 }
 
-func (s *CryptoService) createUserKey(password string) error {
+func (s *CryptoService) CreateUserKey(password string) error {
 	key := sha256.Sum256([]byte(password))
 	s.userKey = key[:]
 	err := s.keyStorage.SaveUserKey(s.userKey)
@@ -36,7 +36,7 @@ func (s *CryptoService) createUserKey(password string) error {
 	return nil
 }
 
-func (s *CryptoService) encryptItem(source any) error {
+func (s *CryptoService) EncryptItem(source any) error {
 	// todo: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)
 	sourceValue := pSourceValue.Elem()
@@ -121,7 +121,7 @@ func (s *CryptoService) getUserKey() ([]byte, error) {
 	return s.userKey, nil
 }
 
-func (s *CryptoService) decryptItem(source any) error {
+func (s *CryptoService) DecryptItem(source any) error {
 	// TODO: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)
 	sourceValue := pSourceValue.Elem()

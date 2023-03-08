@@ -11,16 +11,21 @@ type AuthMetadataService interface {
 	AddAuthMetadata(ctx context.Context) (context.Context, error)
 }
 
+type ItemCryptoService interface {
+	EncryptItem(source any) error
+	DecryptItem(source any) error
+}
+
 type ItemsService struct {
 	authService   AuthMetadataService
 	storageClient items.ItemsManagementClient
-	cryptoService *CryptoService
+	cryptoService ItemCryptoService
 }
 
 func NewItemsService(
 	client items.ItemsManagementClient,
 	service AuthMetadataService,
-	cryptoService *CryptoService,
+	cryptoService ItemCryptoService,
 ) *ItemsService {
 	return &ItemsService{storageClient: client, authService: service, cryptoService: cryptoService}
 }
@@ -31,7 +36,7 @@ func (s *ItemsService) AddPassword(loginPwd *dto.LoginPassword) error {
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.encryptItem(loginPwd)
+	err = s.cryptoService.EncryptItem(loginPwd)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
@@ -56,7 +61,7 @@ func (s *ItemsService) AddTextInfo(text *dto.TextInfo) error {
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.encryptItem(text)
+	err = s.cryptoService.EncryptItem(text)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
@@ -80,7 +85,7 @@ func (s *ItemsService) AddCardInfo(card *dto.CardInfo) error {
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.encryptItem(card)
+	err = s.cryptoService.EncryptItem(card)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
@@ -125,7 +130,7 @@ func (s *ItemsService) ListItems() (dto.ItemsList, error) {
 			Login:    pwd.Login,
 			Password: pwd.Password,
 		}
-		err := s.cryptoService.decryptItem(&pwdDest)
+		err := s.cryptoService.DecryptItem(&pwdDest)
 		if err != nil {
 			return dto.ItemsList{}, err
 		}
@@ -140,7 +145,7 @@ func (s *ItemsService) ListItems() (dto.ItemsList, error) {
 			Text: txt.Text,
 			Item: itemDest,
 		}
-		err := s.cryptoService.decryptItem(txtDest)
+		err := s.cryptoService.DecryptItem(txtDest)
 		if err != nil {
 			return dto.ItemsList{}, err
 		}
@@ -158,7 +163,7 @@ func (s *ItemsService) ListItems() (dto.ItemsList, error) {
 			ExpirationMonth: crd.ExpirationMonth,
 			ExpirationYear:  crd.ExpirationYear,
 		}
-		err := s.cryptoService.decryptItem(crdDest)
+		err := s.cryptoService.DecryptItem(crdDest)
 		if err != nil {
 			return dto.ItemsList{}, err
 		}
