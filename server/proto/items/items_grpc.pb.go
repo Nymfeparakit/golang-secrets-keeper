@@ -22,9 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ItemsManagementClient interface {
-	AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error)
-	AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*Response, error)
-	AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*Response, error)
+	AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*AddResponse, error)
+	AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*AddResponse, error)
+	AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*AddResponse, error)
 	ListItems(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*ListItemResponse, error)
 }
 
@@ -36,8 +36,8 @@ func NewItemsManagementClient(cc grpc.ClientConnInterface) ItemsManagementClient
 	return &itemsManagementClient{cc}
 }
 
-func (c *itemsManagementClient) AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *itemsManagementClient) AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.ItemsManagement/AddPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,8 +45,8 @@ func (c *itemsManagementClient) AddPassword(ctx context.Context, in *Password, o
 	return out, nil
 }
 
-func (c *itemsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *itemsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.ItemsManagement/AddCardInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *itemsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo, o
 	return out, nil
 }
 
-func (c *itemsManagementClient) AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *itemsManagementClient) AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.ItemsManagement/AddTextInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -76,9 +76,9 @@ func (c *itemsManagementClient) ListItems(ctx context.Context, in *EmptyRequest,
 // All implementations must embed UnimplementedItemsManagementServer
 // for forward compatibility
 type ItemsManagementServer interface {
-	AddPassword(context.Context, *Password) (*Response, error)
-	AddCardInfo(context.Context, *CardInfo) (*Response, error)
-	AddTextInfo(context.Context, *TextInfo) (*Response, error)
+	AddPassword(context.Context, *Password) (*AddResponse, error)
+	AddCardInfo(context.Context, *CardInfo) (*AddResponse, error)
+	AddTextInfo(context.Context, *TextInfo) (*AddResponse, error)
 	ListItems(context.Context, *EmptyRequest) (*ListItemResponse, error)
 	mustEmbedUnimplementedItemsManagementServer()
 }
@@ -87,13 +87,13 @@ type ItemsManagementServer interface {
 type UnimplementedItemsManagementServer struct {
 }
 
-func (UnimplementedItemsManagementServer) AddPassword(context.Context, *Password) (*Response, error) {
+func (UnimplementedItemsManagementServer) AddPassword(context.Context, *Password) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPassword not implemented")
 }
-func (UnimplementedItemsManagementServer) AddCardInfo(context.Context, *CardInfo) (*Response, error) {
+func (UnimplementedItemsManagementServer) AddCardInfo(context.Context, *CardInfo) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCardInfo not implemented")
 }
-func (UnimplementedItemsManagementServer) AddTextInfo(context.Context, *TextInfo) (*Response, error) {
+func (UnimplementedItemsManagementServer) AddTextInfo(context.Context, *TextInfo) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTextInfo not implemented")
 }
 func (UnimplementedItemsManagementServer) ListItems(context.Context, *EmptyRequest) (*ListItemResponse, error) {

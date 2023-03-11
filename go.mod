@@ -39,6 +39,7 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
@@ -46,6 +47,7 @@ require (
 	github.com/muesli/termenv v0.14.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pressly/goose/v3 v3.9.0 // indirect
 	github.com/rivo/tview v0.0.0-20230208211350-7dfff1ce7854 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect

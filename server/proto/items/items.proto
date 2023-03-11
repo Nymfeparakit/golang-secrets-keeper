@@ -9,6 +9,8 @@ message Password {
   string login = 2;
   string password = 3;
   string metadata = 4;
+  string id = 5;
+  string user = 6;
 }
 
 message CardInfo {
@@ -18,16 +20,21 @@ message CardInfo {
   string expiration_year = 4;
   string cvv = 5;
   string metadata = 6;
+  string id = 7;
+  string user = 8;
 }
 
 message TextInfo {
   string name = 1;
   string text = 2;
   string metadata = 3;
+  string id = 4;
+  string user = 5;
 }
 
-message Response {
-  string error = 1;
+message AddResponse {
+  string id = 1; // id of added item
+  string error = 2;
 }
 
 message EmptyRequest{}
@@ -40,8 +47,8 @@ message ListItemResponse {
 }
 
 service ItemsManagement {
-  rpc AddPassword(Password) returns (Response);
-  rpc AddCardInfo(CardInfo) returns (Response);
-  rpc AddTextInfo (TextInfo) returns (Response);
+  rpc AddPassword(Password) returns (AddResponse);
+  rpc AddCardInfo(CardInfo) returns (AddResponse);
+  rpc AddTextInfo (TextInfo) returns (AddResponse);
   rpc ListItems(EmptyRequest) returns (ListItemResponse);
 }

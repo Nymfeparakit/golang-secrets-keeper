@@ -7,7 +7,7 @@ CREATE TABLE auth_user
 
 CREATE TABLE login_pwd
 (
-    id         serial PRIMARY KEY,
+    id         uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
     name       VARCHAR(64),
     metadata   TEXT         NOT NULL,
     user_email VARCHAR(32),
@@ -19,7 +19,7 @@ CREATE TABLE login_pwd
 
 CREATE TABLE card_info
 (
-    id               serial PRIMARY KEY,
+    id               uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
     name             VARCHAR(64),
     metadata         TEXT NOT NULL,
     user_email       VARCHAR(32),
@@ -33,7 +33,7 @@ CREATE TABLE card_info
 
 CREATE TABLE text_info
 (
-    id         serial PRIMARY KEY,
+    id         uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
     name       VARCHAR(64),
     metadata   TEXT NOT NULL,
     user_email VARCHAR(32),

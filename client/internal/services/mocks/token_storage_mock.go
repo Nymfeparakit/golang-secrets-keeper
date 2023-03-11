@@ -49,9 +49,9 @@ func (mr *MockTokenStorageMockRecorder) GetToken() *gomock.Call {
 }
 
 // SaveToken mocks base method.
-func (m *MockTokenStorage) SaveToken(token string) error {
+func (m *MockTokenStorage) SaveCredentials(token string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveToken", token)
+	ret := m.ctrl.Call(m, "SaveCredentials", token)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -59,5 +59,5 @@ func (m *MockTokenStorage) SaveToken(token string) error {
 // SaveToken indicates an expected call of SaveToken.
 func (mr *MockTokenStorageMockRecorder) SaveToken(token interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveToken", reflect.TypeOf((*MockTokenStorage)(nil).SaveToken), token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveCredentials", reflect.TypeOf((*MockTokenStorage)(nil).SaveCredentials), token)
 }

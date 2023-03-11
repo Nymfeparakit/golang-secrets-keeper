@@ -3,9 +3,11 @@ package storage
 import (
 	"errors"
 	"github.com/99designs/keyring"
+	"github.com/Nymfeparakit/gophkeeper/dto"
 )
 
 const serviceName = "gophkeeper"
+const ringEmailKey = "email"
 const ringTokenKey = "token"
 const ringUserKey = "user_key"
 
@@ -17,8 +19,26 @@ func NewCredentialsStorage() *CredentialsStorage {
 	return &CredentialsStorage{}
 }
 
-func (s *CredentialsStorage) SaveToken(token string) error {
-	return s.saveItem(ringTokenKey, []byte(token))
+func (s *CredentialsStorage) SaveCredentials(email string, token string) error {
+	err := s.saveItem(ringTokenKey, []byte(token))
+	if err != nil {
+		return err
+	}
+	err = s.saveItem(ringEmailKey, []byte(email))
+	return err
+}
+
+func (s *CredentialsStorage) GetCredentials() (*dto.UserCredentials, error) {
+	tokenData, err := s.getItem(ringTokenKey)
+	if err != nil {
+		return nil, err
+	}
+	emailData, err := s.getItem(ringEmailKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.UserCredentials{Email: string(emailData), Token: string(tokenData)}, nil
 }
 
 func (s *CredentialsStorage) GetToken() (string, error) {

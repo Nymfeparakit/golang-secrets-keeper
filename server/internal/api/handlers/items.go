@@ -9,7 +9,7 @@ import (
 )
 
 type ItemsService interface {
-	AddPassword(ctx context.Context, password *dto.LoginPassword) error
+	AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
@@ -25,8 +25,8 @@ func NewItemsServer(itemsService ItemsService, authService AuthService) *ItemsSe
 	return &ItemsServer{itemsService: itemsService, authService: authService}
 }
 
-func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*items2.Response, error) {
-	var response items2.Response
+func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*items2.AddResponse, error) {
+	var response items2.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
@@ -44,16 +44,17 @@ func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*it
 		Item:     item,
 	}
 
-	err := s.itemsService.AddPassword(ctx, &password)
+	createdID, err := s.itemsService.AddPassword(ctx, &password)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
+	response.Id = createdID
 
 	return &response, nil
 }
 
-func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*items2.Response, error) {
-	var response items2.Response
+func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*items2.AddResponse, error) {
+	var response items2.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
@@ -78,8 +79,8 @@ func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*it
 	return &response, nil
 }
 
-func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*items2.Response, error) {
-	var response items2.Response
+func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*items2.AddResponse, error) {
+	var response items2.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
@@ -121,29 +122,35 @@ func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*
 	}
 	for _, pwd := range itemsList.Passwords {
 		pwdCopy := items2.Password{
+			Id:       pwd.ID,
 			Name:     pwd.Name,
 			Login:    pwd.Login,
 			Password: pwd.Password,
 			Metadata: pwd.Metadata,
+			User:     pwd.User,
 		}
 		response.Passwords = append(response.Passwords, &pwdCopy)
 	}
 	for _, txt := range itemsList.Texts {
 		txtCopy := items2.TextInfo{
+			Id:       txt.ID,
 			Name:     txt.Name,
 			Text:     txt.Text,
 			Metadata: txt.Metadata,
+			User:     txt.User,
 		}
 		response.Texts = append(response.Texts, &txtCopy)
 	}
 	for _, crd := range itemsList.Cards {
 		crdCopy := items2.CardInfo{
+			Id:              crd.ID,
 			Name:            crd.Name,
 			Metadata:        crd.Metadata,
 			Number:          crd.Number,
 			ExpirationMonth: crd.ExpirationMonth,
 			ExpirationYear:  crd.ExpirationYear,
 			Cvv:             crd.CVV,
+			User:            crd.User,
 		}
 		response.Cards = append(response.Cards, &crdCopy)
 	}

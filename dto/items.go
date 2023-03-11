@@ -1,6 +1,9 @@
 package dto
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ItemType int
 
@@ -30,10 +33,11 @@ func ItemTypeFromString(s string) (ItemType, error) {
 }
 
 type Item struct {
-	ID       int    `db:"id"`
-	Name     string `db:"name"`
-	User     string `db:"user_email"`
-	Metadata string `db:"metadata"`
+	ID        string `db:"id"`
+	Name      string `db:"name"`
+	User      string `db:"user_email"`
+	Metadata  string `db:"metadata"`
+	UpdatedAt time.Time
 }
 
 type LoginPassword struct {

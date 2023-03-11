@@ -16,6 +16,7 @@ type ItemsService interface {
 	AddPassword(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
+	GetPasswordByID(id string) (*dto.LoginPassword, error)
 }
 
 func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
@@ -38,17 +39,19 @@ func NewItemsView(itemsService ItemsService) *ItemsView {
 }
 
 func (v *ItemsView) AddItemPage(itemType dto.ItemType) {
-	var form forms.SaveItemForm
-	switch itemType {
-	case dto.PASSWORD:
-		form = forms.NewLoginPasswordForm(v.itemsService)
-	case dto.TEXT:
-		form = forms.NewTextInfoForm(v.itemsService)
-	case dto.CARD:
-		form = forms.NewCardInfoForm(v.itemsService)
-	}
+	form := v.formFromItemType(itemType)
 	forms.FillSaveItemForm(form, forms.CREATE, v.processSaveItemResult)
 	v.pages.AddPage("Add item", form, true, true)
+	err := v.app.Run()
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+}
+
+func (v *ItemsView) UpdateItemPage(itemType dto.ItemType) {
+	form := v.formFromItemType(itemType)
+	forms.FillSaveItemForm(form, forms.UPDATE, v.processSaveItemResult)
+	v.pages.AddPage("Update item", form, true, true)
 	err := v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
@@ -179,4 +182,17 @@ func (v *ItemsView) detailedCardInfoView(i int) *tview.Flex {
 	flex.AddItem(tview.NewTextView().SetText(card.ExpirationYear).SetLabel("Expiration year:"), 0, 1, false)
 
 	return flex
+}
+
+func (v *ItemsView) formFromItemType(itemType dto.ItemType) forms.SaveItemForm {
+	var form forms.SaveItemForm
+	switch itemType {
+	case dto.PASSWORD:
+		form = forms.NewLoginPasswordForm(v.itemsService)
+	case dto.TEXT:
+		form = forms.NewTextInfoForm(v.itemsService)
+	case dto.CARD:
+		form = forms.NewCardInfoForm(v.itemsService)
+	}
+	return form
 }

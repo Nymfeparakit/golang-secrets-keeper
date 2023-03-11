@@ -24,10 +24,17 @@ func main() {
 	itemsClient := items.NewItemsManagementClient(conn)
 	credentialStorage := storage.NewCredentialsStorage()
 	authClient := auth.NewAuthManagementClient(conn)
+	localConn, err := storage.GetLocalStorageConnection()
+	if err != nil {
+		log.Fatal().Err(err).Msg("unable to connect to local storage")
+	}
+	localStorage := storage.NewItemsStorage(localConn)
+	usersLocalStorage := storage.NewUsersStorage(localConn)
 
 	cryptoService := services.NewCryptoService(credentialStorage)
-	authService := services.NewAuthService(authClient, credentialStorage, cryptoService)
-	itemsService := services.NewItemsService(itemsClient, authService, cryptoService)
+	authMetadataService := services.NewMetadataService()
+	itemsService := services.NewItemsService(itemsClient, authMetadataService, cryptoService, localStorage, credentialStorage)
+	authService := services.NewAuthService(authClient, credentialStorage, cryptoService, usersLocalStorage, itemsService)
 
 	authView := view.NewAuthView(authService)
 	itemsView := view.NewItemsView(itemsService)

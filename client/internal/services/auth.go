@@ -9,7 +9,7 @@ import (
 )
 
 type CredentialsStorage interface {
-	SaveToken(token string) error
+	SaveCredentials(email string, token string) error
 	GetToken() (string, error)
 }
 
@@ -17,19 +17,37 @@ type UserCryptoService interface {
 	CreateUserKey(string) error
 }
 
+type UsersStorage interface {
+	CreateUser(ctx context.Context, email string) error
+}
+
+type ItemsServiceInterface interface {
+	LoadItems(ctx context.Context) error
+}
+
 type AuthService struct {
 	storageClient      auth.AuthManagementClient
 	userToken          string
 	credentialsStorage CredentialsStorage
 	cryptoService      UserCryptoService
+	localUsersStorage  UsersStorage
+	itemsService       ItemsServiceInterface
 }
 
 func NewAuthService(
 	client auth.AuthManagementClient,
 	storage CredentialsStorage,
 	cryptoService UserCryptoService,
+	usersStorage UsersStorage,
+	itemsService ItemsServiceInterface,
 ) *AuthService {
-	return &AuthService{storageClient: client, credentialsStorage: storage, cryptoService: cryptoService}
+	return &AuthService{
+		storageClient:      client,
+		credentialsStorage: storage,
+		cryptoService:      cryptoService,
+		localUsersStorage:  usersStorage,
+		itemsService:       itemsService,
+	}
 }
 
 func (s *AuthService) Register(user *dto.User) error {
@@ -67,13 +85,26 @@ func (s *AuthService) Login(email string, pwd string) error {
 	}
 
 	token := response.Token
-	err = s.credentialsStorage.SaveToken(token)
+	err = s.credentialsStorage.SaveCredentials(email, token)
 	if err != nil {
 		return fmt.Errorf("failed to save user credentials in local storage: %s", err)
 	}
 	err = s.cryptoService.CreateUserKey(pwd)
 	if err != nil {
 		return fmt.Errorf("failed to save user credentials in local storage: %s", err)
+	}
+
+	return s.loadUserData(email)
+}
+
+func (s *AuthService) loadUserData(email string) error {
+	err := s.localUsersStorage.CreateUser(context.Background(), email)
+	if err != nil {
+		return fmt.Errorf("failed to save user data in local storage: %s", err)
+	}
+	err = s.itemsService.LoadItems(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}
 
 	return nil
@@ -92,11 +123,13 @@ func (s *AuthService) getUserToken() (string, error) {
 	return s.userToken, nil
 }
 
-func (s *AuthService) AddAuthMetadata(ctx context.Context) (context.Context, error) {
-	token, err := s.getUserToken()
-	if err != nil {
-		return nil, err
-	}
+type MetadataService struct{}
+
+func NewMetadataService() *MetadataService {
+	return &MetadataService{}
+}
+
+func (s *MetadataService) AddAuthMetadata(ctx context.Context, token string) (context.Context, error) {
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
 	return ctx, nil
 }
