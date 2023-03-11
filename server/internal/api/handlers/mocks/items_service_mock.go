@@ -77,11 +77,11 @@ func (mr *MockItemsServiceMockRecorder) AddTextInfo(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTextInfo", reflect.TypeOf((*MockItemsService)(nil).AddTextInfo), arg0, arg1)
 }
 
-// ListItems mocks base method.
-func (m *MockItemsService) ListItems(arg0 context.Context, arg1 string) (dto.ItemsList, error) {
+// ListSecrets mocks base method.
+func (m *MockItemsService) ListSecrets(arg0 context.Context, arg1 string) (dto.SecretsList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListItems", arg0, arg1)
-	ret0, _ := ret[0].(dto.ItemsList)
+	ret := m.ctrl.Call(m, "ListSecrets", arg0, arg1)
+	ret0, _ := ret[0].(dto.SecretsList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -89,5 +89,5 @@ func (m *MockItemsService) ListItems(arg0 context.Context, arg1 string) (dto.Ite
 // ListItems indicates an expected call of ListItems.
 func (mr *MockItemsServiceMockRecorder) ListItems(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListItems", reflect.TypeOf((*MockItemsService)(nil).ListItems), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSecrets", reflect.TypeOf((*MockItemsService)(nil).ListSecrets), arg0, arg1)
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	mock_handlers "github.com/Nymfeparakit/gophkeeper/server/internal/api/handlers/mocks"
-	"github.com/Nymfeparakit/gophkeeper/server/proto/items"
+	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -12,7 +12,7 @@ import (
 
 func TestItemsServer_AddPassword(t *testing.T) {
 	userEmail := "test@email.com"
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     "name",
 		User:     userEmail,
 		Metadata: "metadata",
@@ -20,14 +20,14 @@ func TestItemsServer_AddPassword(t *testing.T) {
 	password := dto.LoginPassword{
 		Login:    "login",
 		Password: "pwd",
-		Item:     item,
+		Secret:   item,
 	}
 
 	tests := []struct {
 		name        string
 		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockItemsService)
-		request     *items.Password
-		expResponse *items.Response
+		request     *secrets.Password
+		expResponse *secrets.Response
 		expError    error
 	}{
 		{
@@ -36,13 +36,13 @@ func TestItemsServer_AddPassword(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddPassword(gomock.Any(), &password)
 			},
-			request: &items.Password{
+			request: &secrets.Password{
 				Name:     password.Name,
 				Login:    password.Login,
 				Password: password.Password,
 				Metadata: password.Metadata,
 			},
-			expResponse: &items.Response{},
+			expResponse: &secrets.Response{},
 		},
 	}
 
@@ -54,7 +54,7 @@ func TestItemsServer_AddPassword(t *testing.T) {
 			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
 			itemsServiceMock := mock_handlers.NewMockItemsService(ctrl)
 			tt.setupMocks(authServiceMock, itemsServiceMock)
-			itemsServer := NewItemsServer(itemsServiceMock, authServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
 			response, err := itemsServer.AddPassword(context.Background(), tt.request)
 
 			assert.Equal(t, tt.expResponse, response)
@@ -65,21 +65,21 @@ func TestItemsServer_AddPassword(t *testing.T) {
 
 func TestItemsServer_AddTextInfo(t *testing.T) {
 	userEmail := "test@email.com"
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     "name",
 		User:     userEmail,
 		Metadata: "metadata",
 	}
 	textInfo := dto.TextInfo{
-		Text: "text",
-		Item: item,
+		Text:   "text",
+		Secret: item,
 	}
 
 	tests := []struct {
 		name        string
 		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockItemsService)
-		request     *items.TextInfo
-		expResponse *items.Response
+		request     *secrets.TextInfo
+		expResponse *secrets.Response
 		expError    error
 	}{
 		{
@@ -88,12 +88,12 @@ func TestItemsServer_AddTextInfo(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddTextInfo(gomock.Any(), &textInfo)
 			},
-			request: &items.TextInfo{
+			request: &secrets.TextInfo{
 				Name:     textInfo.Name,
 				Text:     textInfo.Text,
 				Metadata: textInfo.Metadata,
 			},
-			expResponse: &items.Response{},
+			expResponse: &secrets.Response{},
 		},
 	}
 
@@ -105,7 +105,7 @@ func TestItemsServer_AddTextInfo(t *testing.T) {
 			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
 			itemsServiceMock := mock_handlers.NewMockItemsService(ctrl)
 			tt.setupMocks(authServiceMock, itemsServiceMock)
-			itemsServer := NewItemsServer(itemsServiceMock, authServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
 			response, err := itemsServer.AddTextInfo(context.Background(), tt.request)
 
 			assert.Equal(t, tt.expResponse, response)
@@ -116,21 +116,21 @@ func TestItemsServer_AddTextInfo(t *testing.T) {
 
 func TestItemsServer_AddCardInfo(t *testing.T) {
 	userEmail := "test@email.com"
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     "name",
 		User:     userEmail,
 		Metadata: "metadata",
 	}
 	cardInfo := dto.CardInfo{
-		Item:   item,
+		Secret: item,
 		Number: "123123",
 	}
 
 	tests := []struct {
 		name        string
 		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockItemsService)
-		request     *items.CardInfo
-		expResponse *items.Response
+		request     *secrets.CardInfo
+		expResponse *secrets.Response
 		expError    error
 	}{
 		{
@@ -139,12 +139,12 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddCardInfo(gomock.Any(), &cardInfo)
 			},
-			request: &items.CardInfo{
+			request: &secrets.CardInfo{
 				Name:     cardInfo.Name,
 				Number:   cardInfo.Number,
 				Metadata: cardInfo.Metadata,
 			},
-			expResponse: &items.Response{},
+			expResponse: &secrets.Response{},
 		},
 	}
 
@@ -156,7 +156,7 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
 			itemsServiceMock := mock_handlers.NewMockItemsService(ctrl)
 			tt.setupMocks(authServiceMock, itemsServiceMock)
-			itemsServer := NewItemsServer(itemsServiceMock, authServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
 			response, err := itemsServer.AddCardInfo(context.Background(), tt.request)
 
 			assert.Equal(t, tt.expResponse, response)
@@ -167,7 +167,7 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 
 func TestItemsServer_ListItems(t *testing.T) {
 	userEmail := "test@email.com"
-	itemsList := dto.ItemsList{
+	itemsList := dto.SecretsList{
 		Passwords: []*dto.LoginPassword{{Password: "pwd1"}, {Password: "pwd2"}},
 		Texts:     []*dto.TextInfo{{Text: "text1"}, {Text: "text2"}},
 	}
@@ -175,8 +175,8 @@ func TestItemsServer_ListItems(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockItemsService)
-		request     *items.EmptyRequest
-		expResponse *items.ListItemResponse
+		request     *secrets.EmptyRequest
+		expResponse *secrets.ListSecretResponse
 		expError    error
 	}{
 		{
@@ -185,13 +185,13 @@ func TestItemsServer_ListItems(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().ListItems(gomock.Any(), userEmail).Return(itemsList, nil)
 			},
-			request: &items.EmptyRequest{},
-			expResponse: &items.ListItemResponse{
-				Passwords: []*items.Password{
+			request: &secrets.EmptyRequest{},
+			expResponse: &secrets.ListSecretResponse{
+				Passwords: []*secrets.Password{
 					{Password: itemsList.Passwords[0].Password},
 					{Password: itemsList.Passwords[1].Password},
 				},
-				Texts: []*items.TextInfo{
+				Texts: []*secrets.TextInfo{
 					{Text: itemsList.Texts[0].Text},
 					{Text: itemsList.Texts[1].Text},
 				},
@@ -208,8 +208,8 @@ func TestItemsServer_ListItems(t *testing.T) {
 			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
 			itemsServiceMock := mock_handlers.NewMockItemsService(ctrl)
 			tt.setupMocks(authServiceMock, itemsServiceMock)
-			itemsServer := NewItemsServer(itemsServiceMock, authServiceMock)
-			response, err := itemsServer.ListItems(context.Background(), tt.request)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+			response, err := itemsServer.ListSecrets(context.Background(), tt.request)
 
 			assert.Equal(t, tt.expResponse, response)
 			assert.Equal(t, tt.expError, err)

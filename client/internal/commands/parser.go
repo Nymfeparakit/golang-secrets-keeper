@@ -10,9 +10,9 @@ type Options struct {
 
 var options Options
 
-type ItemsView interface {
-	ListItemsPage()
-	AddItemPage(itemType dto.ItemType)
+type SecretsView interface {
+	ListSecretsPage()
+	AddSecretPage(itemType dto.SecretType)
 }
 
 type AuthView interface {
@@ -29,16 +29,16 @@ func NewCommandParser() *CommandParser {
 	return &CommandParser{parser: parser}
 }
 
-func (p *CommandParser) InitCommands(itemsView ItemsView, authView AuthView) error {
+func (p *CommandParser) InitCommands(secretsView SecretsView, authView AuthView) error {
 	err := p.initAuthCommands(authView)
 	if err != nil {
 		return err
 	}
-	err = p.initItemsCommands(itemsView)
+	err = p.initSecretsCommands(secretsView)
 	return err
 }
 
-func (p *CommandParser) initItemsCommands(view ItemsView) error {
+func (p *CommandParser) initSecretsCommands(view SecretsView) error {
 	addCmd := NewAddCommand(view)
 	_, err := p.parser.AddCommand("add",
 		"Add new item",
@@ -50,8 +50,8 @@ func (p *CommandParser) initItemsCommands(view ItemsView) error {
 	}
 	listCmd := NewListCommand(view)
 	_, err = p.parser.AddCommand("list",
-		"List items",
-		"The list command lists all existing items.",
+		"List secrets",
+		"The list command lists all existing secrets.",
 		listCmd,
 	)
 	if err != nil {

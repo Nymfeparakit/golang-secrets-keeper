@@ -36,7 +36,7 @@ func (s *CryptoService) CreateUserKey(password string) error {
 	return nil
 }
 
-func (s *CryptoService) EncryptItem(source any) error {
+func (s *CryptoService) EncryptSecret(source any) error {
 	// todo: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)
 	sourceValue := pSourceValue.Elem()
@@ -50,7 +50,7 @@ func (s *CryptoService) EncryptItem(source any) error {
 			continue
 		}
 
-		if field.Name == "Item" {
+		if field.Name == "Secret" {
 			fieldType := fieldValue.Type()
 			for ii := 0; ii < fieldValue.NumField(); ii++ {
 				ffield := fieldType.Field(i)
@@ -121,7 +121,7 @@ func (s *CryptoService) getUserKey() ([]byte, error) {
 	return s.userKey, nil
 }
 
-func (s *CryptoService) DecryptItem(source any) error {
+func (s *CryptoService) DecryptSecret(source any) error {
 	// TODO: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)
 	sourceValue := pSourceValue.Elem()
@@ -135,7 +135,7 @@ func (s *CryptoService) DecryptItem(source any) error {
 			continue
 		}
 
-		if field.Name == "Item" {
+		if field.Name == "Secret" {
 			fieldType := fieldValue.Type()
 			for ii := 0; ii < fieldValue.NumField(); ii++ {
 				ffield := fieldType.Field(i)

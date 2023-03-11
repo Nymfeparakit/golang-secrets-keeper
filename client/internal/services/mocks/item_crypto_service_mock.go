@@ -34,9 +34,9 @@ func (m *MockItemCryptoService) EXPECT() *MockItemCryptoServiceMockRecorder {
 }
 
 // DecryptItem mocks base method.
-func (m *MockItemCryptoService) DecryptItem(arg0 interface{}) error {
+func (m *MockItemCryptoService) DecryptSecret(arg0 interface{}) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DecryptItem", arg0)
+	ret := m.ctrl.Call(m, "DecryptSecret", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -44,13 +44,13 @@ func (m *MockItemCryptoService) DecryptItem(arg0 interface{}) error {
 // DecryptItem indicates an expected call of DecryptItem.
 func (mr *MockItemCryptoServiceMockRecorder) DecryptItem(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecryptItem", reflect.TypeOf((*MockItemCryptoService)(nil).DecryptItem), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecryptSecret", reflect.TypeOf((*MockItemCryptoService)(nil).DecryptSecret), arg0)
 }
 
 // EncryptItem mocks base method.
-func (m *MockItemCryptoService) EncryptItem(arg0 interface{}) error {
+func (m *MockItemCryptoService) EncryptSecret(arg0 interface{}) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EncryptItem", arg0)
+	ret := m.ctrl.Call(m, "EncryptSecret", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -58,5 +58,5 @@ func (m *MockItemCryptoService) EncryptItem(arg0 interface{}) error {
 // EncryptItem indicates an expected call of EncryptItem.
 func (mr *MockItemCryptoServiceMockRecorder) EncryptItem(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncryptItem", reflect.TypeOf((*MockItemCryptoService)(nil).EncryptItem), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncryptSecret", reflect.TypeOf((*MockItemCryptoService)(nil).EncryptSecret), arg0)
 }

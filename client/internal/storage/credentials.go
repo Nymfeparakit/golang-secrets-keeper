@@ -29,7 +29,7 @@ func (s *CredentialsStorage) GetToken() (string, error) {
 
 	item, err := ring.Get(ringTokenKey)
 	if errors.Is(err, keyring.ErrKeyNotFound) {
-		return "", ErrItemNotFound
+		return "", ErrSecretNotFound
 	}
 	if err != nil {
 		return "", err
@@ -78,7 +78,7 @@ func (s *CredentialsStorage) getItem(key string) ([]byte, error) {
 
 	item, err := ring.Get(key)
 	if errors.Is(err, keyring.ErrKeyNotFound) {
-		return []byte{}, ErrItemNotFound
+		return []byte{}, ErrSecretNotFound
 	}
 	if err != nil {
 		return []byte{}, err

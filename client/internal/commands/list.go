@@ -1,14 +1,14 @@
 package commands
 
 type ListCommand struct {
-	view ItemsView
+	view SecretsView
 }
 
-func NewListCommand(view ItemsView) *ListCommand {
+func NewListCommand(view SecretsView) *ListCommand {
 	return &ListCommand{view: view}
 }
 
 func (c *ListCommand) Execute(args []string) error {
-	c.view.ListItemsPage()
+	c.view.ListSecretsPage()
 	return nil
 }

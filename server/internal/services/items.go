@@ -5,33 +5,33 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/dto"
 )
 
-type ItemsStorage interface {
+type SecretsStorage interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
-	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
+	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 }
 
-type ItemsService struct {
-	storage ItemsStorage
+type SecretsService struct {
+	storage SecretsStorage
 }
 
-func NewItemsService(storage ItemsStorage) *ItemsService {
-	return &ItemsService{storage: storage}
+func NewSecretsService(storage SecretsStorage) *SecretsService {
+	return &SecretsService{storage: storage}
 }
 
-func (s *ItemsService) AddPassword(ctx context.Context, password *dto.LoginPassword) error {
+func (s *SecretsService) AddPassword(ctx context.Context, password *dto.LoginPassword) error {
 	return s.storage.AddPassword(ctx, password)
 }
 
-func (s *ItemsService) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
+func (s *SecretsService) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
 	return s.storage.AddTextInfo(ctx, textInfo)
 }
 
-func (s *ItemsService) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+func (s *SecretsService) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
 	return s.storage.AddCardInfo(ctx, cardInfo)
 }
 
-func (s *ItemsService) ListItems(ctx context.Context, user string) (dto.ItemsList, error) {
-	return s.storage.ListItems(ctx, user)
+func (s *SecretsService) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
+	return s.storage.ListSecrets(ctx, user)
 }

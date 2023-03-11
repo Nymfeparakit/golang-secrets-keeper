@@ -5,19 +5,19 @@ import (
 )
 
 type AddCommand struct {
-	Type string `short:"t" long:"type" description:"Type of item that should be added"`
-	view ItemsView
+	Type string `short:"t" long:"type" description:"Type of secret that should be added"`
+	view SecretsView
 }
 
-func NewAddCommand(view ItemsView) *AddCommand {
+func NewAddCommand(view SecretsView) *AddCommand {
 	return &AddCommand{view: view}
 }
 
 func (c *AddCommand) Execute(args []string) error {
-	itemType, err := dto.ItemTypeFromString(c.Type)
+	itemType, err := dto.SecretTypeFromString(c.Type)
 	if err != nil {
 		return err
 	}
-	c.view.AddItemPage(itemType)
+	c.view.AddSecretPage(itemType)
 	return nil
 }

@@ -47,30 +47,30 @@ VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :e
 	return nil
 }
 
-func (s *ItemsStorage) ListItems(ctx context.Context, user string) (dto.ItemsList, error) {
+func (s *ItemsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 	defer tx.Rollback()
 
-	var itemsList dto.ItemsList
+	var itemsList dto.SecretsList
 
 	passwords, err := s.listPasswords(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 	itemsList.Passwords = passwords
 
 	texts, err := s.listTexts(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 	itemsList.Texts = texts
 
 	cards, err := s.listCardInfo(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 	itemsList.Cards = cards
 

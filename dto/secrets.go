@@ -2,19 +2,19 @@ package dto
 
 import "fmt"
 
-type ItemType int
+type SecretType int
 
 const (
-	PASSWORD ItemType = iota
+	PASSWORD SecretType = iota
 	TEXT
 	CARD
 	BINARY
 	UNKNOWN
 )
 
-var ErrUnknownItemType = fmt.Errorf("unknown item type")
+var ErrUnknownSecretType = fmt.Errorf("unknown secret type")
 
-func ItemTypeFromString(s string) (ItemType, error) {
+func SecretTypeFromString(s string) (SecretType, error) {
 	switch s {
 	case "password":
 		return PASSWORD, nil
@@ -25,11 +25,11 @@ func ItemTypeFromString(s string) (ItemType, error) {
 	case "binary":
 		return BINARY, nil
 	default:
-		return UNKNOWN, ErrUnknownItemType
+		return UNKNOWN, ErrUnknownSecretType
 	}
 }
 
-type Item struct {
+type Secret struct {
 	ID       int    `db:"id"`
 	Name     string `db:"name"`
 	User     string `db:"user_email"`
@@ -37,25 +37,25 @@ type Item struct {
 }
 
 type LoginPassword struct {
-	Item
+	Secret
 	Login    string `db:"login"`
 	Password string `db:"password"`
 }
 
 type TextInfo struct {
-	Item
+	Secret
 	Text string `db:"text"`
 }
 
 type CardInfo struct {
-	Item
+	Secret
 	Number          string `db:"card_number"`
 	CVV             string `db:"cvv"`
 	ExpirationMonth string `db:"expiration_month" json:"expiration_month"`
 	ExpirationYear  string `db:"expiration_year" json:"expiration_year"`
 }
 
-type ItemsList struct {
+type SecretsList struct {
 	Passwords []*LoginPassword
 	Texts     []*TextInfo
 	Cards     []*CardInfo
