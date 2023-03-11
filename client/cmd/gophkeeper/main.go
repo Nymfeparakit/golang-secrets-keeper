@@ -6,7 +6,7 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/client/internal/storage"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/view"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/auth"
-	"github.com/Nymfeparakit/gophkeeper/server/proto/items"
+	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/jessevdk/go-flags"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -21,7 +21,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	itemsClient := items.NewItemsManagementClient(conn)
+	secretsClient := secrets.NewSecretsManagementClient(conn)
 	credentialStorage := storage.NewCredentialsStorage()
 	authClient := auth.NewAuthManagementClient(conn)
 	localConn, err := storage.GetLocalStorageConnection()
@@ -33,14 +33,14 @@ func main() {
 
 	cryptoService := services.NewCryptoService(credentialStorage)
 	authMetadataService := services.NewMetadataService()
-	itemsService := services.NewItemsService(itemsClient, authMetadataService, cryptoService, localStorage, credentialStorage)
-	authService := services.NewAuthService(authClient, credentialStorage, cryptoService, usersLocalStorage, itemsService)
+	secretsService := services.NewSecretsService(secretsClient, authMetadataService, cryptoService, localStorage, credentialStorage)
+	authService := services.NewAuthService(authClient, credentialStorage, cryptoService, usersLocalStorage, secretsService)
 
 	authView := view.NewAuthView(authService)
-	itemsView := view.NewItemsView(itemsService)
+	secretsView := view.NewSecretsView(secretsService)
 
 	commandParser := commands.NewCommandParser()
-	if err := commandParser.InitCommands(itemsView, authView); err != nil {
+	if err := commandParser.InitCommands(secretsView, authView); err != nil {
 		log.Fatal().Err(err).Msg("can't init commands")
 	}
 	if _, err := commandParser.Parse(); err != nil {

@@ -7,11 +7,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ItemsStorage interface {
+type SecretsStorage interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
-	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
+	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 }
 
 type BaseDBItemsStorage struct {
@@ -22,34 +22,34 @@ func NewBaseItemsStorage(db *sqlx.DB) *BaseDBItemsStorage {
 	return &BaseDBItemsStorage{db: db}
 }
 
-func (s *BaseDBItemsStorage) ListItems(ctx context.Context, user string) (dto.ItemsList, error) {
+func (s *BaseDBItemsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 	defer tx.Rollback()
 
-	var itemsList dto.ItemsList
+	var secretList dto.SecretsList
 
 	passwords, err := s.listPasswords(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
-	itemsList.Passwords = passwords
+	secretList.Passwords = passwords
 
 	texts, err := s.listTexts(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
-	itemsList.Texts = texts
+	secretList.Texts = texts
 
 	cards, err := s.listCardInfo(ctx, tx, user)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
-	itemsList.Cards = cards
+	secretList.Cards = cards
 
-	return itemsList, nil
+	return secretList, nil
 }
 
 func (s *BaseDBItemsStorage) listPasswords(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.LoginPassword, error) {

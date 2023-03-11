@@ -22,9 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SecretsManagementClient interface {
-	AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error)
-	AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*Response, error)
-	AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*Response, error)
+	AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*AddResponse, error)
+	AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*AddResponse, error)
+	AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*AddResponse, error)
 	ListSecrets(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*ListSecretResponse, error)
 }
 
@@ -36,8 +36,8 @@ func NewSecretsManagementClient(cc grpc.ClientConnInterface) SecretsManagementCl
 	return &secretsManagementClient{cc}
 }
 
-func (c *secretsManagementClient) AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *secretsManagementClient) AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/AddPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,8 +45,8 @@ func (c *secretsManagementClient) AddPassword(ctx context.Context, in *Password,
 	return out, nil
 }
 
-func (c *secretsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *secretsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/AddCardInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *secretsManagementClient) AddCardInfo(ctx context.Context, in *CardInfo,
 	return out, nil
 }
 
-func (c *secretsManagementClient) AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *secretsManagementClient) AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*AddResponse, error) {
+	out := new(AddResponse)
 	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/AddTextInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -76,9 +76,9 @@ func (c *secretsManagementClient) ListSecrets(ctx context.Context, in *EmptyRequ
 // All implementations must embed UnimplementedSecretsManagementServer
 // for forward compatibility
 type SecretsManagementServer interface {
-	AddPassword(context.Context, *Password) (*Response, error)
-	AddCardInfo(context.Context, *CardInfo) (*Response, error)
-	AddTextInfo(context.Context, *TextInfo) (*Response, error)
+	AddPassword(context.Context, *Password) (*AddResponse, error)
+	AddCardInfo(context.Context, *CardInfo) (*AddResponse, error)
+	AddTextInfo(context.Context, *TextInfo) (*AddResponse, error)
 	ListSecrets(context.Context, *EmptyRequest) (*ListSecretResponse, error)
 	mustEmbedUnimplementedSecretsManagementServer()
 }
@@ -87,13 +87,13 @@ type SecretsManagementServer interface {
 type UnimplementedSecretsManagementServer struct {
 }
 
-func (UnimplementedSecretsManagementServer) AddPassword(context.Context, *Password) (*Response, error) {
+func (UnimplementedSecretsManagementServer) AddPassword(context.Context, *Password) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPassword not implemented")
 }
-func (UnimplementedSecretsManagementServer) AddCardInfo(context.Context, *CardInfo) (*Response, error) {
+func (UnimplementedSecretsManagementServer) AddCardInfo(context.Context, *CardInfo) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCardInfo not implemented")
 }
-func (UnimplementedSecretsManagementServer) AddTextInfo(context.Context, *TextInfo) (*Response, error) {
+func (UnimplementedSecretsManagementServer) AddTextInfo(context.Context, *TextInfo) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTextInfo not implemented")
 }
 func (UnimplementedSecretsManagementServer) ListSecrets(context.Context, *EmptyRequest) (*ListSecretResponse, error) {

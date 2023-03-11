@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ItemsService interface {
-	ListItems() (dto.ItemsList, error)
+type SecretsService interface {
+	ListSecrets() (dto.SecretsList, error)
 	AddPassword(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
@@ -27,20 +27,20 @@ func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
 	return flex
 }
 
-type ItemsView struct {
+type SecretsView struct {
 	PagesView
-	itemsService ItemsService
-	items        dto.ItemsList
+	secretsService SecretsService
+	secrets        dto.SecretsList
 }
 
-func NewItemsView(itemsService ItemsService) *ItemsView {
+func NewSecretsView(secretsService SecretsService) *SecretsView {
 	pagesView := NewPagesView()
-	return &ItemsView{PagesView: *pagesView, itemsService: itemsService}
+	return &SecretsView{PagesView: *pagesView, secretsService: secretsService}
 }
 
-func (v *ItemsView) AddItemPage(itemType dto.ItemType) {
-	form := v.formFromItemType(itemType)
-	forms.FillSaveItemForm(form, forms.CREATE, v.processSaveItemResult)
+func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
+	form := v.formFromSecretType(itemType)
+	forms.FillSaveItemForm(form, forms.CREATE, v.processSaveSecretResult)
 	v.pages.AddPage("Add item", form, true, true)
 	err := v.app.Run()
 	if err != nil {
@@ -48,9 +48,9 @@ func (v *ItemsView) AddItemPage(itemType dto.ItemType) {
 	}
 }
 
-func (v *ItemsView) UpdateItemPage(itemType dto.ItemType) {
-	form := v.formFromItemType(itemType)
-	forms.FillSaveItemForm(form, forms.UPDATE, v.processSaveItemResult)
+func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType) {
+	form := v.formFromSecretType(itemType)
+	forms.FillSaveItemForm(form, forms.UPDATE, v.processSaveSecretResult)
 	v.pages.AddPage("Update item", form, true, true)
 	err := v.app.Run()
 	if err != nil {
@@ -58,37 +58,37 @@ func (v *ItemsView) UpdateItemPage(itemType dto.ItemType) {
 	}
 }
 
-func (v *ItemsView) ListItemsPage() {
-	resultItems, err := v.itemsService.ListItems()
+func (v *SecretsView) ListSecretsPage() {
+	resultSecrets, err := v.secretsService.ListSecrets()
 	if errors.Is(err, services.ErrTokenNotFound) {
 		v.ResultPage("You are not authenticated - use 'login' command to set credentials")
 		return
 	}
 	if err != nil {
-		v.ResultPage(fmt.Sprintf("can not list items: %v", err.Error()))
+		v.ResultPage(fmt.Sprintf("can not list secrets: %v", err.Error()))
 		return
 	}
-	v.items = resultItems
+	v.secrets = resultSecrets
 
 	var pwdNames []string
-	for _, pwd := range resultItems.Passwords {
+	for _, pwd := range resultSecrets.Passwords {
 		pwdNames = append(pwdNames, pwd.Name)
 	}
-	listPwdView := v.listItemsView(pwdNames, v.detailedLoginPasswordView)
+	listPwdView := v.listSecretsView(pwdNames, v.detailedLoginPasswordView)
 	v.pages.AddPage("List passwords", listPwdView, true, true)
 
 	var txtNames []string
-	for _, txt := range resultItems.Texts {
+	for _, txt := range resultSecrets.Texts {
 		txtNames = append(txtNames, txt.Name)
 	}
-	listTxtView := v.listItemsView(txtNames, v.detailedTextInfoView)
+	listTxtView := v.listSecretsView(txtNames, v.detailedTextInfoView)
 	v.pages.AddPage("List texts", listTxtView, true, true)
 
 	var cardNames []string
-	for _, crd := range resultItems.Cards {
+	for _, crd := range resultSecrets.Cards {
 		cardNames = append(cardNames, crd.Name)
 	}
-	listCardView := v.listItemsView(cardNames, v.detailedCardInfoView)
+	listCardView := v.listSecretsView(cardNames, v.detailedCardInfoView)
 	v.pages.AddPage("List cards", listCardView, true, true)
 
 	buttonsList := tview.NewList()
@@ -101,7 +101,7 @@ func (v *ItemsView) ListItemsPage() {
 	buttonsList.AddItem("Cards", "", 0, func() {
 		v.pages.SwitchToPage("List cards")
 	})
-	v.pages.AddPage("List items", buttonsList, true, true)
+	v.pages.AddPage("List secrets", buttonsList, true, true)
 
 	err = v.app.Run()
 	if err != nil {
@@ -109,26 +109,26 @@ func (v *ItemsView) ListItemsPage() {
 	}
 }
 
-func (v *ItemsView) processSaveItemResult(saveAction forms.SaveAction, err error) {
+func (v *SecretsView) processSaveSecretResult(saveAction forms.SaveAction, err error) {
 	var resultMsg string
 	switch saveAction {
 	case forms.CREATE:
-		resultMsg = "Successfully added new item!"
+		resultMsg = "Successfully added new secret!"
 	case forms.UPDATE:
-		resultMsg = "Successfully updated item!"
+		resultMsg = "Successfully updated secret!"
 	}
 	if err != nil {
-		resultMsg = fmt.Sprintf("Error happened on saving item: %v", err)
+		resultMsg = fmt.Sprintf("Error happened on saving secret: %v", err)
 	}
 	v.ResultPage(resultMsg)
 }
 
-func (v *ItemsView) listItemsView(
-	itemsNames []string,
-	getDetailedItemView func(i int) *tview.Flex,
+func (v *SecretsView) listSecretsView(
+	secretsNames []string,
+	getDetailedSecretView func(i int) *tview.Flex,
 ) *tview.Flex {
 	listView := tview.NewList()
-	for _, name := range itemsNames {
+	for _, name := range secretsNames {
 		listView.AddItem(name, "", 0, nil)
 	}
 
@@ -137,22 +137,22 @@ func (v *ItemsView) listItemsView(
 	listView.SetSelectedFunc(func(i int, s string, s2 string, r rune) {
 		flex.Clear()
 		flex.AddItem(listView, 0, 1, true)
-		flex.AddItem(getDetailedItemView(i), 0, 4, false)
+		flex.AddItem(getDetailedSecretView(i), 0, 4, false)
 	})
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape {
-			v.pages.SwitchToPage("List items")
+			v.pages.SwitchToPage("List secrets")
 			return nil
 		}
 		return event
 	})
-	hintFlex := NewFlexWithHint(flex, "press ENTER to choose item; press ESC to exit")
+	hintFlex := NewFlexWithHint(flex, "press ENTER to choose secret; press ESC to exit")
 
 	return hintFlex
 }
 
-func (v *ItemsView) detailedLoginPasswordView(i int) *tview.Flex {
-	pwd := v.items.Passwords[i]
+func (v *SecretsView) detailedLoginPasswordView(i int) *tview.Flex {
+	pwd := v.secrets.Passwords[i]
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(tview.NewTextView().SetText(pwd.Name).SetLabel("Name:"), 0, 1, false)
 	flex.AddItem(tview.NewTextView().SetText(pwd.Login).SetLabel("Login:"), 0, 1, false)
@@ -162,8 +162,8 @@ func (v *ItemsView) detailedLoginPasswordView(i int) *tview.Flex {
 	return flex
 }
 
-func (v *ItemsView) detailedTextInfoView(i int) *tview.Flex {
-	text := v.items.Texts[i]
+func (v *SecretsView) detailedTextInfoView(i int) *tview.Flex {
+	text := v.secrets.Texts[i]
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(tview.NewTextView().SetText(text.Name).SetLabel("Name:"), 0, 1, false)
 	flex.AddItem(tview.NewTextView().SetText(text.Text).SetLabel("Text:"), 0, 1, false)
@@ -172,8 +172,8 @@ func (v *ItemsView) detailedTextInfoView(i int) *tview.Flex {
 	return flex
 }
 
-func (v *ItemsView) detailedCardInfoView(i int) *tview.Flex {
-	card := v.items.Cards[i]
+func (v *SecretsView) detailedCardInfoView(i int) *tview.Flex {
+	card := v.secrets.Cards[i]
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(tview.NewTextView().SetText(card.Name).SetLabel("Name:"), 0, 1, false)
 	flex.AddItem(tview.NewTextView().SetText(card.Number).SetLabel("Number:"), 0, 1, false)
@@ -184,15 +184,15 @@ func (v *ItemsView) detailedCardInfoView(i int) *tview.Flex {
 	return flex
 }
 
-func (v *ItemsView) formFromItemType(itemType dto.ItemType) forms.SaveItemForm {
+func (v *SecretsView) formFromSecretType(itemType dto.SecretType) forms.SaveItemForm {
 	var form forms.SaveItemForm
 	switch itemType {
 	case dto.PASSWORD:
-		form = forms.NewLoginPasswordForm(v.itemsService)
+		form = forms.NewLoginPasswordForm(v.secretsService)
 	case dto.TEXT:
-		form = forms.NewTextInfoForm(v.itemsService)
+		form = forms.NewTextInfoForm(v.secretsService)
 	case dto.CARD:
-		form = forms.NewCardInfoForm(v.itemsService)
+		form = forms.NewCardInfoForm(v.secretsService)
 	}
 	return form
 }

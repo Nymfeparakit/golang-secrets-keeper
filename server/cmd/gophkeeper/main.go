@@ -27,9 +27,9 @@ func main() {
 		return
 	}
 	db := connectToDB(cfg.DatabaseDSN)
-	itemsStorage := storage.NewItemsStorage(db)
+	itemsStorage := storage.NewSecretsStorage(db)
 	userStorage := storage.NewUsersStorage(db)
-	itemsService := services.NewItemsService(itemsStorage)
+	itemsService := services.NewSecretsService(itemsStorage)
 	// todo: get secret key from env
 	authService := services.NewAuthService(userStorage, "123")
 	server := api.NewServer(authService, itemsService)

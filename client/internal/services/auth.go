@@ -22,7 +22,7 @@ type UsersStorage interface {
 }
 
 type ItemsServiceInterface interface {
-	LoadItems(ctx context.Context) error
+	LoadSecrets(ctx context.Context) error
 }
 
 type AuthService struct {
@@ -102,7 +102,7 @@ func (s *AuthService) loadUserData(email string) error {
 	if err != nil {
 		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}
-	err = s.itemsService.LoadItems(context.Background())
+	err = s.itemsService.LoadSecrets(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}

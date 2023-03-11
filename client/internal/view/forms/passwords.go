@@ -29,7 +29,7 @@ func (f *LoginPasswordForm) AddInputs() {
 		SetFieldWidth(64).
 		SetChangedFunc(func(pwd string) {
 			f.loginPwd.Password = pwd
-		}).SetMaskCharacter('*')
+		})
 	f.AddFormItem(pwdInput)
 }
 

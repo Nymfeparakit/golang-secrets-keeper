@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
-	"github.com/Nymfeparakit/gophkeeper/server/proto/items"
+	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,9 +14,9 @@ type AuthMetadataService interface {
 	AddAuthMetadata(ctx context.Context, token string) (context.Context, error)
 }
 
-type ItemCryptoService interface {
-	EncryptItem(source any) error
-	DecryptItem(source any) error
+type SecretCryptoService interface {
+	EncryptSecret(source any) error
+	DecryptSecret(source any) error
 }
 
 type UserCredentialsStorage interface {
@@ -27,26 +27,31 @@ type LocalItemsStorage interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
-	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
-	AddItems(ctx context.Context, itemsList dto.ItemsList) error
+	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
+	AddSecrets(ctx context.Context, secretsList dto.SecretsList) error
 }
 
-type ItemsService struct {
+type SecretsService struct {
 	authService      AuthMetadataService
-	storageClient    items.ItemsManagementClient
-	cryptoService    ItemCryptoService
+	storageClient    secrets.SecretsManagementClient
+	cryptoService    SecretCryptoService
 	localStorage     LocalItemsStorage
 	userCredsStorage UserCredentialsStorage
 }
 
-func NewItemsService(
-	client items.ItemsManagementClient,
+func (s *SecretsService) GetPasswordByID(id string) (*dto.LoginPassword, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewSecretsService(
+	client secrets.SecretsManagementClient,
 	service AuthMetadataService,
-	cryptoService ItemCryptoService,
+	cryptoService SecretCryptoService,
 	localStorage LocalItemsStorage,
 	userCredsStorage UserCredentialsStorage,
-) *ItemsService {
-	return &ItemsService{
+) *SecretsService {
+	return &SecretsService{
 		storageClient:    client,
 		authService:      service,
 		cryptoService:    cryptoService,
@@ -55,7 +60,7 @@ func NewItemsService(
 	}
 }
 
-func (s *ItemsService) AddPassword(loginPwd *dto.LoginPassword) error {
+func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
 	// todo: context should be passed from argument
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -66,11 +71,11 @@ func (s *ItemsService) AddPassword(loginPwd *dto.LoginPassword) error {
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.EncryptItem(loginPwd)
+	err = s.cryptoService.EncryptSecret(loginPwd)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
-	request := items.Password{
+	request := secrets.Password{
 		Name:     loginPwd.Name,
 		Login:    loginPwd.Login,
 		Password: loginPwd.Password,
@@ -99,21 +104,20 @@ func (s *ItemsService) AddPassword(loginPwd *dto.LoginPassword) error {
 	return nil
 }
 
-func (s *ItemsService) AddTextInfo(text *dto.TextInfo) error {
+func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
 	}
-
 	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.EncryptItem(text)
+	err = s.cryptoService.EncryptSecret(text)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
-	request := items.TextInfo{
+	request := secrets.TextInfo{
 		Name:     text.Name,
 		Text:     text.Text,
 		Metadata: text.Metadata,
@@ -128,7 +132,7 @@ func (s *ItemsService) AddTextInfo(text *dto.TextInfo) error {
 	return nil
 }
 
-func (s *ItemsService) AddCardInfo(card *dto.CardInfo) error {
+func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
@@ -138,11 +142,11 @@ func (s *ItemsService) AddCardInfo(card *dto.CardInfo) error {
 	if err != nil {
 		return err
 	}
-	err = s.cryptoService.EncryptItem(card)
+	err = s.cryptoService.EncryptSecret(card)
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
-	request := items.CardInfo{
+	request := secrets.CardInfo{
 		Name:            card.Name,
 		Number:          card.Number,
 		ExpirationMonth: card.ExpirationMonth,
@@ -160,92 +164,88 @@ func (s *ItemsService) AddCardInfo(card *dto.CardInfo) error {
 	return nil
 }
 
-func (s *ItemsService) ListItems() (dto.ItemsList, error) {
+func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 
 	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 
-	request := items.EmptyRequest{}
-	response, err := s.storageClient.ListItems(ctx, &request)
+	request := secrets.EmptyRequest{}
+	response, err := s.storageClient.ListSecrets(ctx, &request)
 	if err != nil {
-		return dto.ItemsList{}, err
+		return dto.SecretsList{}, err
 	}
 
-	var itemsList dto.ItemsList
+	var secretsList dto.SecretsList
 	for _, pwd := range response.Passwords {
-		itemDest := dto.Item{
+		itemDest := dto.Secret{
 			ID:       pwd.Id,
 			Name:     pwd.Name,
 			Metadata: pwd.Metadata,
 			User:     pwd.User,
 		}
 		pwdDest := dto.LoginPassword{
-			Item:     itemDest,
+			Secret:   itemDest,
 			Login:    pwd.Login,
 			Password: pwd.Password,
 		}
-		err := s.cryptoService.DecryptItem(&pwdDest)
+		err := s.cryptoService.DecryptSecret(&pwdDest)
 		if err != nil {
-			return dto.ItemsList{}, err
+			return dto.SecretsList{}, err
 		}
-		itemsList.Passwords = append(itemsList.Passwords, &pwdDest)
+		secretsList.Passwords = append(secretsList.Passwords, &pwdDest)
 	}
 	for _, txt := range response.Texts {
-		itemDest := dto.Item{
+		itemDest := dto.Secret{
 			ID:       txt.Id,
 			Name:     txt.Name,
 			Metadata: txt.Metadata,
 			User:     txt.User,
 		}
 		txtDest := &dto.TextInfo{
-			Text: txt.Text,
-			Item: itemDest,
+			Text:   txt.Text,
+			Secret: itemDest,
 		}
-		err := s.cryptoService.DecryptItem(txtDest)
+		err := s.cryptoService.DecryptSecret(txtDest)
 		if err != nil {
-			return dto.ItemsList{}, err
+			return dto.SecretsList{}, err
 		}
-		itemsList.Texts = append(itemsList.Texts, txtDest)
+		secretsList.Texts = append(secretsList.Texts, txtDest)
 	}
 	for _, crd := range response.Cards {
-		itemDest := dto.Item{
+		itemDest := dto.Secret{
 			ID:       crd.Id,
 			Name:     crd.Name,
 			Metadata: crd.Metadata,
 			User:     crd.User,
 		}
 		crdDest := &dto.CardInfo{
-			Item:            itemDest,
+			Secret:          itemDest,
 			Number:          crd.Number,
 			CVV:             crd.Cvv,
 			ExpirationMonth: crd.ExpirationMonth,
 			ExpirationYear:  crd.ExpirationYear,
 		}
-		err := s.cryptoService.DecryptItem(crdDest)
+		err := s.cryptoService.DecryptSecret(crdDest)
 		if err != nil {
-			return dto.ItemsList{}, err
+			return dto.SecretsList{}, err
 		}
-		itemsList.Cards = append(itemsList.Cards, crdDest)
+		secretsList.Cards = append(secretsList.Cards, crdDest)
 	}
 
-	return itemsList, nil
+	return secretsList, nil
 }
 
-func (s *ItemsService) LoadItems(ctx context.Context) error {
-	itemsList, err := s.ListItems()
+func (s *SecretsService) LoadSecrets(ctx context.Context) error {
+	secretsList, err := s.ListSecrets()
 	if err != nil {
 		return err
 	}
 
-	return s.localStorage.AddItems(ctx, itemsList)
-}
-
-func (s *ItemsService) GetPasswordByID(id string) (*dto.LoginPassword, error) {
-
+	return s.localStorage.AddSecrets(ctx, secretsList)
 }

@@ -3,37 +3,37 @@ package handlers
 import (
 	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
-	items2 "github.com/Nymfeparakit/gophkeeper/server/proto/items"
+	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type ItemsService interface {
+type SecretsService interface {
 	AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
-	ListItems(ctx context.Context, user string) (dto.ItemsList, error)
+	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 }
 
-type ItemsServer struct {
-	items2.UnimplementedItemsManagementServer
-	authService  AuthService
-	itemsService ItemsService
+type SecretsServer struct {
+	secrets.UnimplementedSecretsManagementServer
+	authService    AuthService
+	secretsService SecretsService
 }
 
-func NewItemsServer(itemsService ItemsService, authService AuthService) *ItemsServer {
-	return &ItemsServer{itemsService: itemsService, authService: authService}
+func NewSecretsServer(secretsService SecretsService, authService AuthService) *SecretsServer {
+	return &SecretsServer{secretsService: secretsService, authService: authService}
 }
 
-func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*items2.AddResponse, error) {
-	var response items2.AddResponse
+func (s *SecretsServer) AddPassword(ctx context.Context, in *secrets.Password) (*secrets.AddResponse, error) {
+	var response secrets.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
@@ -41,10 +41,10 @@ func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*it
 	password := dto.LoginPassword{
 		Login:    in.Login,
 		Password: in.Password,
-		Item:     item,
+		Secret:   item,
 	}
 
-	createdID, err := s.itemsService.AddPassword(ctx, &password)
+	createdID, err := s.secretsService.AddPassword(ctx, &password)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
@@ -53,25 +53,25 @@ func (s *ItemsServer) AddPassword(ctx context.Context, in *items2.Password) (*it
 	return &response, nil
 }
 
-func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*items2.AddResponse, error) {
-	var response items2.AddResponse
+func (s *SecretsServer) AddTextInfo(ctx context.Context, in *secrets.TextInfo) (*secrets.AddResponse, error) {
+	var response secrets.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
 	}
 	textInfo := dto.TextInfo{
-		Text: in.Text,
-		Item: item,
+		Text:   in.Text,
+		Secret: item,
 	}
 
-	err := s.itemsService.AddTextInfo(ctx, &textInfo)
+	err := s.secretsService.AddTextInfo(ctx, &textInfo)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
@@ -79,28 +79,28 @@ func (s *ItemsServer) AddTextInfo(ctx context.Context, in *items2.TextInfo) (*it
 	return &response, nil
 }
 
-func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*items2.AddResponse, error) {
-	var response items2.AddResponse
+func (s *SecretsServer) AddCardInfo(ctx context.Context, in *secrets.CardInfo) (*secrets.AddResponse, error) {
+	var response secrets.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Item{
+	item := dto.Secret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
 	}
 	cardInfo := dto.CardInfo{
-		Item:            item,
+		Secret:          item,
 		Number:          in.Number,
 		CVV:             in.Cvv,
 		ExpirationMonth: in.ExpirationMonth,
 		ExpirationYear:  in.ExpirationYear,
 	}
 
-	err := s.itemsService.AddCardInfo(ctx, &cardInfo)
+	err := s.secretsService.AddCardInfo(ctx, &cardInfo)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
@@ -108,20 +108,20 @@ func (s *ItemsServer) AddCardInfo(ctx context.Context, in *items2.CardInfo) (*it
 	return &response, nil
 }
 
-func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*items2.ListItemResponse, error) {
-	var response items2.ListItemResponse
+func (s *SecretsServer) ListSecrets(ctx context.Context, in *secrets.EmptyRequest) (*secrets.ListSecretResponse, error) {
+	var response secrets.ListSecretResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	itemsList, err := s.itemsService.ListItems(ctx, user)
+	secretsList, err := s.secretsService.ListSecrets(ctx, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
-	for _, pwd := range itemsList.Passwords {
-		pwdCopy := items2.Password{
+	for _, pwd := range secretsList.Passwords {
+		pwdCopy := secrets.Password{
 			Id:       pwd.ID,
 			Name:     pwd.Name,
 			Login:    pwd.Login,
@@ -131,8 +131,8 @@ func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*
 		}
 		response.Passwords = append(response.Passwords, &pwdCopy)
 	}
-	for _, txt := range itemsList.Texts {
-		txtCopy := items2.TextInfo{
+	for _, txt := range secretsList.Texts {
+		txtCopy := secrets.TextInfo{
 			Id:       txt.ID,
 			Name:     txt.Name,
 			Text:     txt.Text,
@@ -141,8 +141,8 @@ func (s *ItemsServer) ListItems(ctx context.Context, in *items2.EmptyRequest) (*
 		}
 		response.Texts = append(response.Texts, &txtCopy)
 	}
-	for _, crd := range itemsList.Cards {
-		crdCopy := items2.CardInfo{
+	for _, crd := range secretsList.Cards {
+		crdCopy := secrets.CardInfo{
 			Id:              crd.ID,
 			Name:            crd.Name,
 			Metadata:        crd.Metadata,
