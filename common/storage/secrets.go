@@ -8,7 +8,7 @@ import (
 )
 
 type SecretsStorage interface {
-	AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error)
+	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)

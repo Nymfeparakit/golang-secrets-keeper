@@ -14,8 +14,8 @@ func NewSecretsService(storage storage.SecretsStorage) *SecretsService {
 	return &SecretsService{storage: storage}
 }
 
-func (s *SecretsService) AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error) {
-	return s.storage.AddPassword(ctx, password)
+func (s *SecretsService) AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error) {
+	return s.storage.AddCredentials(ctx, password)
 }
 
 func (s *SecretsService) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {

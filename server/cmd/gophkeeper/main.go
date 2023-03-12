@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	commonconfig "github.com/Nymfeparakit/gophkeeper/common/config"
 	"github.com/Nymfeparakit/gophkeeper/server/internal/api"
 	"github.com/Nymfeparakit/gophkeeper/server/internal/config"
 	"github.com/Nymfeparakit/gophkeeper/server/internal/services"
@@ -21,10 +22,10 @@ func connectToDB(dbURL string) *sqlx.DB {
 }
 
 func main() {
-	cfg, err := config.InitConfig()
+	cfg := &config.Config{}
+	err := commonconfig.InitConfig(cfg)
 	if err != nil {
-		log.Fatal().Err(err).Msg("can not init config:")
-		return
+		log.Fatal().Err(err).Msg("can not initialize config")
 	}
 	db := connectToDB(cfg.DatabaseDSN)
 	itemsStorage := storage.NewSecretsStorage(db)
@@ -32,7 +33,11 @@ func main() {
 	itemsService := services.NewSecretsService(itemsStorage)
 	// todo: get secret key from env
 	authService := services.NewAuthService(userStorage, "123")
-	server := api.NewServer(authService, itemsService)
+	server, err := api.NewServer(cfg.EnableHTTPS, authService, itemsService)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can not initialize server:")
+		return
+	}
 	if err = server.Start(cfg.ServerAddress); err != nil {
 		log.Fatal().Err(err).Msg("can not start server:")
 		return

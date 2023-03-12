@@ -9,7 +9,7 @@ import (
 )
 
 type SecretsService interface {
-	AddPassword(ctx context.Context, password *dto.LoginPassword) (string, error)
+	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
@@ -25,7 +25,7 @@ func NewSecretsServer(secretsService SecretsService, authService AuthService) *S
 	return &SecretsServer{secretsService: secretsService, authService: authService}
 }
 
-func (s *SecretsServer) AddPassword(ctx context.Context, in *secrets.Password) (*secrets.AddResponse, error) {
+func (s *SecretsServer) AddCredentials(ctx context.Context, in *secrets.Password) (*secrets.AddResponse, error) {
 	var response secrets.AddResponse
 
 	user, ok := s.authService.GetUserFromContext(ctx)
@@ -44,7 +44,7 @@ func (s *SecretsServer) AddPassword(ctx context.Context, in *secrets.Password) (
 		Secret:   item,
 	}
 
-	createdID, err := s.secretsService.AddPassword(ctx, &password)
+	createdID, err := s.secretsService.AddCredentials(ctx, &password)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}

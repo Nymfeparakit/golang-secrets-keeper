@@ -2,9 +2,11 @@ package main
 
 import (
 	"github.com/Nymfeparakit/gophkeeper/client/internal/commands"
+	"github.com/Nymfeparakit/gophkeeper/client/internal/config"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/services"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/storage"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/view"
+	commonconfig "github.com/Nymfeparakit/gophkeeper/common/config"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/auth"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/jessevdk/go-flags"
@@ -12,23 +14,30 @@ import (
 	"os"
 )
 
-var serverAddress = ":8080"
-
 func main() {
-	conn, err := services.ConnectToServer(serverAddress)
+	cfg := &config.Config{}
+	err := commonconfig.InitConfig(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can not initialize config")
+	}
+
+	conn, err := services.ConnectToServer(cfg.ServerAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to connect to server")
 	}
 	defer conn.Close()
 
 	secretsClient := secrets.NewSecretsManagementClient(conn)
-	credentialStorage := storage.NewCredentialsStorage()
+	credentialStorage, err := storage.OpenCredentialsStorage()
+	if err != nil {
+		log.Fatal().Err(err).Msg("unable to open credentials storage")
+	}
 	authClient := auth.NewAuthManagementClient(conn)
 	localConn, err := storage.GetLocalStorageConnection()
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to connect to local storage")
 	}
-	localStorage := storage.NewItemsStorage(localConn)
+	localStorage := storage.NewSecretsStorage(localConn)
 	usersLocalStorage := storage.NewUsersStorage(localConn)
 
 	cryptoService := services.NewCryptoService(credentialStorage)

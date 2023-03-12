@@ -24,7 +24,7 @@ type UserCredentialsStorage interface {
 }
 
 type LocalItemsStorage interface {
-	AddPassword(ctx context.Context, password *dto.LoginPassword) error
+	AddCredentials(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
@@ -60,7 +60,7 @@ func NewSecretsService(
 	}
 }
 
-func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
+func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 	// todo: context should be passed from argument
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -81,7 +81,7 @@ func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
 		Password: loginPwd.Password,
 		Metadata: loginPwd.Metadata,
 	}
-	response, err := s.storageClient.AddPassword(ctx, &request)
+	response, err := s.storageClient.AddCredentials(ctx, &request)
 	st, ok := status.FromError(err)
 	if ok && st.Code() == codes.Unavailable {
 		log.Error().Err(err).Msg("remote storage is not available:")
@@ -96,7 +96,7 @@ func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
 
 	loginPwd.User = credentials.Email
 	loginPwd.ID = response.Id
-	err = s.localStorage.AddPassword(ctx, loginPwd)
+	err = s.localStorage.AddCredentials(ctx, loginPwd)
 	if err != nil {
 		return err
 	}

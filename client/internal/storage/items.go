@@ -9,24 +9,24 @@ import (
 	"strconv"
 )
 
-type LocalDBItemsStorage struct {
+type LocalDBSecretsStorage struct {
 	db *sqlx.DB
 	commonstorage.BaseDBItemsStorage
 }
 
-func NewItemsStorage(db *sqlx.DB) *LocalDBItemsStorage {
+func NewSecretsStorage(db *sqlx.DB) *LocalDBSecretsStorage {
 	baseStorage := commonstorage.NewBaseItemsStorage(db)
-	return &LocalDBItemsStorage{db: db, BaseDBItemsStorage: *baseStorage}
+	return &LocalDBSecretsStorage{db: db, BaseDBItemsStorage: *baseStorage}
 }
 
-func (s *LocalDBItemsStorage) AddPassword(ctx context.Context, password *dto.LoginPassword) error {
+func (s *LocalDBSecretsStorage) AddCredentials(ctx context.Context, password *dto.LoginPassword) error {
 	query := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password)
 VALUES (:id, :name, :metadata, :user_email, :login, :password)`
 	_, err := s.db.NamedExecContext(ctx, query, &password)
 	return err
 }
 
-func (s *LocalDBItemsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
+func (s *LocalDBSecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
 	query := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES (:id, :name, :metadata, :user_email, :text)`
 	_, err := s.db.NamedExecContext(ctx, query, &textInfo)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *LocalDBItemsStorage) AddTextInfo(ctx context.Context, textInfo *dto.Tex
 	return nil
 }
 
-func (s *LocalDBItemsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+func (s *LocalDBSecretsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
 	query := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
 VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
 	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
@@ -47,7 +47,7 @@ VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_mont
 	return nil
 }
 
-func (s *LocalDBItemsStorage) AddSecrets(ctx context.Context, secretsList dto.SecretsList) error {
+func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.SecretsList) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (s *LocalDBItemsStorage) AddSecrets(ctx context.Context, secretsList dto.Se
 	return tx.Commit()
 }
 
-func (s *LocalDBItemsStorage) createBulkInsertArgsString(rowsNum int, columnsNum int) string {
+func (s *LocalDBSecretsStorage) createBulkInsertArgsString(rowsNum int, columnsNum int) string {
 	idx := 1
 	var buffer bytes.Buffer
 	buffer.WriteString("\n")

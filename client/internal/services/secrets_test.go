@@ -29,12 +29,12 @@ func TestItemsService_AddPassword(t *testing.T) {
 	}
 	authClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
 	response := secrets.Response{}
-	authClientMock.EXPECT().AddPassword(gomock.Any(), &request).Return(&response, nil)
+	authClientMock.EXPECT().AddCredentials(gomock.Any(), &request).Return(&response, nil)
 	itemCryptoMock := mock_services.NewMockItemCryptoService(ctrl)
 	itemCryptoMock.EXPECT().EncryptItem(&pwd).Return(nil)
 
 	itemsService := NewSecretsService(authClientMock, authServiceMock, itemCryptoMock)
-	err := itemsService.AddPassword(&pwd)
+	err := itemsService.AddCredentials(&pwd)
 
 	require.NoError(t, err)
 }

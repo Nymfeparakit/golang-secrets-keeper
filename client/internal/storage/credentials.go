@@ -15,8 +15,12 @@ type CredentialsStorage struct {
 	keyring keyring.Keyring
 }
 
-func NewCredentialsStorage() *CredentialsStorage {
-	return &CredentialsStorage{}
+func OpenCredentialsStorage() (*CredentialsStorage, error) {
+	ring, err := keyring.Open(keyring.Config{ServiceName: serviceName})
+	if err != nil {
+		return nil, err
+	}
+	return &CredentialsStorage{keyring: ring}, nil
 }
 
 func (s *CredentialsStorage) SaveCredentials(email string, token string) error {

@@ -49,10 +49,10 @@ func (mr *MockItemsServiceMockRecorder) AddCardInfo(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCardInfo", reflect.TypeOf((*MockItemsService)(nil).AddCardInfo), arg0, arg1)
 }
 
-// AddPassword mocks base method.
-func (m *MockItemsService) AddPassword(arg0 context.Context, arg1 *dto.LoginPassword) error {
+// AddCredentials mocks base method.
+func (m *MockItemsService) AddCredentials(arg0 context.Context, arg1 *dto.LoginPassword) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddPassword", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddCredentials", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -60,7 +60,7 @@ func (m *MockItemsService) AddPassword(arg0 context.Context, arg1 *dto.LoginPass
 // AddPassword indicates an expected call of AddPassword.
 func (mr *MockItemsServiceMockRecorder) AddPassword(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPassword", reflect.TypeOf((*MockItemsService)(nil).AddPassword), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCredentials", reflect.TypeOf((*MockItemsService)(nil).AddCredentials), arg0, arg1)
 }
 
 // AddTextInfo mocks base method.
