@@ -30,7 +30,7 @@ func NewSecretsService(
 	return &SecretsService{storageClient: client, authService: service, cryptoService: cryptoService}
 }
 
-func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
+func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 	// todo: context should be passed from argument
 	ctx, err := s.authService.AddAuthMetadata(context.Background())
 	if err != nil {
@@ -46,7 +46,7 @@ func (s *SecretsService) AddPassword(loginPwd *dto.LoginPassword) error {
 		Password: loginPwd.Password,
 		Metadata: loginPwd.Metadata,
 	}
-	response, err := s.storageClient.AddPassword(ctx, &request)
+	response, err := s.storageClient.AddCredentials(ctx, &request)
 	if err != nil {
 		return err
 	}

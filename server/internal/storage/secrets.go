@@ -7,15 +7,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ItemsStorage struct {
+type SecretsStorage struct {
 	db *sqlx.DB
 }
 
-func NewItemsStorage(db *sqlx.DB) *ItemsStorage {
-	return &ItemsStorage{db: db}
+func NewSecretsStorage(db *sqlx.DB) *SecretsStorage {
+	return &SecretsStorage{db: db}
 }
 
-func (s *ItemsStorage) AddPassword(ctx context.Context, password *dto.LoginPassword) error {
+func (s *SecretsStorage) AddCredentials(ctx context.Context, password *dto.LoginPassword) error {
 	query := `INSERT INTO login_pwd (name, metadata, user_email, login, password)
 VALUES (:name, :metadata, :user_email, :login, :password)`
 	_, err := s.db.NamedExecContext(ctx, query, &password)
@@ -26,7 +26,7 @@ VALUES (:name, :metadata, :user_email, :login, :password)`
 	return nil
 }
 
-func (s *ItemsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
+func (s *SecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
 	query := `INSERT INTO text_info (name, metadata, user_email, text) VALUES (:name, :metadata, :user_email, :text)`
 	_, err := s.db.NamedExecContext(ctx, query, &textInfo)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *ItemsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) 
 	return nil
 }
 
-func (s *ItemsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+func (s *SecretsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
 	query := `INSERT INTO card_info (name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
 VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
 	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
@@ -47,7 +47,7 @@ VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :e
 	return nil
 }
 
-func (s *ItemsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
+func (s *SecretsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return dto.SecretsList{}, err
@@ -77,7 +77,7 @@ func (s *ItemsStorage) ListSecrets(ctx context.Context, user string) (dto.Secret
 	return itemsList, nil
 }
 
-func (s *ItemsStorage) listPasswords(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.LoginPassword, error) {
+func (s *SecretsStorage) listPasswords(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.LoginPassword, error) {
 	query := `SELECT * FROM login_pwd WHERE user_email=$1`
 	rows, err := tx.QueryxContext(ctx, query, user)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *ItemsStorage) listPasswords(ctx context.Context, tx *sqlx.Tx, user stri
 	return passwords, nil
 }
 
-func (s *ItemsStorage) listTexts(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.TextInfo, error) {
+func (s *SecretsStorage) listTexts(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.TextInfo, error) {
 	query := `SELECT * FROM text_info WHERE user_email=$1`
 	rows, err := tx.QueryxContext(ctx, query, user)
 	if err != nil {
@@ -115,7 +115,7 @@ func (s *ItemsStorage) listTexts(ctx context.Context, tx *sqlx.Tx, user string) 
 	return texts, nil
 }
 
-func (s *ItemsStorage) listCardInfo(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.CardInfo, error) {
+func (s *SecretsStorage) listCardInfo(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.CardInfo, error) {
 	query := `SELECT * FROM card_info WHERE user_email=$1`
 	rows, err := tx.QueryxContext(ctx, query, user)
 	if err != nil {

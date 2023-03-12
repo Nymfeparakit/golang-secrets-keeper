@@ -2,33 +2,18 @@ package config
 
 import (
 	"flag"
-	"fmt"
-	"github.com/caarlos0/env"
 )
 
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	DatabaseDSN   string `env:"DATABASE_DSN"`
+	EnableHTTPS   bool   `env:"ENABLE_HTTPS" envDefault:"false" json:"enable_https"`
 }
 
-func InitFlags(cfg *Config) {
+func (c *Config) InitFlags() {
 	flag.StringVar(
-		&cfg.ServerAddress, "a", cfg.ServerAddress, "The address where the server will be started",
+		&c.ServerAddress, "a", c.ServerAddress, "The address where the server will be started",
 	)
-	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "Connection string for database storage")
-}
-
-func InitConfig() (*Config, error) {
-	cfg := &Config{}
-	//Инициируем флаги
-	InitFlags(cfg)
-	flag.Parse()
-
-	//Загружаем переменные окружения
-	if err := env.Parse(cfg); err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return cfg, nil
+	flag.StringVar(&c.DatabaseDSN, "d", c.DatabaseDSN, "Connection string for database storage")
+	flag.BoolVar(&c.EnableHTTPS, "s", c.EnableHTTPS, "Should https be used")
 }

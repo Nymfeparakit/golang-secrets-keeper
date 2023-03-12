@@ -13,7 +13,7 @@ import (
 
 type SecretsService interface {
 	ListSecrets() (dto.SecretsList, error)
-	AddPassword(password *dto.LoginPassword) error
+	AddCredentials(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
 }

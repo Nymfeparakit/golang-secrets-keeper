@@ -6,7 +6,7 @@ import (
 )
 
 type ItemsService interface {
-	AddPassword(password *dto.LoginPassword) error
+	AddCredentials(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
 }

@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SecretsManagementClient interface {
-	AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error)
+	AddCredentials(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error)
 	AddCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*Response, error)
 	AddTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*Response, error)
 	ListSecrets(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*ListSecretResponse, error)
@@ -36,9 +36,9 @@ func NewSecretsManagementClient(cc grpc.ClientConnInterface) SecretsManagementCl
 	return &secretsManagementClient{cc}
 }
 
-func (c *secretsManagementClient) AddPassword(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error) {
+func (c *secretsManagementClient) AddCredentials(ctx context.Context, in *Password, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/AddPassword", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/AddCredentials", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *secretsManagementClient) ListSecrets(ctx context.Context, in *EmptyRequ
 // All implementations must embed UnimplementedSecretsManagementServer
 // for forward compatibility
 type SecretsManagementServer interface {
-	AddPassword(context.Context, *Password) (*Response, error)
+	AddCredentials(context.Context, *Password) (*Response, error)
 	AddCardInfo(context.Context, *CardInfo) (*Response, error)
 	AddTextInfo(context.Context, *TextInfo) (*Response, error)
 	ListSecrets(context.Context, *EmptyRequest) (*ListSecretResponse, error)
@@ -87,8 +87,8 @@ type SecretsManagementServer interface {
 type UnimplementedSecretsManagementServer struct {
 }
 
-func (UnimplementedSecretsManagementServer) AddPassword(context.Context, *Password) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddPassword not implemented")
+func (UnimplementedSecretsManagementServer) AddCredentials(context.Context, *Password) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddCredentials not implemented")
 }
 func (UnimplementedSecretsManagementServer) AddCardInfo(context.Context, *CardInfo) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCardInfo not implemented")
@@ -112,20 +112,20 @@ func RegisterSecretsManagementServer(s grpc.ServiceRegistrar, srv SecretsManagem
 	s.RegisterService(&SecretsManagement_ServiceDesc, srv)
 }
 
-func _SecretsManagement_AddPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SecretsManagement_AddCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Password)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SecretsManagementServer).AddPassword(ctx, in)
+		return srv.(SecretsManagementServer).AddCredentials(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.SecretsManagement/AddPassword",
+		FullMethod: "/proto.SecretsManagement/AddCredentials",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SecretsManagementServer).AddPassword(ctx, req.(*Password))
+		return srv.(SecretsManagementServer).AddCredentials(ctx, req.(*Password))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,8 +192,8 @@ var SecretsManagement_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SecretsManagementServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddPassword",
-			Handler:    _SecretsManagement_AddPassword_Handler,
+			MethodName: "AddCredentials",
+			Handler:    _SecretsManagement_AddCredentials_Handler,
 		},
 		{
 			MethodName: "AddCardInfo",

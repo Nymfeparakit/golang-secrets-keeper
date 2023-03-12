@@ -37,9 +37,9 @@ func (f *LoginPasswordForm) Save(saveAction SaveAction) error {
 	var err error
 	switch saveAction {
 	case UPDATE:
-		err = f.itemService.AddPassword(f.loginPwd)
+		err = f.itemService.AddCredentials(f.loginPwd)
 	case CREATE:
-		err = f.itemService.AddPassword(f.loginPwd)
+		err = f.itemService.AddCredentials(f.loginPwd)
 	}
 	return err
 }

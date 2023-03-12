@@ -55,7 +55,7 @@ func TestItemsServer_AddPassword(t *testing.T) {
 			itemsServiceMock := mock_handlers.NewMockItemsService(ctrl)
 			tt.setupMocks(authServiceMock, itemsServiceMock)
 			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
-			response, err := itemsServer.AddPassword(context.Background(), tt.request)
+			response, err := itemsServer.AddCredentials(context.Background(), tt.request)
 
 			assert.Equal(t, tt.expResponse, response)
 			assert.Equal(t, tt.expError, err)
