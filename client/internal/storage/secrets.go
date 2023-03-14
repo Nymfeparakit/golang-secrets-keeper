@@ -47,6 +47,17 @@ VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_mont
 	return nil
 }
 
+func (s *LocalDBSecretsStorage) AddBinaryInfo(ctx context.Context, binInfo *dto.BinaryInfo) error {
+	query := `INSERT INTO binary_info (id, name, metadata, user_email, data)
+VALUES (:id, :name, :metadata, :user_email, :data)`
+	_, err := s.db.NamedExecContext(ctx, query, &binInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.SecretsList) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -97,6 +108,31 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	return tx.Commit()
+}
+
+func (s *LocalDBSecretsStorage) UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error {
+	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, login=:login, password=:password
+WHERE id=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &pwd)
+}
+
+func (s *LocalDBSecretsStorage) UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error {
+	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
+	expiration_month=:expiration_month, expiration_year=:expiration_year, updated_at=:updated_at
+WHERE id=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &crd)
+}
+
+func (s *LocalDBSecretsStorage) UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error {
+	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
+WHERE id=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &txt)
+}
+
+func (s *LocalDBSecretsStorage) UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error {
+	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
+WHERE id=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &crd)
 }
 
 func (s *LocalDBSecretsStorage) createBulkInsertArgsString(rowsNum int, columnsNum int) string {

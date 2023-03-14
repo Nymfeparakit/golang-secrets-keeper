@@ -32,35 +32,59 @@ func SecretTypeFromString(s string) (SecretType, error) {
 	}
 }
 
-type Secret struct {
-	ID        string `db:"id"`
-	Name      string `db:"name"`
-	User      string `db:"user_email"`
-	Metadata  string `db:"metadata"`
-	UpdatedAt time.Time
+type Secret interface {
+	GetUpdatedAt() time.Time
+	SetUpdatedAt(t time.Time)
+	GetID() string
+}
+
+type BaseSecret struct {
+	ID        string    `db:"id"`
+	Name      string    `db:"name"`
+	User      string    `db:"user_email"`
+	Metadata  string    `db:"metadata"`
+	UpdatedAt time.Time `db:"updated_at"`
+}
+
+func (s BaseSecret) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+func (s BaseSecret) SetUpdatedAt(t time.Time) {
+	s.UpdatedAt = t
+}
+
+func (s BaseSecret) GetID() string {
+	return s.ID
 }
 
 type LoginPassword struct {
-	Secret
+	BaseSecret
 	Login    string `db:"login"`
 	Password string `db:"password"`
 }
 
 type TextInfo struct {
-	Secret
+	BaseSecret
 	Text string `db:"text"`
 }
 
 type CardInfo struct {
-	Secret
+	BaseSecret
 	Number          string `db:"card_number"`
 	CVV             string `db:"cvv"`
 	ExpirationMonth string `db:"expiration_month" json:"expiration_month"`
 	ExpirationYear  string `db:"expiration_year" json:"expiration_year"`
 }
 
+type BinaryInfo struct {
+	BaseSecret
+	Data string `db:"data"`
+}
+
 type SecretsList struct {
 	Passwords []*LoginPassword
 	Texts     []*TextInfo
 	Cards     []*CardInfo
+	Bins      []*BinaryInfo
 }

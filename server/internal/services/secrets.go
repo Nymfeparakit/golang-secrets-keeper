@@ -29,3 +29,12 @@ func (s *SecretsService) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo
 func (s *SecretsService) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
 	return s.storage.ListSecrets(ctx, user)
 }
+
+func (s *SecretsService) GetCredentialsById(ctx context.Context, id string, user string) (*dto.LoginPassword, error) {
+	pwd, err := s.storage.GetCredentialsById(ctx, id, user)
+	return &pwd, err
+}
+
+func (s *SecretsService) UpdateCredentials(ctx context.Context, password *dto.LoginPassword) error {
+	return s.storage.UpdateCredentials(ctx, password)
+}

@@ -16,11 +16,11 @@ func TestItemsService_AddPassword(t *testing.T) {
 	defer ctrl.Finish()
 	authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
 	authServiceMock.EXPECT().AddAuthMetadata(gomock.Any()).Return(context.Background(), nil)
-	item := dto.Secret{Name: "pwd"}
+	item := dto.BaseSecret{Name: "pwd"}
 	pwd := dto.LoginPassword{
-		Secret:   item,
-		Login:    "login",
-		Password: "pwd",
+		BaseSecret: item,
+		Login:      "login",
+		Password:   "pwd",
 	}
 	request := secrets.Password{
 		Name:     pwd.Name,
@@ -44,10 +44,10 @@ func TestItemsService_AddTextInfo(t *testing.T) {
 	defer ctrl.Finish()
 	authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
 	authServiceMock.EXPECT().AddAuthMetadata(gomock.Any()).Return(context.Background(), nil)
-	item := dto.Secret{Name: "textinfo", Metadata: "metadata"}
+	item := dto.BaseSecret{Name: "textinfo", Metadata: "metadata"}
 	textInfo := dto.TextInfo{
-		Secret: item,
-		Text:   "test text",
+		BaseSecret: item,
+		Text:       "test text",
 	}
 	expectedRequest := secrets.TextInfo{
 		Name:     textInfo.Name,
@@ -71,10 +71,10 @@ func TestItemsService_AddCardInfo(t *testing.T) {
 	defer ctrl.Finish()
 	authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
 	authServiceMock.EXPECT().AddAuthMetadata(gomock.Any()).Return(context.Background(), nil)
-	item := dto.Secret{Name: "cardinfo", Metadata: "metadata"}
+	item := dto.BaseSecret{Name: "cardinfo", Metadata: "metadata"}
 	cardInfo := dto.CardInfo{
-		Secret: item,
-		Number: "123123",
+		BaseSecret: item,
+		Number:     "123123",
 	}
 	expectedRequest := secrets.CardInfo{
 		Name:     cardInfo.Name,

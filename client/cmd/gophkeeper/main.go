@@ -42,11 +42,28 @@ func main() {
 
 	cryptoService := services.NewCryptoService(credentialStorage)
 	authMetadataService := services.NewMetadataService()
-	secretsService := services.NewSecretsService(secretsClient, authMetadataService, cryptoService, localStorage, credentialStorage)
+	pwdInstanceService := services.NewUpdateRetrieveDeletePasswordService(authMetadataService, cryptoService, credentialStorage, localStorage, secretsClient)
+	crdInstanceService := services.NewUpdateRetrieveDeleteCardService(authMetadataService, cryptoService, credentialStorage, localStorage, secretsClient)
+	txtInstanceService := services.NewUpdateRetrieveDeleteTextService(authMetadataService, cryptoService, credentialStorage, localStorage, secretsClient)
+	binInstanceService := services.NewUpdateRetrieveDeleteBinaryService(authMetadataService, cryptoService, credentialStorage, localStorage, secretsClient)
+	secretsService := services.NewSecretsService(
+		secretsClient,
+		authMetadataService,
+		cryptoService,
+		localStorage,
+		credentialStorage,
+		pwdInstanceService,
+	)
 	authService := services.NewAuthService(authClient, credentialStorage, cryptoService, usersLocalStorage, secretsService)
 
 	authView := view.NewAuthView(authService)
-	secretsView := view.NewSecretsView(secretsService)
+	secretsView := view.NewSecretsView(
+		secretsService,
+		pwdInstanceService,
+		crdInstanceService,
+		txtInstanceService,
+		binInstanceService,
+	)
 
 	commandParser := commands.NewCommandParser()
 	if err := commandParser.InitCommands(secretsView, authView); err != nil {

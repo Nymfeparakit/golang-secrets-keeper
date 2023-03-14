@@ -44,7 +44,20 @@ CREATE TABLE text_info
         REFERENCES auth_user (email)
 );
 
+CREATE TABLE binary_info
+(
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    metadata   TEXT NOT NULL,
+    data       TEXT NOT NULL,
+    user_email TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_email)
+        REFERENCES auth_user (email)
+);
+
 -- +goose Down
 DROP TABLE text_info;
 DROP TABLE card_info;
 DROP TABLE login_pwd;
+DROP TABLE binary_info;

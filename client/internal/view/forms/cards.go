@@ -8,13 +8,15 @@ import (
 type CardInfoForm struct {
 	cardInfo *dto.CardInfo
 	tview.Form
-	itemService ItemsService
+	itemService           AddSecretService
+	retrieveUpdateService UpdateRetrieveCardService
+	FormWithSaveAction
 }
 
-func NewCardInfoForm(service ItemsService) *CardInfoForm {
+func NewCardInfoForm(service AddSecretService, updateService UpdateRetrieveCardService) *CardInfoForm {
 	cardInfo := &dto.CardInfo{}
 	form := tview.NewForm()
-	return &CardInfoForm{cardInfo: cardInfo, Form: *form, itemService: service}
+	return &CardInfoForm{cardInfo: cardInfo, Form: *form, itemService: service, retrieveUpdateService: updateService}
 }
 
 func (f *CardInfoForm) AddInputs() {
@@ -33,11 +35,14 @@ func (f *CardInfoForm) AddInputs() {
 	f.AddInputField("Expiration Year", "", 4, nil, func(yearStr string) {
 		f.cardInfo.ExpirationYear = yearStr
 	})
+	f.AddInputField("Metadata", f.cardInfo.Metadata, 128, nil, func(metadata string) {
+		f.cardInfo.Metadata = metadata
+	})
 }
 
-func (f *CardInfoForm) Save(saveAction SaveAction) error {
+func (f *CardInfoForm) Save() error {
 	var err error
-	switch saveAction {
+	switch f.saveAction {
 	case UPDATE:
 		err = f.itemService.AddCardInfo(f.cardInfo)
 	case CREATE:
@@ -48,4 +53,10 @@ func (f *CardInfoForm) Save(saveAction SaveAction) error {
 
 func (f *CardInfoForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
+}
+
+func (f *CardInfoForm) SetSecret(id string) error {
+	crd, err := f.retrieveUpdateService.GetSecretByID(id)
+	f.cardInfo = &crd
+	return err
 }

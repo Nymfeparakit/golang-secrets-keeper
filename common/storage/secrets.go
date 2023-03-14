@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -12,6 +13,8 @@ type SecretsStorage interface {
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
+	GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error)
+	UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error
 }
 
 type BaseDBItemsStorage struct {
@@ -107,4 +110,89 @@ func (s *BaseDBItemsStorage) listCardInfo(ctx context.Context, tx *sqlx.Tx, user
 	}
 
 	return cards, nil
+}
+
+func (s *BaseDBItemsStorage) GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error) {
+	query := `SELECT * FROM login_pwd WHERE id=$1 AND user_email=$2`
+	var pwd dto.LoginPassword
+	err := s.getSecretByID(ctx, id, user, query, &pwd)
+	if err != nil {
+		return dto.LoginPassword{}, err
+	}
+
+	return pwd, nil
+}
+
+func (s *BaseDBItemsStorage) GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error) {
+	query := `SELECT * FROM card_info WHERE id=$1 AND user_email=$2`
+	var crd dto.CardInfo
+	err := s.getSecretByID(ctx, id, user, query, &crd)
+	if err != nil {
+		return dto.CardInfo{}, err
+	}
+
+	return crd, nil
+}
+
+func (s *BaseDBItemsStorage) GetTextById(ctx context.Context, id string, user string) (dto.TextInfo, error) {
+	query := `SELECT * FROM text_info WHERE id=$1 AND user_email=$2`
+	var txt dto.TextInfo
+	err := s.getSecretByID(ctx, id, user, query, &txt)
+	if err != nil {
+		return dto.TextInfo{}, err
+	}
+
+	return txt, nil
+}
+
+func (s *BaseDBItemsStorage) GetBinaryById(ctx context.Context, id string, user string) (dto.BinaryInfo, error) {
+	query := `SELECT * FROM binary_info WHERE id=$1 AND user_email=$2`
+	var bin dto.BinaryInfo
+	err := s.getSecretByID(ctx, id, user, query, &bin)
+	if err != nil {
+		return dto.BinaryInfo{}, err
+	}
+
+	return bin, nil
+}
+
+func (s *BaseDBItemsStorage) getSecretByID(ctx context.Context, id string, user string, query string, dest any) error {
+	err := s.db.QueryRowxContext(ctx, query, &id, &user).StructScan(dest)
+	if err == sql.ErrNoRows {
+		return ErrSecretNotFound
+	}
+	return err
+}
+
+func (s *BaseDBItemsStorage) UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error {
+	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, login=:login, password=:password, updated_at=:updated_at
+WHERE text(id)=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &pwd)
+}
+
+func (s *BaseDBItemsStorage) UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error {
+	query := `UPDATE card_info SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
+	expiration_month=:expiration_month, expiration_year=:expiration_year, updated_at=:updated_at
+WHERE text(id)=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &crd)
+}
+
+func (s *BaseDBItemsStorage) UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error {
+	query := `UPDATE text_info SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
+WHERE text(id)=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &txt)
+}
+
+func (s *BaseDBItemsStorage) UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error {
+	query := `UPDATE binary_info SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
+WHERE text(id)=:id AND updated_at < :updated_at`
+	return s.UpdateSecret(ctx, query, &crd)
+}
+
+func (s *BaseDBItemsStorage) UpdateSecret(ctx context.Context, query string, arg interface{}) error {
+	_, err := s.db.NamedExecContext(ctx, query, arg)
+	if err == sql.ErrNoRows {
+		return CantUpdateSecret
+	}
+	return err
 }

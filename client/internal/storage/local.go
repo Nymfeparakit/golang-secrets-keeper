@@ -18,18 +18,6 @@ import (
 var embedMigrations embed.FS
 
 func GetLocalStorageConnection() (*sqlx.DB, error) {
-	// todo: choose different folders depending on OS
-	//if runtime.GOOS == "linux" {
-	//	fmt.Println("Hello from Windows")
-	//}
-	//appDataPath := "/var/lib/" + common.AppName + "/"
-	//if _, err := os.Stat(appDataPath); errors.Is(err, os.ErrNotExist) {
-	//	err := os.Mkdir(appDataPath, os.ModePerm)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-	// todo: creating in /var/lib/ not working, fix
 	exPath, err := os.Executable()
 	if err != nil {
 		return nil, err

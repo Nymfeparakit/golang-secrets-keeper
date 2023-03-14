@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"google.golang.org/grpc/codes"
@@ -13,6 +14,8 @@ type SecretsService interface {
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
+	GetCredentialsById(ctx context.Context, id string, user string) (*dto.LoginPassword, error)
+	UpdateCredentials(ctx context.Context, password *dto.LoginPassword) error
 }
 
 type SecretsServer struct {
@@ -33,15 +36,15 @@ func (s *SecretsServer) AddCredentials(ctx context.Context, in *secrets.Password
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Secret{
+	item := dto.BaseSecret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
 	}
 	password := dto.LoginPassword{
-		Login:    in.Login,
-		Password: in.Password,
-		Secret:   item,
+		Login:      in.Login,
+		Password:   in.Password,
+		BaseSecret: item,
 	}
 
 	createdID, err := s.secretsService.AddCredentials(ctx, &password)
@@ -61,14 +64,14 @@ func (s *SecretsServer) AddTextInfo(ctx context.Context, in *secrets.TextInfo) (
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Secret{
+	item := dto.BaseSecret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
 	}
 	textInfo := dto.TextInfo{
-		Text:   in.Text,
-		Secret: item,
+		Text:       in.Text,
+		BaseSecret: item,
 	}
 
 	err := s.secretsService.AddTextInfo(ctx, &textInfo)
@@ -87,13 +90,13 @@ func (s *SecretsServer) AddCardInfo(ctx context.Context, in *secrets.CardInfo) (
 		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
 	}
 
-	item := dto.Secret{
+	item := dto.BaseSecret{
 		Name:     in.Name,
 		User:     user,
 		Metadata: in.Metadata,
 	}
 	cardInfo := dto.CardInfo{
-		Secret:          item,
+		BaseSecret:      item,
 		Number:          in.Number,
 		CVV:             in.Cvv,
 		ExpirationMonth: in.ExpirationMonth,
@@ -153,6 +156,67 @@ func (s *SecretsServer) ListSecrets(ctx context.Context, in *secrets.EmptyReques
 			User:            crd.User,
 		}
 		response.Cards = append(response.Cards, &crdCopy)
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) GetCredentialsByID(
+	ctx context.Context,
+	in *secrets.GetSecretRequest,
+) (*secrets.GetCredentialsResponse, error) {
+	var response secrets.GetCredentialsResponse
+
+	user, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	pwd, err := s.secretsService.GetCredentialsById(ctx, in.Id, user)
+	if err == storage.ErrSecretNotFound {
+		return nil, status.Error(codes.PermissionDenied, "BaseSecret does not exist")
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal server error")
+	}
+
+	response.Password = &secrets.Password{
+		Id:       pwd.ID,
+		Name:     pwd.Name,
+		Login:    pwd.Login,
+		Password: pwd.Password,
+		Metadata: pwd.Metadata,
+		User:     pwd.User,
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) UpdateCredentials(ctx context.Context, in *secrets.Password) (*secrets.EmptyResponse, error) {
+	var response secrets.EmptyResponse
+
+	user, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	item := dto.BaseSecret{
+		Name:     in.Name,
+		User:     user,
+		Metadata: in.Metadata,
+	}
+	password := dto.LoginPassword{
+		Login:      in.Login,
+		Password:   in.Password,
+		BaseSecret: item,
+	}
+
+	err := s.secretsService.UpdateCredentials(ctx, &password)
+	if err == storage.CantUpdateSecret {
+		return nil, status.Error(codes.PermissionDenied, "Can not update secret")
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
 	return &response, nil

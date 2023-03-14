@@ -6,37 +6,48 @@ import (
 )
 
 type TextInfoForm struct {
-	textInfo *dto.TextInfo
+	instance *dto.TextInfo
 	tview.Form
-	itemService ItemsService
+	itemService           AddSecretService
+	retrieveUpdateService UpdateRetrieveTextService
+	FormWithSaveAction
 }
 
-func NewTextInfoForm(service ItemsService) *TextInfoForm {
+func NewTextInfoForm(service AddSecretService, updateService UpdateRetrieveTextService) *TextInfoForm {
 	textInfo := &dto.TextInfo{}
 	form := tview.NewForm()
-	return &TextInfoForm{textInfo: textInfo, Form: *form, itemService: service}
+	return &TextInfoForm{instance: textInfo, Form: *form, itemService: service, retrieveUpdateService: updateService}
 }
 
 func (f *TextInfoForm) AddInputs() {
 	f.AddInputField("Name", "", 64, nil, func(name string) {
-		f.textInfo.Name = name
+		f.instance.Name = name
 	})
 	f.AddInputField("Text", "", 128, nil, func(text string) {
-		f.textInfo.Text = text
+		f.instance.Text = text
+	})
+	f.AddInputField("Metadata", f.instance.Metadata, 128, nil, func(metadata string) {
+		f.instance.Metadata = metadata
 	})
 }
 
-func (f *TextInfoForm) Save(saveAction SaveAction) error {
+func (f *TextInfoForm) Save() error {
 	var err error
-	switch saveAction {
+	switch f.saveAction {
 	case UPDATE:
-		err = f.itemService.AddTextInfo(f.textInfo)
+		err = f.itemService.AddTextInfo(f.instance)
 	case CREATE:
-		err = f.itemService.AddTextInfo(f.textInfo)
+		err = f.itemService.AddTextInfo(f.instance)
 	}
 	return err
 }
 
 func (f *TextInfoForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
+}
+
+func (f *TextInfoForm) SetSecret(id string) error {
+	txt, err := f.retrieveUpdateService.GetSecretByID(id)
+	f.instance = &txt
+	return err
 }

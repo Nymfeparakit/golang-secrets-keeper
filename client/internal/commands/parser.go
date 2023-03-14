@@ -13,6 +13,7 @@ var options Options
 type SecretsView interface {
 	ListSecretsPage()
 	AddSecretPage(itemType dto.SecretType)
+	UpdateSecretPage(itemType dto.SecretType, secretID string)
 }
 
 type AuthView interface {
@@ -53,6 +54,15 @@ func (p *CommandParser) initSecretsCommands(view SecretsView) error {
 		"List secrets",
 		"The list command lists all existing secrets.",
 		listCmd,
+	)
+	if err != nil {
+		return err
+	}
+	updateCmd := NewUpdateCommand(view)
+	_, err = p.parser.AddCommand("update",
+		"Update secret",
+		"The update command updates certain item.",
+		updateCmd,
 	)
 	if err != nil {
 		return err

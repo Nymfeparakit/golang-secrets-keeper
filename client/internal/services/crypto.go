@@ -50,7 +50,7 @@ func (s *CryptoService) EncryptSecret(source any) error {
 			continue
 		}
 
-		if field.Name == "Secret" {
+		if field.Name == "BaseSecret" {
 			fieldType := fieldValue.Type()
 			for ii := 0; ii < fieldValue.NumField(); ii++ {
 				ffield := fieldType.Field(i)
@@ -135,7 +135,7 @@ func (s *CryptoService) DecryptSecret(source any) error {
 			continue
 		}
 
-		if field.Name == "Secret" {
+		if field.Name == "BaseSecret" {
 			fieldType := fieldValue.Type()
 			for ii := 0; ii < fieldValue.NumField(); ii++ {
 				ffield := fieldType.Field(i)

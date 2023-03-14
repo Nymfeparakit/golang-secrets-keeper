@@ -55,3 +55,14 @@ VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :e
 
 	return nil
 }
+
+func (s *SecretsStorage) AddBinaryInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+	query := `INSERT INTO binary_info (name, metadata, user_email, data)
+VALUES (:name, :metadata, :user_email, :data)`
+	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

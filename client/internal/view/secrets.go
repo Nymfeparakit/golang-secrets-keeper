@@ -11,12 +11,32 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type SecretsService interface {
+type ListAddSecretsService interface {
 	ListSecrets() (dto.SecretsList, error)
 	AddCredentials(password *dto.LoginPassword) error
 	AddTextInfo(text *dto.TextInfo) error
 	AddCardInfo(card *dto.CardInfo) error
-	GetPasswordByID(id string) (*dto.LoginPassword, error)
+	AddBinaryInfo(bin *dto.BinaryInfo) error
+}
+
+type UpdateRetrievePasswordService interface {
+	GetSecretByID(id string) (dto.LoginPassword, error)
+	UpdateSecret(secret dto.LoginPassword) error
+}
+
+type UpdateRetrieveCardService interface {
+	GetSecretByID(id string) (dto.CardInfo, error)
+	UpdateSecret(secret dto.CardInfo) error
+}
+
+type UpdateRetrieveTextService interface {
+	GetSecretByID(id string) (dto.TextInfo, error)
+	UpdateSecret(secret dto.TextInfo) error
+}
+
+type UpdateRetrieveBinaryService interface {
+	GetSecretByID(id string) (dto.BinaryInfo, error)
+	UpdateSecret(secret dto.BinaryInfo) error
 }
 
 func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
@@ -29,30 +49,50 @@ func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
 
 type SecretsView struct {
 	PagesView
-	secretsService SecretsService
-	secrets        dto.SecretsList
+	secretsService     ListAddSecretsService
+	pwdInstanceService UpdateRetrievePasswordService
+	crdInstanceService UpdateRetrieveCardService
+	txtInstanceService UpdateRetrieveTextService
+	binInstanceService UpdateRetrieveBinaryService
+	secrets            dto.SecretsList
 }
 
-func NewSecretsView(secretsService SecretsService) *SecretsView {
+func NewSecretsView(
+	secretsService ListAddSecretsService,
+	pwdInstanceService UpdateRetrievePasswordService,
+	crdInstanceService UpdateRetrieveCardService,
+	txtInstanceService UpdateRetrieveTextService,
+	binInstanceService UpdateRetrieveBinaryService,
+) *SecretsView {
 	pagesView := NewPagesView()
-	return &SecretsView{PagesView: *pagesView, secretsService: secretsService}
+	return &SecretsView{
+		PagesView:          *pagesView,
+		secretsService:     secretsService,
+		pwdInstanceService: pwdInstanceService,
+		crdInstanceService: crdInstanceService,
+		txtInstanceService: txtInstanceService,
+		binInstanceService: binInstanceService,
+	}
 }
 
 func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
 	form := v.formFromSecretType(itemType)
-	forms.FillSaveItemForm(form, forms.CREATE, v.processSaveSecretResult)
+	form, err := forms.FillSaveItemForm(form, forms.CREATE, "", v.processSaveSecretResult)
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
 	v.pages.AddPage("Add item", form, true, true)
-	err := v.app.Run()
+	err = v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 }
 
-func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType) {
+func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string) {
 	form := v.formFromSecretType(itemType)
-	forms.FillSaveItemForm(form, forms.UPDATE, v.processSaveSecretResult)
+	form, err := forms.FillSaveItemForm(form, forms.UPDATE, secretID, v.processSaveSecretResult)
 	v.pages.AddPage("Update item", form, true, true)
-	err := v.app.Run()
+	err = v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
@@ -188,11 +228,13 @@ func (v *SecretsView) formFromSecretType(itemType dto.SecretType) forms.SaveItem
 	var form forms.SaveItemForm
 	switch itemType {
 	case dto.PASSWORD:
-		form = forms.NewLoginPasswordForm(v.secretsService)
+		form = forms.NewLoginPasswordForm(v.secretsService, v.pwdInstanceService)
 	case dto.TEXT:
-		form = forms.NewTextInfoForm(v.secretsService)
+		form = forms.NewTextInfoForm(v.secretsService, v.txtInstanceService)
 	case dto.CARD:
-		form = forms.NewCardInfoForm(v.secretsService)
+		form = forms.NewCardInfoForm(v.secretsService, v.crdInstanceService)
+	case dto.BINARY:
+		form = forms.NewBinaryInfoForm(v.secretsService, v.binInstanceService)
 	}
 	return form
 }
