@@ -2,14 +2,15 @@ package services
 
 import (
 	"context"
+	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"time"
 )
 
 type PasswordInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalItemsStorage
+	localStorage  LocalSecretsStorage
 }
 
 func (s *PasswordInstanceService) GetSecretByID(ctx context.Context, id string) (dto.LoginPassword, error) {
@@ -20,19 +21,9 @@ func (s *PasswordInstanceService) GetSecretByID(ctx context.Context, id string) 
 	}
 
 	pwd := response.Password
-	itemDest := dto.BaseSecret{
-		ID:       pwd.Id,
-		Name:     pwd.Name,
-		Metadata: pwd.Metadata,
-		User:     pwd.User,
-	}
-	pwdDest := dto.LoginPassword{
-		BaseSecret: itemDest,
-		Login:      pwd.Login,
-		Password:   pwd.Password,
-	}
+	dest := common.PasswordFromProto(pwd)
 
-	return pwdDest, nil
+	return dest, nil
 }
 
 func (s *PasswordInstanceService) GetLocalSecretByID(id string, email string) (dto.LoginPassword, error) {
@@ -40,17 +31,13 @@ func (s *PasswordInstanceService) GetLocalSecretByID(id string, email string) (d
 }
 
 func (s *PasswordInstanceService) UpdateSecret(ctx context.Context, loginPwd dto.LoginPassword) error {
-	request := secrets.Password{
-		Name:      loginPwd.Name,
-		Login:     loginPwd.Login,
-		Password:  loginPwd.Password,
-		Metadata:  loginPwd.Metadata,
-		UpdatedAt: timestamppb.New(loginPwd.UpdatedAt),
-	}
-	_, err := s.storageClient.UpdateCredentials(ctx, &request)
+	loginPwd.UpdatedAt = time.Now().UTC()
+	request := common.CredentialsToProto(&loginPwd)
+	_, err := s.storageClient.UpdateCredentials(ctx, request)
 	return err
 }
 
 func (s *PasswordInstanceService) UpdateLocalSecret(loginPwd dto.LoginPassword) error {
+	loginPwd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCredentials(context.Background(), &loginPwd)
 }

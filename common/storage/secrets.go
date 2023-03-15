@@ -10,11 +10,18 @@ import (
 
 type SecretsStorage interface {
 	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
-	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
-	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
+	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) (string, error)
+	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) (string, error)
+	AddBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) (string, error)
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 	GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error)
+	GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error)
+	GetTextById(ctx context.Context, id string, user string) (dto.TextInfo, error)
+	GetBinaryById(ctx context.Context, id string, user string) (dto.BinaryInfo, error)
 	UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error
+	UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error
+	UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error
+	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
 }
 
 type BaseDBItemsStorage struct {

@@ -21,7 +21,7 @@ type UsersStorage interface {
 	CreateUser(ctx context.Context, email string) error
 }
 
-type ItemsServiceInterface interface {
+type SecretsLoadingService interface {
 	LoadSecrets(ctx context.Context) error
 }
 
@@ -31,7 +31,7 @@ type AuthService struct {
 	credentialsStorage CredentialsStorage
 	cryptoService      UserCryptoService
 	localUsersStorage  UsersStorage
-	itemsService       ItemsServiceInterface
+	secretsService     SecretsLoadingService
 }
 
 func NewAuthService(
@@ -39,14 +39,14 @@ func NewAuthService(
 	storage CredentialsStorage,
 	cryptoService UserCryptoService,
 	usersStorage UsersStorage,
-	itemsService ItemsServiceInterface,
+	itemsService SecretsLoadingService,
 ) *AuthService {
 	return &AuthService{
 		storageClient:      client,
 		credentialsStorage: storage,
 		cryptoService:      cryptoService,
 		localUsersStorage:  usersStorage,
-		itemsService:       itemsService,
+		secretsService:     itemsService,
 	}
 }
 
@@ -102,25 +102,12 @@ func (s *AuthService) loadUserData(email string) error {
 	if err != nil {
 		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}
-	err = s.itemsService.LoadSecrets(context.Background())
+	err = s.secretsService.LoadSecrets(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}
 
 	return nil
-}
-
-func (s *AuthService) getUserToken() (string, error) {
-	if s.userToken == "" {
-		errorMsg := "could not get user token: %s"
-		token, err := s.credentialsStorage.GetToken()
-		if err != nil {
-			return "", fmt.Errorf(errorMsg, err)
-		}
-		s.userToken = token
-	}
-
-	return s.userToken, nil
 }
 
 type MetadataService struct{}

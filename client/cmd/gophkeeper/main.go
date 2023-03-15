@@ -11,8 +11,14 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/jessevdk/go-flags"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"os"
 )
+
+func ConnectToServer(serverAddr string) (*grpc.ClientConn, error) {
+	return grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+}
 
 func main() {
 	cfg := &config.Config{}
@@ -21,7 +27,7 @@ func main() {
 		log.Fatal().Err(err).Msg("can not initialize config")
 	}
 
-	conn, err := services.ConnectToServer(cfg.ServerAddress)
+	conn, err := ConnectToServer(cfg.ServerAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to connect to server")
 	}

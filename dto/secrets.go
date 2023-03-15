@@ -34,7 +34,6 @@ func SecretTypeFromString(s string) (SecretType, error) {
 
 type Secret interface {
 	GetUpdatedAt() time.Time
-	SetUpdatedAt(t time.Time)
 	GetID() string
 }
 
@@ -48,10 +47,6 @@ type BaseSecret struct {
 
 func (s BaseSecret) GetUpdatedAt() time.Time {
 	return s.UpdatedAt
-}
-
-func (s BaseSecret) SetUpdatedAt(t time.Time) {
-	s.UpdatedAt = t
 }
 
 func (s BaseSecret) GetID() string {

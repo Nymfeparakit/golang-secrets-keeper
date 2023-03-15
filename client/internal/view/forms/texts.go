@@ -20,10 +20,10 @@ func NewTextInfoForm(service AddSecretService, updateService UpdateRetrieveTextS
 }
 
 func (f *TextInfoForm) AddInputs() {
-	f.AddInputField("Name", "", 64, nil, func(name string) {
+	f.AddInputField("Name", f.instance.Name, 64, nil, func(name string) {
 		f.instance.Name = name
 	})
-	f.AddInputField("Text", "", 128, nil, func(text string) {
+	f.AddInputField("Text", f.instance.Text, 128, nil, func(text string) {
 		f.instance.Text = text
 	})
 	f.AddInputField("Metadata", f.instance.Metadata, 128, nil, func(metadata string) {
@@ -35,7 +35,7 @@ func (f *TextInfoForm) Save() error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.itemService.AddTextInfo(f.instance)
+		err = f.retrieveUpdateService.UpdateSecret(*f.instance)
 	case CREATE:
 		err = f.itemService.AddTextInfo(f.instance)
 	}

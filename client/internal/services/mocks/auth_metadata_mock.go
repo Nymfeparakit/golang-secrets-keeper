@@ -35,16 +35,16 @@ func (m *MockAuthMetadataService) EXPECT() *MockAuthMetadataServiceMockRecorder 
 }
 
 // AddAuthMetadata mocks base method.
-func (m *MockAuthMetadataService) AddAuthMetadata(arg0 context.Context) (context.Context, error) {
+func (m *MockAuthMetadataService) AddAuthMetadata(arg0 context.Context, arg1 string) (context.Context, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddAuthMetadata", arg0)
+	ret := m.ctrl.Call(m, "AddAuthMetadata", arg0, arg1)
 	ret0, _ := ret[0].(context.Context)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddAuthMetadata indicates an expected call of AddAuthMetadata.
-func (mr *MockAuthMetadataServiceMockRecorder) AddAuthMetadata(arg0 interface{}) *gomock.Call {
+func (mr *MockAuthMetadataServiceMockRecorder) AddAuthMetadata(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAuthMetadata", reflect.TypeOf((*MockAuthMetadataService)(nil).AddAuthMetadata), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAuthMetadata", reflect.TypeOf((*MockAuthMetadataService)(nil).AddAuthMetadata), arg0, arg1)
 }

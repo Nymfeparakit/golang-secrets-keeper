@@ -3,14 +3,30 @@ package common
 import (
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func CredentialsToProto(pwd *dto.LoginPassword) *secrets.Password {
+	dest := secrets.Password{
+		Id:        pwd.ID,
+		Name:      pwd.Name,
+		Metadata:  pwd.Metadata,
+		User:      pwd.User,
+		Login:     pwd.Login,
+		Password:  pwd.Password,
+		UpdatedAt: timestamppb.New(pwd.UpdatedAt),
+	}
+
+	return &dest
+}
 
 func CardFromProto(crd *secrets.CardInfo) dto.CardInfo {
 	itemDest := dto.BaseSecret{
-		ID:       crd.Id,
-		Name:     crd.Name,
-		Metadata: crd.Metadata,
-		User:     crd.User,
+		ID:        crd.Id,
+		Name:      crd.Name,
+		Metadata:  crd.Metadata,
+		User:      crd.User,
+		UpdatedAt: crd.UpdatedAt.AsTime(),
 	}
 	crdDest := dto.CardInfo{
 		BaseSecret:      itemDest,
@@ -25,12 +41,15 @@ func CardFromProto(crd *secrets.CardInfo) dto.CardInfo {
 
 func CardToProto(crd *dto.CardInfo) *secrets.CardInfo {
 	crdDest := secrets.CardInfo{
+		Id:              crd.ID,
 		Name:            crd.Name,
 		Number:          crd.Number,
 		ExpirationMonth: crd.ExpirationMonth,
 		ExpirationYear:  crd.ExpirationYear,
 		Cvv:             crd.CVV,
 		Metadata:        crd.Metadata,
+		User:            crd.User,
+		UpdatedAt:       timestamppb.New(crd.UpdatedAt),
 	}
 
 	return &crdDest
@@ -38,10 +57,11 @@ func CardToProto(crd *dto.CardInfo) *secrets.CardInfo {
 
 func TextFromProto(txt *secrets.TextInfo) dto.TextInfo {
 	itemDest := dto.BaseSecret{
-		ID:       txt.Id,
-		Name:     txt.Name,
-		Metadata: txt.Metadata,
-		User:     txt.User,
+		ID:        txt.Id,
+		Name:      txt.Name,
+		Metadata:  txt.Metadata,
+		User:      txt.User,
+		UpdatedAt: txt.UpdatedAt.AsTime(),
 	}
 	txtDest := dto.TextInfo{
 		Text:       txt.Text,
@@ -53,9 +73,12 @@ func TextFromProto(txt *secrets.TextInfo) dto.TextInfo {
 
 func TextToProto(txt *dto.TextInfo) *secrets.TextInfo {
 	txtDest := secrets.TextInfo{
-		Name:     txt.Name,
-		Text:     txt.Text,
-		Metadata: txt.Metadata,
+		Id:        txt.ID,
+		Name:      txt.Name,
+		Text:      txt.Text,
+		Metadata:  txt.Metadata,
+		User:      txt.User,
+		UpdatedAt: timestamppb.New(txt.UpdatedAt),
 	}
 
 	return &txtDest
@@ -63,10 +86,11 @@ func TextToProto(txt *dto.TextInfo) *secrets.TextInfo {
 
 func BinaryFromProto(bin *secrets.BinaryInfo) dto.BinaryInfo {
 	itemDest := dto.BaseSecret{
-		ID:       bin.Id,
-		Name:     bin.Name,
-		Metadata: bin.Metadata,
-		User:     bin.User,
+		ID:        bin.Id,
+		Name:      bin.Name,
+		Metadata:  bin.Metadata,
+		User:      bin.User,
+		UpdatedAt: bin.UpdatedAt.AsTime(),
 	}
 	binDest := dto.BinaryInfo{
 		Data:       bin.Data,
@@ -78,9 +102,12 @@ func BinaryFromProto(bin *secrets.BinaryInfo) dto.BinaryInfo {
 
 func BinaryToProto(bin *dto.BinaryInfo) *secrets.BinaryInfo {
 	dest := secrets.BinaryInfo{
-		Name:     bin.Name,
-		Data:     bin.Data,
-		Metadata: bin.Metadata,
+		Id:        bin.ID,
+		Name:      bin.Name,
+		Data:      bin.Data,
+		Metadata:  bin.Metadata,
+		UpdatedAt: timestamppb.New(bin.UpdatedAt),
+		User:      bin.User,
 	}
 
 	return &dest
@@ -88,10 +115,11 @@ func BinaryToProto(bin *dto.BinaryInfo) *secrets.BinaryInfo {
 
 func PasswordFromProto(pwd *secrets.Password) dto.LoginPassword {
 	itemDest := dto.BaseSecret{
-		ID:       pwd.Id,
-		Name:     pwd.Name,
-		Metadata: pwd.Metadata,
-		User:     pwd.User,
+		ID:        pwd.Id,
+		Name:      pwd.Name,
+		Metadata:  pwd.Metadata,
+		User:      pwd.User,
+		UpdatedAt: pwd.UpdatedAt.AsTime(),
 	}
 	dest := dto.LoginPassword{
 		Login:      pwd.Login,
@@ -100,15 +128,4 @@ func PasswordFromProto(pwd *secrets.Password) dto.LoginPassword {
 	}
 
 	return dest
-}
-
-func PasswordToProto(pwd *dto.LoginPassword) *secrets.Password {
-	dest := secrets.Password{
-		Name:     pwd.Name,
-		Login:    pwd.Login,
-		Password: pwd.Password,
-		Metadata: pwd.Metadata,
-	}
-
-	return &dest
 }

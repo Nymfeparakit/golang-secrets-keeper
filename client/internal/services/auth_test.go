@@ -6,7 +6,6 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/server/proto/auth"
 	mock_auth "github.com/Nymfeparakit/gophkeeper/server/proto/auth/mocks"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -27,9 +26,11 @@ func TestAuthService_Register(t *testing.T) {
 	response := auth.SignUpResponse{}
 	authClientMock.EXPECT().SignUp(gomock.Any(), &expectedRequest).Return(&response, nil)
 
-	tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
+	credsStorageMock := mock_services.NewMockCredentialsStorage(ctrl)
 	userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
-	authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
+	userStorageMock := mock_services.NewMockUsersStorage(ctrl)
+	secretLoadMock := mock_services.NewMockSecretsLoadingService(ctrl)
+	authService := NewAuthService(authClientMock, credsStorageMock, userCryptoMock, userStorageMock, secretLoadMock)
 
 	err := authService.Register(user)
 
@@ -51,54 +52,18 @@ func TestAuthService_Login(t *testing.T) {
 	resp := auth.LoginResponse{Token: token}
 	authClientMock.EXPECT().Login(gomock.Any(), &expectedRequest).Return(&resp, nil)
 
-	tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
-	tokenStorageMock.EXPECT().SaveToken(token).Return(nil)
+	credsStorageMock := mock_services.NewMockCredentialsStorage(ctrl)
 	userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
-	userCryptoMock.EXPECT().CreateUserKey(pwd).Return(nil)
+	userStorageMock := mock_services.NewMockUsersStorage(ctrl)
+	secretLoadMock := mock_services.NewMockSecretsLoadingService(ctrl)
+	authService := NewAuthService(authClientMock, credsStorageMock, userCryptoMock, userStorageMock, secretLoadMock)
 
-	authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
+	credsStorageMock.EXPECT().SaveCredentials(email, token).Return(nil)
+	userCryptoMock.EXPECT().CreateUserKey(pwd).Return(nil)
+	userStorageMock.EXPECT().CreateUser(gomock.Any(), email).Return(nil)
+	secretLoadMock.EXPECT().LoadSecrets(gomock.Any()).Return(nil)
 
 	err := authService.Login(email, pwd)
 
 	require.NoError(t, err)
-}
-
-func TestAuthService_getUserToken(t *testing.T) {
-	tests := []struct {
-		name              string
-		setupMocks        func(tokenMock *mock_services.MockTokenStorage)
-		initialTokenValue string
-	}{
-		{
-			name: "token is empty",
-			setupMocks: func(tokenMock *mock_services.MockTokenStorage) {
-				tokenMock.EXPECT().GetToken().Return("token", nil)
-			},
-			initialTokenValue: "",
-		},
-		{
-			name:              "token is not empty",
-			initialTokenValue: "token",
-			setupMocks:        func(tokenMock *mock_services.MockTokenStorage) {},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			authClientMock := mock_auth.NewMockAuthManagementClient(ctrl)
-			tokenStorageMock := mock_services.NewMockTokenStorage(ctrl)
-			tt.setupMocks(tokenStorageMock)
-			userCryptoMock := mock_services.NewMockUserCryptoService(ctrl)
-			authService := NewAuthService(authClientMock, tokenStorageMock, userCryptoMock)
-			authService.userToken = tt.initialTokenValue
-
-			actualResult, err := authService.getUserToken()
-
-			require.NoError(t, err)
-			assert.Equal(t, "token", actualResult)
-		})
-	}
 }

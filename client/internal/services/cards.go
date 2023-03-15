@@ -5,11 +5,12 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
+	"time"
 )
 
 type CardInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalItemsStorage
+	localStorage  LocalSecretsStorage
 }
 
 func (s *CardInstanceService) GetSecretByID(ctx context.Context, id string) (dto.CardInfo, error) {
@@ -28,11 +29,13 @@ func (s *CardInstanceService) GetLocalSecretByID(id string, email string) (dto.C
 }
 
 func (s *CardInstanceService) UpdateSecret(ctx context.Context, crd dto.CardInfo) error {
+	crd.UpdatedAt = time.Now().UTC()
 	request := common.CardToProto(&crd)
 	_, err := s.storageClient.UpdateCardInfo(ctx, request)
 	return err
 }
 
 func (s *CardInstanceService) UpdateLocalSecret(crd dto.CardInfo) error {
+	crd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCardInfo(context.Background(), &crd)
 }

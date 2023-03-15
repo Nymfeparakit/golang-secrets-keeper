@@ -5,11 +5,12 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
+	"time"
 )
 
 type TextInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalItemsStorage
+	localStorage  LocalSecretsStorage
 }
 
 func (s *TextInstanceService) GetSecretByID(ctx context.Context, id string) (dto.TextInfo, error) {
@@ -28,11 +29,13 @@ func (s *TextInstanceService) GetLocalSecretByID(id string, email string) (dto.T
 }
 
 func (s *TextInstanceService) UpdateSecret(ctx context.Context, txt dto.TextInfo) error {
+	txt.UpdatedAt = time.Now().UTC()
 	request := common.TextToProto(&txt)
 	_, err := s.storageClient.UpdateTextInfo(ctx, request)
 	return err
 }
 
 func (s *TextInstanceService) UpdateLocalSecret(txt dto.TextInfo) error {
+	txt.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateTextInfo(context.Background(), &txt)
 }

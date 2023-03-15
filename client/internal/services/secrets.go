@@ -21,7 +21,7 @@ type UserCredentialsStorage interface {
 	GetCredentials() (*dto.UserCredentials, error)
 }
 
-type LocalItemsStorage interface {
+type LocalSecretsStorage interface {
 	AddCredentials(ctx context.Context, password *dto.LoginPassword) error
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error
@@ -41,17 +41,16 @@ type LocalItemsStorage interface {
 type UpdatePasswordsService interface{}
 
 type DataToSync struct {
-	secretsToCreate      []dto.Secret
-	localSecretsToCreate []dto.Secret
-	secretsToUpdate      []dto.Secret
-	localSecretsToUpdate []dto.Secret
+	localUniqID  []string
+	remoteUniqID []string
+	allID        map[string]bool
 }
 
 type SecretsService struct {
 	authService        AuthMetadataService
 	storageClient      secrets.SecretsManagementClient
 	cryptoService      SecretCryptoService
-	localStorage       LocalItemsStorage
+	localStorage       LocalSecretsStorage
 	userCredsStorage   UserCredentialsStorage
 	pwdInstanceService UpdatePasswordsService
 	//crdInstanceService UpdateRetrieveCardService
@@ -63,7 +62,7 @@ func NewSecretsService(
 	client secrets.SecretsManagementClient,
 	service AuthMetadataService,
 	cryptoService SecretCryptoService,
-	localStorage LocalItemsStorage,
+	localStorage LocalSecretsStorage,
 	userCredsStorage UserCredentialsStorage,
 	pwdInstanceService UpdatePasswordsService,
 ) *SecretsService {
@@ -92,18 +91,18 @@ func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
-	request := common.PasswordToProto(loginPwd)
+	request := common.CredentialsToProto(loginPwd)
 
 	response, err := s.storageClient.AddCredentials(ctx, request)
 	if err != nil && !checkUnavailableError(err) {
 		return err
 	}
-	if response.Error != "" {
-		return fmt.Errorf("error occured on adding password: %s", response.Error)
-	}
 
 	loginPwd.User = credentials.Email
-	loginPwd.ID = response.Id
+	// if remote was available
+	if response != nil {
+		loginPwd.ID = response.Id
+	}
 	err = s.localStorage.AddCredentials(ctx, loginPwd)
 	return err
 }
@@ -128,12 +127,12 @@ func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
 	if err != nil && !checkUnavailableError(err) {
 		return err
 	}
-	if response.Error != "" {
-		return fmt.Errorf("error occured on adding password: %s", response.Error)
-	}
 
 	text.User = credentials.Email
-	text.ID = response.Id
+	// if remote was available
+	if response != nil {
+		text.ID = response.Id
+	}
 	err = s.localStorage.AddTextInfo(ctx, text)
 	return err
 }
@@ -159,12 +158,11 @@ func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
 	if err != nil && !checkUnavailableError(err) {
 		return err
 	}
-	if response.Error != "" {
-		return fmt.Errorf("error occured on adding password: %s", response.Error)
-	}
 
 	card.User = credentials.Email
-	card.ID = response.Id
+	if response != nil {
+		card.ID = response.Id
+	}
 	err = s.localStorage.AddCardInfo(ctx, card)
 	return err
 }
@@ -190,14 +188,20 @@ func (s *SecretsService) AddBinaryInfo(bin *dto.BinaryInfo) error {
 	if err != nil {
 		return err
 	}
-	if response.Error != "" {
-		return fmt.Errorf("error occured on adding binary: %s", response.Error)
-	}
 
 	bin.User = credentials.Email
-	bin.ID = response.Id
+	if response != nil {
+		bin.ID = response.Id
+	}
 	err = s.localStorage.AddBinaryInfo(ctx, bin)
 	return err
+}
+
+type SecretsMap struct {
+	passwords map[string]*dto.LoginPassword
+	cards     map[string]*dto.CardInfo
+	texts     map[string]*dto.TextInfo
+	bins      map[string]*dto.BinaryInfo
 }
 
 func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
@@ -219,58 +223,56 @@ func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
 	}
 
 	var secretsList dto.SecretsList
+	secretsMap := SecretsMap{
+		passwords: make(map[string]*dto.LoginPassword, len(response.Passwords)),
+		cards:     make(map[string]*dto.CardInfo, len(response.Cards)),
+		texts:     make(map[string]*dto.TextInfo, len(response.Texts)),
+		bins:      make(map[string]*dto.BinaryInfo, len(response.Bins)),
+	}
 	for _, pwd := range response.Passwords {
 		pwdDest := common.PasswordFromProto(pwd)
 		secretsList.Passwords = append(secretsList.Passwords, &pwdDest)
+		secretsMap.passwords[pwdDest.ID] = &pwdDest
 	}
 	for _, txt := range response.Texts {
 		txtDest := common.TextFromProto(txt)
 		secretsList.Texts = append(secretsList.Texts, &txtDest)
+		secretsMap.texts[txtDest.ID] = &txtDest
 	}
 	for _, crd := range response.Cards {
 		crdDest := common.CardFromProto(crd)
 		secretsList.Cards = append(secretsList.Cards, &crdDest)
+		secretsMap.cards[crdDest.ID] = &crdDest
 	}
 	for _, bin := range response.Bins {
 		dest := common.BinaryFromProto(bin)
 		secretsList.Bins = append(secretsList.Bins, &dest)
+		secretsMap.bins[dest.ID] = &dest
 	}
 
 	//get secrets from local storage
-	localSecretsList, err := s.localStorage.ListSecrets(ctx, credentials.Email)
+	//localSecretsList, err := s.localStorage.ListSecrets(ctx, credentials.Email)
+	//
+	//localSecretsMap := SecretsMap{
+	//	passwords: make(map[string]*dto.LoginPassword, len(response.Passwords)),
+	//	cards:     make(map[string]*dto.CardInfo, len(response.Cards)),
+	//	texts:     make(map[string]*dto.TextInfo, len(response.Texts)),
+	//	bins:      make(map[string]*dto.BinaryInfo, len(response.Bins)),
+	//}
+	//for _, pwd := range localSecretsList.Passwords {
+	//	localSecretsMap.passwords[pwd.ID] = pwd
+	//}
+	//for _, txt := range localSecretsList.Texts {
+	//	localSecretsMap.texts[txt.ID] = txt
+	//}
+	//for _, crd := range localSecretsList.Cards {
+	//	localSecretsMap.cards[crd.ID] = crd
+	//}
+	//for _, bin := range localSecretsList.Bins {
+	//	localSecretsMap.bins[bin.ID] = bin
+	//}
 
-	// sync secrets
-	//s.syncSecrets(secretsList.Passwords, localSecretsList.Passwords)
-
-	//get secrets again from local storage
-	localSecretsList, err = s.localStorage.ListSecrets(ctx, credentials.Email)
-	// decrypt them and return to user
-	for _, pwd := range localSecretsList.Passwords {
-		err := s.cryptoService.DecryptSecret(pwd)
-		if err != nil {
-			return dto.SecretsList{}, err
-		}
-	}
-	for _, txt := range localSecretsList.Texts {
-		err := s.cryptoService.DecryptSecret(txt)
-		if err != nil {
-			return dto.SecretsList{}, err
-		}
-	}
-	for _, crd := range localSecretsList.Cards {
-		err := s.cryptoService.DecryptSecret(crd)
-		if err != nil {
-			return dto.SecretsList{}, err
-		}
-	}
-	for _, bin := range localSecretsList.Bins {
-		err := s.cryptoService.DecryptSecret(bin)
-		if err != nil {
-			return dto.SecretsList{}, err
-		}
-	}
-
-	return localSecretsList, nil
+	return secretsList, nil
 }
 
 func (s *SecretsService) LoadSecrets(ctx context.Context) error {
@@ -283,45 +285,52 @@ func (s *SecretsService) LoadSecrets(ctx context.Context) error {
 }
 
 // todo: change to base secret
-func (s *SecretsService) syncSecrets(secrets []dto.Secret, localSecrets []dto.Secret) DataToSync {
-	var dataToSync DataToSync
-	secretsMap := make(map[string]dto.Secret, len(secrets))
-	localSecretsMap := make(map[string]dto.Secret, len(localSecrets))
-	for _, secret := range secrets {
-		secretsMap[secret.GetID()] = secret
-	}
-	for _, secret := range localSecrets {
-		secretID := secret.GetID()
-		localSecretsMap[secretID] = secret
-		remoteSecret, ok := secretsMap[secretID]
-		if !ok {
-			dataToSync.localSecretsToCreate = append(dataToSync.localSecretsToCreate, secret)
-		} else {
-			if remoteSecret.GetUpdatedAt() == secret.GetUpdatedAt() {
-				continue
-			}
-			if remoteSecret.GetUpdatedAt().After(secret.GetUpdatedAt()) {
-				dataToSync.localSecretsToUpdate = append(dataToSync.localSecretsToUpdate, remoteSecret)
-			}
-			dataToSync.secretsToUpdate = append(dataToSync.secretsToUpdate, secret)
-		}
-	}
-	for _, secret := range secrets {
-		secretID := secret.GetID()
-		if _, ok := localSecretsMap[secretID]; !ok {
-			dataToSync.secretsToCreate = append(dataToSync.secretsToCreate, secret)
-		}
-	}
-
-	return dataToSync
-}
-
-func (s *SecretsService) addCredentials(authCtx context.Context, loginPwd *dto.LoginPassword) (*secrets.AddResponse, error) {
-	err := s.cryptoService.EncryptSecret(loginPwd)
-	if err != nil {
-		return nil, fmt.Errorf("can't encrypt item: %s", err)
-	}
-	request := common.PasswordToProto(loginPwd)
-
-	return s.storageClient.AddCredentials(authCtx, request)
-}
+//func (s *SecretsService) syncSecrets(secrets SecretsMap, localSecrets SecretsMap) dto.SecretsList {
+//	var pwdID, localPwdID map[string]bool
+//	for ID := range secrets.passwords {
+//		pwdID[ID] = true
+//	}
+//	for ID := range localSecrets.passwords {
+//		localPwdID[ID] = true
+//	}
+//	dataToSync := s.findAllAndUniqIDs(pwdID, localPwdID)
+//
+//	var allCards map[string]*dto.CardInfo
+//	var localUniqCardID, remoteUniqCardID []string
+//	for ID, secret := range secrets.cards {
+//		if _, ok := localSecrets.cards[ID]; !ok {
+//			remoteUniqCardID = append(remoteUniqCardID, ID)
+//		}
+//		allCards[ID] = secret
+//	}
+//	for ID, secret := range localSecrets.cards {
+//		if _, ok := secrets.cards[ID]; !ok {
+//			localUniqCardID = append(localUniqCardID, ID)
+//		}
+//		allCards[ID] = secret
+//	}
+//
+//}
+//
+//func (s *SecretsService) findAllAndUniqIDs(secrets map[string]bool, localSecrets map[string]bool) DataToSync {
+//	var allIDs map[string]bool
+//	var localUniqID, remoteUniqID []string
+//	for ID := range secrets {
+//		if _, ok := localSecrets[ID]; !ok {
+//			remoteUniqID = append(remoteUniqID, ID)
+//		}
+//		allIDs[ID] = true
+//	}
+//	for ID := range localSecrets {
+//		if _, ok := secrets[ID]; !ok {
+//			localUniqID = append(localUniqID, ID)
+//		}
+//		allIDs[ID] = true
+//	}
+//
+//	return DataToSync{
+//		localUniqID:  localUniqID,
+//		remoteUniqID: remoteUniqID,
+//		allID:        allIDs,
+//	}
+//}

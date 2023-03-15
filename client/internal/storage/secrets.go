@@ -5,6 +5,7 @@ import (
 	"context"
 	commonstorage "github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"strconv"
 )
@@ -20,6 +21,9 @@ func NewSecretsStorage(db *sqlx.DB) *LocalDBSecretsStorage {
 }
 
 func (s *LocalDBSecretsStorage) AddCredentials(ctx context.Context, password *dto.LoginPassword) error {
+	if password.ID == "" {
+		password.ID = uuid.New().String()
+	}
 	query := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password)
 VALUES (:id, :name, :metadata, :user_email, :login, :password)`
 	_, err := s.db.NamedExecContext(ctx, query, &password)
@@ -27,6 +31,9 @@ VALUES (:id, :name, :metadata, :user_email, :login, :password)`
 }
 
 func (s *LocalDBSecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
+	if textInfo.ID == "" {
+		textInfo.ID = uuid.New().String()
+	}
 	query := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES (:id, :name, :metadata, :user_email, :text)`
 	_, err := s.db.NamedExecContext(ctx, query, &textInfo)
 	if err != nil {
@@ -37,6 +44,9 @@ func (s *LocalDBSecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.T
 }
 
 func (s *LocalDBSecretsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
+	if cardInfo.ID == "" {
+		cardInfo.ID = uuid.New().String()
+	}
 	query := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
 VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
 	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
@@ -48,6 +58,9 @@ VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_mont
 }
 
 func (s *LocalDBSecretsStorage) AddBinaryInfo(ctx context.Context, binInfo *dto.BinaryInfo) error {
+	if binInfo.ID == "" {
+		binInfo.ID = uuid.New().String()
+	}
 	query := `INSERT INTO binary_info (id, name, metadata, user_email, data)
 VALUES (:id, :name, :metadata, :user_email, :data)`
 	_, err := s.db.NamedExecContext(ctx, query, &binInfo)
@@ -117,20 +130,20 @@ WHERE id=:id AND updated_at < :updated_at`
 }
 
 func (s *LocalDBSecretsStorage) UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error {
-	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
+	query := `UPDATE card_info SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
 	expiration_month=:expiration_month, expiration_year=:expiration_year, updated_at=:updated_at
 WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &crd)
 }
 
 func (s *LocalDBSecretsStorage) UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error {
-	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
+	query := `UPDATE text_info SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
 WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &txt)
 }
 
 func (s *LocalDBSecretsStorage) UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error {
-	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
+	query := `UPDATE binary_info SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
 WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &crd)
 }

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/services"
@@ -131,6 +132,13 @@ func (v *SecretsView) ListSecretsPage() {
 	listCardView := v.listSecretsView(cardNames, v.detailedCardInfoView)
 	v.pages.AddPage("List cards", listCardView, true, true)
 
+	var binNames []string
+	for _, bin := range resultSecrets.Bins {
+		binNames = append(binNames, bin.Name)
+	}
+	listBinView := v.listSecretsView(binNames, v.detailedBinaryInfoView)
+	v.pages.AddPage("List binaries", listBinView, true, true)
+
 	buttonsList := tview.NewList()
 	buttonsList.AddItem("Passwords", "", 0, func() {
 		v.pages.SwitchToPage("List passwords")
@@ -140,6 +148,9 @@ func (v *SecretsView) ListSecretsPage() {
 	})
 	buttonsList.AddItem("Cards", "", 0, func() {
 		v.pages.SwitchToPage("List cards")
+	})
+	buttonsList.AddItem("Binaries", "", 0, func() {
+		v.pages.SwitchToPage("List binaries")
 	})
 	v.pages.AddPage("List secrets", buttonsList, true, true)
 
@@ -220,6 +231,21 @@ func (v *SecretsView) detailedCardInfoView(i int) *tview.Flex {
 	flex.AddItem(tview.NewTextView().SetText(card.CVV).SetLabel("CVV:"), 0, 1, false)
 	flex.AddItem(tview.NewTextView().SetText(card.ExpirationMonth).SetLabel("Expiration month:"), 0, 1, false)
 	flex.AddItem(tview.NewTextView().SetText(card.ExpirationYear).SetLabel("Expiration year:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(card.Metadata).SetLabel("Metadata:"), 0, 1, false)
+
+	return flex
+}
+
+func (v *SecretsView) detailedBinaryInfoView(i int) *tview.Flex {
+	bin := v.secrets.Bins[i]
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.AddItem(tview.NewTextView().SetText(bin.Name).SetLabel("Name:"), 0, 1, false)
+	data, err := base64.StdEncoding.DecodeString(bin.Data)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't decode binary data")
+	}
+	flex.AddItem(tview.NewTextView().SetText(string(data)).SetLabel("Data:"), 0, 1, false)
+	flex.AddItem(tview.NewTextView().SetText(bin.Metadata).SetLabel("Metadata:"), 0, 1, false)
 
 	return flex
 }

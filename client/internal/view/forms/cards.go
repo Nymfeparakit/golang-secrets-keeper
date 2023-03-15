@@ -20,19 +20,19 @@ func NewCardInfoForm(service AddSecretService, updateService UpdateRetrieveCardS
 }
 
 func (f *CardInfoForm) AddInputs() {
-	f.AddInputField("Name", "", 64, nil, func(name string) {
+	f.AddInputField("Name", f.cardInfo.Name, 64, nil, func(name string) {
 		f.cardInfo.Name = name
 	})
-	f.AddInputField("Card number", "", 16, nil, func(number string) {
+	f.AddInputField("Card number", f.cardInfo.Number, 16, nil, func(number string) {
 		f.cardInfo.Number = number
 	})
-	f.AddInputField("CVV", "", 3, nil, func(cvv string) {
+	f.AddInputField("CVV", f.cardInfo.CVV, 3, nil, func(cvv string) {
 		f.cardInfo.CVV = cvv
 	})
-	f.AddInputField("Expiration Month", "", 2, nil, func(monthStr string) {
+	f.AddInputField("Expiration Month", f.cardInfo.ExpirationYear, 2, nil, func(monthStr string) {
 		f.cardInfo.ExpirationMonth = monthStr
 	})
-	f.AddInputField("Expiration Year", "", 4, nil, func(yearStr string) {
+	f.AddInputField("Expiration Year", f.cardInfo.ExpirationYear, 4, nil, func(yearStr string) {
 		f.cardInfo.ExpirationYear = yearStr
 	})
 	f.AddInputField("Metadata", f.cardInfo.Metadata, 128, nil, func(metadata string) {
@@ -44,7 +44,7 @@ func (f *CardInfoForm) Save() error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.itemService.AddCardInfo(f.cardInfo)
+		err = f.retrieveUpdateService.UpdateSecret(*f.cardInfo)
 	case CREATE:
 		err = f.itemService.AddCardInfo(f.cardInfo)
 	}

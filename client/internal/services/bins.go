@@ -5,11 +5,12 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
+	"time"
 )
 
 type BinaryInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalItemsStorage
+	localStorage  LocalSecretsStorage
 }
 
 func (s *BinaryInstanceService) GetSecretByID(ctx context.Context, id string) (dto.BinaryInfo, error) {
@@ -28,11 +29,13 @@ func (s *BinaryInstanceService) GetLocalSecretByID(id string, email string) (dto
 }
 
 func (s *BinaryInstanceService) UpdateSecret(ctx context.Context, bin dto.BinaryInfo) error {
+	bin.UpdatedAt = time.Now().UTC()
 	request := common.BinaryToProto(&bin)
 	_, err := s.storageClient.UpdateBinaryInfo(ctx, request)
 	return err
 }
 
 func (s *BinaryInstanceService) UpdateLocalSecret(bin dto.BinaryInfo) error {
+	bin.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateBinaryInfo(context.Background(), &bin)
 }

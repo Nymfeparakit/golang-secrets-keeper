@@ -2,20 +2,25 @@ package handlers
 
 import (
 	"context"
+	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	mock_handlers "github.com/Nymfeparakit/gophkeeper/server/internal/api/handlers/mocks"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
+	"time"
 )
 
-func TestItemsServer_AddPassword(t *testing.T) {
+func TestSecretsServer_AddCredentials(t *testing.T) {
 	userEmail := "test@email.com"
 	item := dto.BaseSecret{
-		Name:     "name",
-		User:     userEmail,
-		Metadata: "metadata",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
 	}
 	password := dto.LoginPassword{
 		Login:      "login",
@@ -36,13 +41,8 @@ func TestItemsServer_AddPassword(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddCredentials(gomock.Any(), &password).Return("123", nil)
 			},
-			request: &secrets.Password{
-				Name:     password.Name,
-				Login:    password.Login,
-				Password: password.Password,
-				Metadata: password.Metadata,
-			},
-			expResponse: &secrets.AddResponse{},
+			request:     common.CredentialsToProto(&password),
+			expResponse: &secrets.AddResponse{Id: "123"},
 		},
 	}
 
@@ -66,9 +66,10 @@ func TestItemsServer_AddPassword(t *testing.T) {
 func TestItemsServer_AddTextInfo(t *testing.T) {
 	userEmail := "test@email.com"
 	item := dto.BaseSecret{
-		Name:     "name",
-		User:     userEmail,
-		Metadata: "metadata",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
 	}
 	textInfo := dto.TextInfo{
 		Text:       "text",
@@ -88,11 +89,7 @@ func TestItemsServer_AddTextInfo(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddTextInfo(gomock.Any(), &textInfo)
 			},
-			request: &secrets.TextInfo{
-				Name:     textInfo.Name,
-				Text:     textInfo.Text,
-				Metadata: textInfo.Metadata,
-			},
+			request:     common.TextToProto(&textInfo),
 			expResponse: &secrets.AddResponse{},
 		},
 	}
@@ -117,9 +114,10 @@ func TestItemsServer_AddTextInfo(t *testing.T) {
 func TestItemsServer_AddCardInfo(t *testing.T) {
 	userEmail := "test@email.com"
 	item := dto.BaseSecret{
-		Name:     "name",
-		User:     userEmail,
-		Metadata: "metadata",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
 	}
 	cardInfo := dto.CardInfo{
 		BaseSecret: item,
@@ -139,11 +137,7 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
 				itemsMock.EXPECT().AddCardInfo(gomock.Any(), &cardInfo)
 			},
-			request: &secrets.CardInfo{
-				Name:     cardInfo.Name,
-				Number:   cardInfo.Number,
-				Metadata: cardInfo.Metadata,
-			},
+			request:     common.CardToProto(&cardInfo),
 			expResponse: &secrets.AddResponse{},
 		},
 	}
@@ -167,9 +161,11 @@ func TestItemsServer_AddCardInfo(t *testing.T) {
 
 func TestItemsServer_ListItems(t *testing.T) {
 	userEmail := "test@email.com"
+	now := time.Now().UTC()
+	secret := dto.BaseSecret{UpdatedAt: now}
 	itemsList := dto.SecretsList{
-		Passwords: []*dto.LoginPassword{{Password: "pwd1"}, {Password: "pwd2"}},
-		Texts:     []*dto.TextInfo{{Text: "text1"}, {Text: "text2"}},
+		Passwords: []*dto.LoginPassword{{Password: "pwd1", BaseSecret: secret}, {Password: "pwd2", BaseSecret: secret}},
+		Texts:     []*dto.TextInfo{{Text: "text1", BaseSecret: secret}, {Text: "text2", BaseSecret: secret}},
 	}
 
 	tests := []struct {
@@ -188,12 +184,12 @@ func TestItemsServer_ListItems(t *testing.T) {
 			request: &secrets.EmptyRequest{},
 			expResponse: &secrets.ListSecretResponse{
 				Passwords: []*secrets.Password{
-					{Password: itemsList.Passwords[0].Password},
-					{Password: itemsList.Passwords[1].Password},
+					{Password: itemsList.Passwords[0].Password, UpdatedAt: timestamppb.New(now)},
+					{Password: itemsList.Passwords[1].Password, UpdatedAt: timestamppb.New(now)},
 				},
 				Texts: []*secrets.TextInfo{
-					{Text: itemsList.Texts[0].Text},
-					{Text: itemsList.Texts[1].Text},
+					{Text: itemsList.Texts[0].Text, UpdatedAt: timestamppb.New(now)},
+					{Text: itemsList.Texts[1].Text, UpdatedAt: timestamppb.New(now)},
 				},
 				Error: "",
 			},
@@ -213,6 +209,375 @@ func TestItemsServer_ListItems(t *testing.T) {
 
 			assert.Equal(t, tt.expResponse, response)
 			assert.Equal(t, tt.expError, err)
+		})
+	}
+}
+
+func TestSecretsServer_GetCredentialsByID(t *testing.T) {
+	userEmail := "test@email.com"
+	item := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	password := dto.LoginPassword{
+		Login:      "login",
+		Password:   "pwd",
+		BaseSecret: item,
+	}
+
+	tests := []struct {
+		name        string
+		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request     *secrets.GetSecretRequest
+		expResponse *secrets.GetCredentialsResponse
+		expError    error
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().GetCredentialsById(gomock.Any(), "123", userEmail).Return(&password, nil)
+			},
+			request:     &secrets.GetSecretRequest{Id: "123"},
+			expResponse: &secrets.GetCredentialsResponse{Password: common.CredentialsToProto(&password)},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
+			itemsServiceMock := mock_handlers.NewMockSecretsService(ctrl)
+			tt.setupMocks(authServiceMock, itemsServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+			response, err := itemsServer.GetCredentialsByID(context.Background(), tt.request)
+
+			assert.Equal(t, tt.expResponse, response)
+			assert.Equal(t, tt.expError, err)
+		})
+	}
+}
+
+func TestSecretsServer_GetCardByID(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.CardInfo{
+		Number:     "123",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name        string
+		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request     *secrets.GetSecretRequest
+		expResponse *secrets.GetCardResponse
+		expError    error
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().GetCardById(gomock.Any(), "123", userEmail).Return(&secret, nil)
+			},
+			request:     &secrets.GetSecretRequest{Id: "123"},
+			expResponse: &secrets.GetCardResponse{Card: common.CardToProto(&secret)},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
+			itemsServiceMock := mock_handlers.NewMockSecretsService(ctrl)
+			tt.setupMocks(authServiceMock, itemsServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+			response, err := itemsServer.GetCardByID(context.Background(), tt.request)
+
+			assert.Equal(t, tt.expResponse, response)
+			assert.Equal(t, tt.expError, err)
+		})
+	}
+}
+
+func TestSecretsServer_GetTextByID(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.TextInfo{
+		Text:       "some text",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name        string
+		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request     *secrets.GetSecretRequest
+		expResponse *secrets.GetTextResponse
+		expError    error
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().GetTextById(gomock.Any(), "123", userEmail).Return(&secret, nil)
+			},
+			request:     &secrets.GetSecretRequest{Id: "123"},
+			expResponse: &secrets.GetTextResponse{Text: common.TextToProto(&secret)},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
+			itemsServiceMock := mock_handlers.NewMockSecretsService(ctrl)
+			tt.setupMocks(authServiceMock, itemsServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+			response, err := itemsServer.GetTextByID(context.Background(), tt.request)
+
+			assert.Equal(t, tt.expResponse, response)
+			assert.Equal(t, tt.expError, err)
+		})
+	}
+}
+
+func TestSecretsServer_GetBinaryByID(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.BinaryInfo{
+		Data:       "some text",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name        string
+		setupMocks  func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request     *secrets.GetSecretRequest
+		expResponse *secrets.GetBinaryResponse
+		expError    error
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().GetBinaryById(gomock.Any(), "123", userEmail).Return(&secret, nil)
+			},
+			request:     &secrets.GetSecretRequest{Id: "123"},
+			expResponse: &secrets.GetBinaryResponse{Bin: common.BinaryToProto(&secret)},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			authServiceMock := mock_handlers.NewMockAuthService(ctrl)
+			itemsServiceMock := mock_handlers.NewMockSecretsService(ctrl)
+			tt.setupMocks(authServiceMock, itemsServiceMock)
+			itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+			response, err := itemsServer.GetBinaryByID(context.Background(), tt.request)
+
+			assert.Equal(t, tt.expResponse, response)
+			assert.Equal(t, tt.expError, err)
+		})
+	}
+}
+
+func initServerAndMocks(
+	ctrl *gomock.Controller,
+	setupMocks func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService),
+) *SecretsServer {
+	authServiceMock := mock_handlers.NewMockAuthService(ctrl)
+	itemsServiceMock := mock_handlers.NewMockSecretsService(ctrl)
+	setupMocks(authServiceMock, itemsServiceMock)
+	itemsServer := NewSecretsServer(itemsServiceMock, authServiceMock)
+	return itemsServer
+}
+
+func TestSecretsServer_UpdateCredentials(t *testing.T) {
+	userEmail := "test@email.com"
+	item := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	password := dto.LoginPassword{
+		Login:      "login",
+		Password:   "pwd",
+		BaseSecret: item,
+	}
+
+	tests := []struct {
+		name       string
+		setupMocks func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request    *secrets.Password
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().UpdateCredentials(gomock.Any(), &password).Return(nil)
+			},
+			request: common.CredentialsToProto(&password),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
+			_, err := secretsServer.UpdateCredentials(context.Background(), tt.request)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestSecretsServer_UpdateCardInfo(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.CardInfo{
+		Number:     "123",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name       string
+		setupMocks func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request    *secrets.CardInfo
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().UpdateCardInfo(gomock.Any(), &secret).Return(nil)
+			},
+			request: common.CardToProto(&secret),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
+			_, err := secretsServer.UpdateCardInfo(context.Background(), tt.request)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestSecretsServer_UpdateTextInfo(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.TextInfo{
+		Text:       "some text",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name       string
+		setupMocks func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request    *secrets.TextInfo
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().UpdateTextInfo(gomock.Any(), &secret).Return(nil)
+			},
+			request: common.TextToProto(&secret),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
+			_, err := secretsServer.UpdateTextInfo(context.Background(), tt.request)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestSecretsServer_UpdateBinaryInfo(t *testing.T) {
+	userEmail := "test@email.com"
+	baseSecret := dto.BaseSecret{
+		ID:        "123",
+		Name:      "name",
+		User:      userEmail,
+		Metadata:  "metadata",
+		UpdatedAt: time.Now().UTC(),
+	}
+	secret := dto.BinaryInfo{
+		Data:       "some text",
+		BaseSecret: baseSecret,
+	}
+
+	tests := []struct {
+		name       string
+		setupMocks func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService)
+		request    *secrets.BinaryInfo
+	}{
+		{
+			name: "positive test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, itemsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return(userEmail, true)
+				itemsMock.EXPECT().UpdateBinaryInfo(gomock.Any(), &secret).Return(nil)
+			},
+			request: common.BinaryToProto(&secret),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
+			_, err := secretsServer.UpdateBinaryInfo(context.Background(), tt.request)
+			require.NoError(t, err)
 		})
 	}
 }

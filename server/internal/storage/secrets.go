@@ -18,51 +18,40 @@ func NewSecretsStorage(db *sqlx.DB) *SecretsStorage {
 	return &SecretsStorage{db: db, BaseDBItemsStorage: *baseStorage}
 }
 
-func (s *SecretsStorage) AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error) {
+func (s *SecretsStorage) AddCredentials(ctx context.Context, secret *dto.LoginPassword) (string, error) {
 	query := `INSERT INTO login_pwd (name, metadata, user_email, login, password)
 VALUES (:name, :metadata, :user_email, :login, :password) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *SecretsStorage) AddTextInfo(ctx context.Context, secret *dto.TextInfo) (string, error) {
+	query := `INSERT INTO text_info (name, metadata, user_email, text) VALUES (:name, :metadata, :user_email, :text) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *SecretsStorage) AddCardInfo(ctx context.Context, secret *dto.CardInfo) (string, error) {
+	query := `INSERT INTO card_info (name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
+VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *SecretsStorage) AddBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) (string, error) {
+	query := `INSERT INTO binary_info (name, metadata, user_email, data)
+VALUES (:name, :metadata, :user_email, :data) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *SecretsStorage) addSecret(ctx context.Context, query string, queryArg interface{}) (string, error) {
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return "", err
 	}
 
 	var createdID string
-	err = stmt.QueryRowxContext(ctx, &password).Scan(&createdID)
+	err = stmt.QueryRowxContext(ctx, queryArg).Scan(&createdID)
 	if err != nil {
 		return "", err
 	}
 
-	return "", nil
-}
-
-func (s *SecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
-	query := `INSERT INTO text_info (name, metadata, user_email, text) VALUES (:name, :metadata, :user_email, :text)`
-	_, err := s.db.NamedExecContext(ctx, query, &textInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *SecretsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
-	query := `INSERT INTO card_info (name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
-VALUES (:name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
-	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *SecretsStorage) AddBinaryInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
-	query := `INSERT INTO binary_info (name, metadata, user_email, data)
-VALUES (:name, :metadata, :user_email, :data)`
-	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return createdID, nil
 }

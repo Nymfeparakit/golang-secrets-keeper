@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
-	"time"
 )
 
 type UpdateRetrieveDeleteSecretServiceInterface[T dto.Secret] interface {
@@ -31,7 +30,7 @@ func NewUpdateRetrieveDeletePasswordService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalItemsStorage,
+	localStorage LocalSecretsStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.LoginPassword] {
 	secretInstanceService := &PasswordInstanceService{
@@ -50,7 +49,7 @@ func NewUpdateRetrieveDeleteCardService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalItemsStorage,
+	localStorage LocalSecretsStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.CardInfo] {
 	secretInstanceService := &CardInstanceService{
@@ -69,7 +68,7 @@ func NewUpdateRetrieveDeleteTextService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalItemsStorage,
+	localStorage LocalSecretsStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.TextInfo] {
 	secretInstanceService := &TextInstanceService{
@@ -88,7 +87,7 @@ func NewUpdateRetrieveDeleteBinaryService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalItemsStorage,
+	localStorage LocalSecretsStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.BinaryInfo] {
 	secretInstanceService := &BinaryInstanceService{
@@ -129,7 +128,6 @@ func (s *UpdateRetrieveDeleteSecretService[T]) UpdateSecret(secret T) error {
 	if err != nil {
 		return fmt.Errorf("can't encrypt item: %s", err)
 	}
-	secret.SetUpdatedAt(time.Now())
 
 	// do update in remote
 	ctx, err := s.authenticateContext(context.Background())
