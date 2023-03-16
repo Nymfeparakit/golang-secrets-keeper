@@ -43,7 +43,7 @@ func TestSecretsService_AddCredentials(t *testing.T) {
 	localPwd := pwd
 	localPwd.ID = "123"
 	localPwd.User = credentials.Email
-	localStorageMock.EXPECT().AddCredentials(gomock.Any(), &localPwd).Return(nil)
+	localStorageMock.EXPECT().AddCredentials(gomock.Any(), &localPwd).Return("123", nil)
 	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
 
 	itemsService := NewSecretsService(
@@ -88,7 +88,7 @@ func TestSecretsService_AddTextInfo(t *testing.T) {
 	localTextInfo := textInfo
 	localTextInfo.ID = "123"
 	localTextInfo.User = credentials.Email
-	localStorageMock.EXPECT().AddTextInfo(gomock.Any(), &localTextInfo).Return(nil)
+	localStorageMock.EXPECT().AddTextInfo(gomock.Any(), &localTextInfo).Return("123", nil)
 	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
 
 	itemsService := NewSecretsService(
@@ -133,7 +133,7 @@ func TestSecretsService_AddCardInfo(t *testing.T) {
 	localCardInfo := cardInfo
 	localCardInfo.ID = "123"
 	localCardInfo.User = credentials.Email
-	localStorageMock.EXPECT().AddCardInfo(gomock.Any(), &localCardInfo).Return(nil)
+	localStorageMock.EXPECT().AddCardInfo(gomock.Any(), &localCardInfo).Return("123", nil)
 	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
 
 	itemsService := NewSecretsService(
@@ -178,7 +178,7 @@ func TestSecretsService_AddBinaryInfo(t *testing.T) {
 	localBinInfo := binInfo
 	localBinInfo.ID = "123"
 	localBinInfo.User = credentials.Email
-	localStorageMock.EXPECT().AddBinaryInfo(gomock.Any(), &localBinInfo).Return(nil)
+	localStorageMock.EXPECT().AddBinaryInfo(gomock.Any(), &localBinInfo).Return("123", nil)
 	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
 
 	itemsService := NewSecretsService(

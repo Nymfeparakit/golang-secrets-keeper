@@ -36,11 +36,12 @@ func (m *MockLocalSecretsStorage) EXPECT() *MockLocalSecretsStorageMockRecorder 
 }
 
 // AddBinaryInfo mocks base method.
-func (m *MockLocalSecretsStorage) AddBinaryInfo(arg0 context.Context, arg1 *dto.BinaryInfo) error {
+func (m *MockLocalSecretsStorage) AddBinaryInfo(arg0 context.Context, arg1 *dto.BinaryInfo) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddBinaryInfo", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddBinaryInfo indicates an expected call of AddBinaryInfo.
@@ -50,11 +51,12 @@ func (mr *MockLocalSecretsStorageMockRecorder) AddBinaryInfo(arg0, arg1 interfac
 }
 
 // AddCardInfo mocks base method.
-func (m *MockLocalSecretsStorage) AddCardInfo(arg0 context.Context, arg1 *dto.CardInfo) error {
+func (m *MockLocalSecretsStorage) AddCardInfo(arg0 context.Context, arg1 *dto.CardInfo) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddCardInfo", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddCardInfo indicates an expected call of AddCardInfo.
@@ -64,11 +66,12 @@ func (mr *MockLocalSecretsStorageMockRecorder) AddCardInfo(arg0, arg1 interface{
 }
 
 // AddCredentials mocks base method.
-func (m *MockLocalSecretsStorage) AddCredentials(arg0 context.Context, arg1 *dto.LoginPassword) error {
+func (m *MockLocalSecretsStorage) AddCredentials(arg0 context.Context, arg1 *dto.LoginPassword) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddCredentials", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddCredentials indicates an expected call of AddCredentials.
@@ -92,11 +95,12 @@ func (mr *MockLocalSecretsStorageMockRecorder) AddSecrets(arg0, arg1 interface{}
 }
 
 // AddTextInfo mocks base method.
-func (m *MockLocalSecretsStorage) AddTextInfo(arg0 context.Context, arg1 *dto.TextInfo) error {
+func (m *MockLocalSecretsStorage) AddTextInfo(arg0 context.Context, arg1 *dto.TextInfo) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTextInfo", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddTextInfo indicates an expected call of AddTextInfo.
