@@ -110,6 +110,12 @@ func (s *BaseDBItemsStorage) ListSecrets(ctx context.Context, user string) (dto.
 	}
 	secretList.Cards = cards
 
+	bins, err := s.listBinaryInfo(ctx, tx, user)
+	if err != nil {
+		return dto.SecretsList{}, err
+	}
+	secretList.Bins = bins
+
 	return secretList, nil
 }
 
@@ -168,6 +174,25 @@ func (s *BaseDBItemsStorage) listCardInfo(ctx context.Context, tx *sqlx.Tx, user
 	}
 
 	return cards, nil
+}
+
+func (s *BaseDBItemsStorage) listBinaryInfo(ctx context.Context, tx *sqlx.Tx, user string) ([]*dto.BinaryInfo, error) {
+	query := `SELECT * FROM binary_info WHERE user_email=$1`
+	rows, err := tx.QueryxContext(ctx, query, user)
+	if err != nil {
+		return []*dto.BinaryInfo{}, err
+	}
+	var secrets []*dto.BinaryInfo
+	for rows.Next() {
+		var secret dto.BinaryInfo
+		err = rows.StructScan(&secret)
+		if err != nil {
+			return []*dto.BinaryInfo{}, err
+		}
+		secrets = append(secrets, &secret)
+	}
+
+	return secrets, nil
 }
 
 func (s *BaseDBItemsStorage) GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error) {
