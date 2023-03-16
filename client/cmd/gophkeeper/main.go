@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/commands"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/config"
 	"github.com/Nymfeparakit/gophkeeper/client/internal/services"
@@ -12,11 +15,33 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"io/ioutil"
 	"os"
 )
 
-func ConnectToServer(serverAddr string) (*grpc.ClientConn, error) {
+func ConnectToServer(enableHTTPs bool, serverAddr string) (*grpc.ClientConn, error) {
+	if enableHTTPs {
+		pemServerCA, err := ioutil.ReadFile("cert.pem")
+		if err != nil {
+			return nil, err
+		}
+
+		certPool := x509.NewCertPool()
+		if !certPool.AppendCertsFromPEM(pemServerCA) {
+			return nil, fmt.Errorf("failed to add server certificate")
+		}
+
+		cfg := &tls.Config{
+			RootCAs: certPool,
+		}
+
+		creds := credentials.NewTLS(cfg)
+
+		return grpc.Dial(serverAddr, grpc.WithTransportCredentials(creds))
+	}
+
 	return grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
@@ -27,7 +52,7 @@ func main() {
 		log.Fatal().Err(err).Msg("can not initialize config")
 	}
 
-	conn, err := ConnectToServer(cfg.ServerAddress)
+	conn, err := ConnectToServer(cfg.EnableHTTPS, cfg.ServerAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to connect to server")
 	}
