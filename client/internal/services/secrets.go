@@ -54,9 +54,6 @@ type SecretsService struct {
 	localStorage       LocalSecretsStorage
 	userCredsStorage   UserCredentialsStorage
 	pwdInstanceService UpdatePasswordsService
-	//crdInstanceService UpdateRetrieveCardService
-	//txtInstanceService UpdateRetrieveTextService
-	//binInstanceService UpdateRetrieveBinaryService
 }
 
 func NewSecretsService(
