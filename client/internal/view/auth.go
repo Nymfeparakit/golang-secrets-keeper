@@ -7,21 +7,25 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// AuthService - service to register and login users.
 type AuthService interface {
 	Register(user *dto.User) error
 	Login(email string, pwd string) error
 }
 
+// AuthView - view with pages for authentication operations.
 type AuthView struct {
 	PagesView
 	authService AuthService
 }
 
+// NewAuthView creates new AuthView object.
 func NewAuthView(authService AuthService) *AuthView {
 	pagesView := NewPagesView()
 	return &AuthView{authService: authService, PagesView: *pagesView}
 }
 
+// RegisterUserPage shows page to perform user registration.
 func (v *AuthView) RegisterUserPage() {
 	var user dto.User
 	form := tview.NewForm()
@@ -48,6 +52,7 @@ func (v *AuthView) RegisterUserPage() {
 	}
 }
 
+// LoginUserPage shows page to perform user login.
 func (v *AuthView) LoginUserPage() {
 	var userEmail string
 	var userPwd string

@@ -10,26 +10,31 @@ type Options struct {
 
 var options Options
 
+// SecretsView - view with pages for secrets, with page to list secrets, add and update them.
 type SecretsView interface {
 	ListSecretsPage()
 	AddSecretPage(itemType dto.SecretType)
 	UpdateSecretPage(itemType dto.SecretType, secretID string)
 }
 
+// AuthView - view with pages to register new users and login existing ones.
 type AuthView interface {
 	RegisterUserPage()
 	LoginUserPage()
 }
 
+// CommandParser - parser of command line commands.
 type CommandParser struct {
 	parser *flags.Parser
 }
 
+// NewCommandParser instantiates new command parser object.
 func NewCommandParser() *CommandParser {
 	parser := flags.NewParser(&options, flags.Default)
 	return &CommandParser{parser: parser}
 }
 
+// InitCommands instantiates objects for command line commands.
 func (p *CommandParser) InitCommands(secretsView SecretsView, authView AuthView) error {
 	err := p.initAuthCommands(authView)
 	if err != nil {
@@ -95,6 +100,7 @@ func (p *CommandParser) initAuthCommands(view AuthView) error {
 	return nil
 }
 
+// Parse parses command line arguments.
 func (p *CommandParser) Parse() ([]string, error) {
 	return p.parser.Parse()
 }

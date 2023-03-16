@@ -11,10 +11,12 @@ const ringEmailKey = "email"
 const ringTokenKey = "token"
 const ringUserKey = "user_key"
 
+// CredentialsStorage storage for all user credentials in keyring.
 type CredentialsStorage struct {
 	keyring keyring.Keyring
 }
 
+// OpenCredentialsStorage opens keyring for service and creates new CredentialsStorage object.
 func OpenCredentialsStorage() (*CredentialsStorage, error) {
 	ring, err := keyring.Open(keyring.Config{ServiceName: serviceName})
 	if err != nil {
@@ -23,6 +25,7 @@ func OpenCredentialsStorage() (*CredentialsStorage, error) {
 	return &CredentialsStorage{keyring: ring}, nil
 }
 
+// SaveCredentials saves user credentials (email and token) in keyring.
 func (s *CredentialsStorage) SaveCredentials(email string, token string) error {
 	err := s.saveItem(ringTokenKey, []byte(token))
 	if err != nil {
@@ -32,6 +35,7 @@ func (s *CredentialsStorage) SaveCredentials(email string, token string) error {
 	return err
 }
 
+// GetCredentials gets user credentials from keyring.
 func (s *CredentialsStorage) GetCredentials() (*dto.UserCredentials, error) {
 	tokenData, err := s.getItem(ringTokenKey)
 	if err != nil {
@@ -45,6 +49,7 @@ func (s *CredentialsStorage) GetCredentials() (*dto.UserCredentials, error) {
 	return &dto.UserCredentials{Email: string(emailData), Token: string(tokenData)}, nil
 }
 
+// GetToken gets current user token from keyring.
 func (s *CredentialsStorage) GetToken() (string, error) {
 	ring, err := s.getKeyring()
 	if err != nil {
@@ -61,10 +66,12 @@ func (s *CredentialsStorage) GetToken() (string, error) {
 	return string(item.Data), nil
 }
 
+// SaveUserKey saves user key in keyring.
 func (s *CredentialsStorage) SaveUserKey(key []byte) error {
 	return s.saveItem(ringUserKey, key)
 }
 
+// GetUserKey gets user key from keyring.
 func (s *CredentialsStorage) GetUserKey() ([]byte, error) {
 	return s.getItem(ringUserKey)
 }

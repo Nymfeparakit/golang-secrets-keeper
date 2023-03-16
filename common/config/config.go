@@ -6,15 +6,16 @@ import (
 	"github.com/caarlos0/env"
 )
 
+// Config - storage for general settings.
 type Config interface {
 	InitFlags()
 }
 
+// InitConfig fills config with data from specified flags and environment variables.
 func InitConfig(cfg Config) error {
 	cfg.InitFlags()
 	flag.Parse()
 
-	//Загружаем переменные окружения
 	if err := env.Parse(cfg); err != nil {
 		fmt.Println(err.Error())
 		return err

@@ -9,19 +9,23 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// AuthMetadataService service for adding auth metadata to provided context.
 type AuthMetadataService interface {
 	AddAuthMetadata(ctx context.Context, token string) (context.Context, error)
 }
 
+// SecretCryptoService service for encrypting and decrypting secrets.
 type SecretCryptoService interface {
 	EncryptSecret(source any) error
 	DecryptSecret(source any) error
 }
 
+// UserCredentialsStorage - storage of user credentials (email and token).
 type UserCredentialsStorage interface {
 	GetCredentials() (*dto.UserCredentials, error)
 }
 
+// LocalSecretsStorage - local storage of secrets.
 type LocalSecretsStorage interface {
 	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) (string, error)
@@ -41,12 +45,14 @@ type LocalSecretsStorage interface {
 
 type UpdatePasswordsService interface{}
 
+// DataToSync - data to sync between remote and local storage.
 type DataToSync struct {
 	localUniqID    []string
 	remoteUniqID   []string
 	intersectionID map[string]bool
 }
 
+// SecretsService service for listing and adding new secrets.
 type SecretsService struct {
 	authService        AuthMetadataService
 	storageClient      secrets.SecretsManagementClient
@@ -56,6 +62,7 @@ type SecretsService struct {
 	pwdInstanceService UpdatePasswordsService
 }
 
+// NewSecretsService creates new SecretsService object.
 func NewSecretsService(
 	client secrets.SecretsManagementClient,
 	service AuthMetadataService,
@@ -74,6 +81,7 @@ func NewSecretsService(
 	}
 }
 
+// AddCredentials adds LoginPwd to remote and local storage.
 func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 	// todo: context should be passed from argument
 	credentials, err := s.userCredsStorage.GetCredentials()
@@ -105,6 +113,7 @@ func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 	return err
 }
 
+// AddTextInfo adds TextInfo to remote and local storage.
 func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -135,6 +144,7 @@ func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
 	return err
 }
 
+// AddCardInfo adds CardInfo to remote and local storage.
 func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -165,6 +175,7 @@ func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
 	return err
 }
 
+// AddBinaryInfo adds BinaryInfo to remote and local storage.
 func (s *SecretsService) AddBinaryInfo(bin *dto.BinaryInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -202,6 +213,8 @@ type SecretsMap struct {
 	bins      map[string]*dto.BinaryInfo
 }
 
+// ListSecrets syncs all secrets for current user between local and remote storage, and then returns synchronized
+// secrets list.
 func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
@@ -297,6 +310,7 @@ func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
 	return finalSecretsList, nil
 }
 
+// LoadSecrets gets all user secrets from remote and then adds them to local storage.
 func (s *SecretsService) LoadSecrets(ctx context.Context) error {
 	// load secrets from remote
 	secretsList, err := s.listSecrets()

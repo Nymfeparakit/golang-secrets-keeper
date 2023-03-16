@@ -9,16 +9,19 @@ import (
 	"strconv"
 )
 
+// LocalDBSecretsStorage - local secrets storage in database.
 type LocalDBSecretsStorage struct {
 	db *sqlx.DB
 	commonstorage.BaseDBItemsStorage
 }
 
+// NewSecretsStorage creates new LocalDBSecretsStorage object.
 func NewSecretsStorage(db *sqlx.DB) *LocalDBSecretsStorage {
 	baseStorage := commonstorage.NewBaseItemsStorage(db)
 	return &LocalDBSecretsStorage{db: db, BaseDBItemsStorage: *baseStorage}
 }
 
+// AddSecrets adds all provided secrets to database.
 func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.SecretsList) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -85,12 +88,14 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	return tx.Commit()
 }
 
+// UpdateCredentials updates LoginPassword object in database.
 func (s *LocalDBSecretsStorage) UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error {
 	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, login=:login, password=:password
 WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &pwd)
 }
 
+// UpdateCardInfo updates CardInfo object in database.
 func (s *LocalDBSecretsStorage) UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error {
 	query := `UPDATE card_info SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
 	expiration_month=:expiration_month, expiration_year=:expiration_year, updated_at=:updated_at
@@ -98,12 +103,14 @@ WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &crd)
 }
 
+// UpdateTextInfo updates TextInfo object in database.
 func (s *LocalDBSecretsStorage) UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error {
 	query := `UPDATE text_info SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
 WHERE id=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &txt)
 }
 
+// UpdateBinaryInfo updates BinaryInfo object in database.
 func (s *LocalDBSecretsStorage) UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error {
 	query := `UPDATE binary_info SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
 WHERE id=:id AND updated_at < :updated_at`

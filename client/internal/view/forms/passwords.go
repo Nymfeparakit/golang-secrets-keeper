@@ -5,6 +5,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// LoginPasswordForm - form to perform save operations with certain LoginPassword.
 type LoginPasswordForm struct {
 	loginPwd *dto.LoginPassword
 	tview.Form
@@ -13,12 +14,14 @@ type LoginPasswordForm struct {
 	FormWithSaveAction
 }
 
+// NewLoginPasswordForm creates LoginPasswordForm object.
 func NewLoginPasswordForm(service AddSecretService, updateService UpdateRetrievePasswordService) *LoginPasswordForm {
 	pwd := &dto.LoginPassword{}
 	form := tview.NewForm()
 	return &LoginPasswordForm{loginPwd: pwd, Form: *form, addService: service, retrieveUpdateService: updateService}
 }
 
+// AddInputs adds input fields to form.
 func (f *LoginPasswordForm) AddInputs() {
 	f.AddInputField("Name", f.loginPwd.Name, 64, nil, func(name string) {
 		f.loginPwd.Name = name
@@ -39,6 +42,7 @@ func (f *LoginPasswordForm) AddInputs() {
 	f.AddFormItem(pwdInput)
 }
 
+// Save performs operation with LoginPassword when the save button is clicked.
 func (f *LoginPasswordForm) Save() error {
 	var err error
 	switch f.saveAction {
@@ -50,10 +54,12 @@ func (f *LoginPasswordForm) Save() error {
 	return err
 }
 
+// AddBtn adds button with certain label and selected function.
 func (f *LoginPasswordForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
 }
 
+// SetSecret associates specific LoginPassword with form.
 func (f *LoginPasswordForm) SetSecret(id string) error {
 	pwd, err := f.retrieveUpdateService.GetSecretByID(id)
 	f.loginPwd = &pwd

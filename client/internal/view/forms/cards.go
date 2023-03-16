@@ -5,6 +5,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// CardInfoForm - form to perform save operations with certain CardInfo.
 type CardInfoForm struct {
 	cardInfo *dto.CardInfo
 	tview.Form
@@ -13,12 +14,14 @@ type CardInfoForm struct {
 	FormWithSaveAction
 }
 
+// NewCardInfoForm creates CardInfoForm object.
 func NewCardInfoForm(service AddSecretService, updateService UpdateRetrieveCardService) *CardInfoForm {
 	cardInfo := &dto.CardInfo{}
 	form := tview.NewForm()
 	return &CardInfoForm{cardInfo: cardInfo, Form: *form, itemService: service, retrieveUpdateService: updateService}
 }
 
+// AddInputs adds input fields to form.
 func (f *CardInfoForm) AddInputs() {
 	f.AddInputField("Name", f.cardInfo.Name, 64, nil, func(name string) {
 		f.cardInfo.Name = name
@@ -40,6 +43,7 @@ func (f *CardInfoForm) AddInputs() {
 	})
 }
 
+// Save performs operation with CardInfo when the save button is clicked.
 func (f *CardInfoForm) Save() error {
 	var err error
 	switch f.saveAction {
@@ -51,10 +55,12 @@ func (f *CardInfoForm) Save() error {
 	return err
 }
 
+// AddBtn adds button with certain label and selected function.
 func (f *CardInfoForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
 }
 
+// SetSecret associates specific CardInfo with form.
 func (f *CardInfoForm) SetSecret(id string) error {
 	crd, err := f.retrieveUpdateService.GetSecretByID(id)
 	f.cardInfo = &crd

@@ -5,6 +5,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// TextInfoForm - form to perform save operations with certain TextInfo.
 type TextInfoForm struct {
 	instance *dto.TextInfo
 	tview.Form
@@ -13,12 +14,14 @@ type TextInfoForm struct {
 	FormWithSaveAction
 }
 
+// NewTextInfoForm creates TextInfoForm object.
 func NewTextInfoForm(service AddSecretService, updateService UpdateRetrieveTextService) *TextInfoForm {
 	textInfo := &dto.TextInfo{}
 	form := tview.NewForm()
 	return &TextInfoForm{instance: textInfo, Form: *form, itemService: service, retrieveUpdateService: updateService}
 }
 
+// AddInputs adds input fields to form.
 func (f *TextInfoForm) AddInputs() {
 	f.AddInputField("Name", f.instance.Name, 64, nil, func(name string) {
 		f.instance.Name = name
@@ -31,6 +34,7 @@ func (f *TextInfoForm) AddInputs() {
 	})
 }
 
+// Save performs operation with TextInfo when the save button is clicked.
 func (f *TextInfoForm) Save() error {
 	var err error
 	switch f.saveAction {
@@ -42,10 +46,12 @@ func (f *TextInfoForm) Save() error {
 	return err
 }
 
+// AddBtn adds button with certain label and selected function.
 func (f *TextInfoForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
 }
 
+// SetSecret associates specific TextInfo with form.
 func (f *TextInfoForm) SetSecret(id string) error {
 	txt, err := f.retrieveUpdateService.GetSecretByID(id)
 	f.instance = &txt

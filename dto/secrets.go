@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// SecretType - type of secret.
 type SecretType int
 
 const (
@@ -17,6 +18,7 @@ const (
 
 var ErrUnknownSecretType = fmt.Errorf("unknown secret type")
 
+// SecretTypeFromString converts strong to SecretType object.
 func SecretTypeFromString(s string) (SecretType, error) {
 	switch s {
 	case "password":
@@ -32,11 +34,13 @@ func SecretTypeFromString(s string) (SecretType, error) {
 	}
 }
 
+// Secret - specifies secret object with ID and UpdatedAt fields.
 type Secret interface {
 	GetUpdatedAt() time.Time
 	GetID() string
 }
 
+// BaseSecret - base secret object with common fields for all objects.
 type BaseSecret struct {
 	ID        string    `db:"id"`
 	Name      string    `db:"name"`
@@ -45,25 +49,30 @@ type BaseSecret struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
+// GetUpdatedAt - returns the time when the object was last updated.
 func (s BaseSecret) GetUpdatedAt() time.Time {
 	return s.UpdatedAt
 }
 
+// GetID - returns the unique ID of secret.
 func (s BaseSecret) GetID() string {
 	return s.ID
 }
 
+// LoginPassword - stores the login and password data that the user uses in a particular service.
 type LoginPassword struct {
 	BaseSecret
 	Login    string `db:"login"`
 	Password string `db:"password"`
 }
 
+// TextInfo - stores secret text note.
 type TextInfo struct {
 	BaseSecret
 	Text string `db:"text"`
 }
 
+// CardInfo - stores credit card information.
 type CardInfo struct {
 	BaseSecret
 	Number          string `db:"card_number"`
@@ -72,11 +81,13 @@ type CardInfo struct {
 	ExpirationYear  string `db:"expiration_year" json:"expiration_year"`
 }
 
+// BinaryInfo - stores secret binary data(as base64 encoded).
 type BinaryInfo struct {
 	BaseSecret
 	Data string `db:"data"`
 }
 
+// SecretsList - list of all secrets.
 type SecretsList struct {
 	Passwords []*LoginPassword
 	Texts     []*TextInfo

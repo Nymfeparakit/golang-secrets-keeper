@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ListAddSecretsService - service for adding and listing secrets.
 type ListAddSecretsService interface {
 	ListSecrets() (dto.SecretsList, error)
 	AddCredentials(password *dto.LoginPassword) error
@@ -20,26 +21,31 @@ type ListAddSecretsService interface {
 	AddBinaryInfo(bin *dto.BinaryInfo) error
 }
 
+// UpdateRetrievePasswordService - service for retrieving/updating certain LoginPassword instance.
 type UpdateRetrievePasswordService interface {
 	GetSecretByID(id string) (dto.LoginPassword, error)
 	UpdateSecret(secret dto.LoginPassword) error
 }
 
+// UpdateRetrieveCardService - service for retrieving/updating certain CardInfo instance.
 type UpdateRetrieveCardService interface {
 	GetSecretByID(id string) (dto.CardInfo, error)
 	UpdateSecret(secret dto.CardInfo) error
 }
 
+// UpdateRetrieveTextService - service for retrieving/updating certain TextInfo instance.
 type UpdateRetrieveTextService interface {
 	GetSecretByID(id string) (dto.TextInfo, error)
 	UpdateSecret(secret dto.TextInfo) error
 }
 
+// UpdateRetrieveBinaryService - service for retrieving/updating certain BinaryInfo instance.
 type UpdateRetrieveBinaryService interface {
 	GetSecretByID(id string) (dto.BinaryInfo, error)
 	UpdateSecret(secret dto.BinaryInfo) error
 }
 
+// NewFlexWithHint creates new flex with main view and text view with specified hint.
 func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(mainView, 0, 6, true)
@@ -48,6 +54,7 @@ func NewFlexWithHint(mainView tview.Primitive, hint string) *tview.Flex {
 	return flex
 }
 
+// SecretsView - view for showing pages for creating, updating and listing secrets.
 type SecretsView struct {
 	PagesView
 	secretsService     ListAddSecretsService
@@ -58,6 +65,7 @@ type SecretsView struct {
 	secrets            dto.SecretsList
 }
 
+// NewSecretsView creates new SecretsView object.
 func NewSecretsView(
 	secretsService ListAddSecretsService,
 	pwdInstanceService UpdateRetrievePasswordService,
@@ -76,6 +84,7 @@ func NewSecretsView(
 	}
 }
 
+// AddSecretPage shows page to add new secret.
 func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
 	form := v.formFromSecretType(itemType)
 	form, err := forms.FillSaveItemForm(form, forms.CREATE, "", v.processSaveSecretResult)
@@ -89,6 +98,7 @@ func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
 	}
 }
 
+// UpdateSecretPage shows page to update exising secret.
 func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string) {
 	form := v.formFromSecretType(itemType)
 	form, err := forms.FillSaveItemForm(form, forms.UPDATE, secretID, v.processSaveSecretResult)
@@ -99,6 +109,7 @@ func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string)
 	}
 }
 
+// ListSecretsPage shows page to list all user's secrets.
 func (v *SecretsView) ListSecretsPage() {
 	resultSecrets, err := v.secretsService.ListSecrets()
 	if errors.Is(err, services.ErrTokenNotFound) {

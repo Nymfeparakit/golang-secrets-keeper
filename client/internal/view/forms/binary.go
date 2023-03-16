@@ -7,6 +7,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// BinaryInfoForm - form to perform save operations with certain BinaryInfo.
 type BinaryInfoForm struct {
 	instance *dto.BinaryInfo
 	tview.Form
@@ -16,12 +17,14 @@ type BinaryInfoForm struct {
 	binFilePath string
 }
 
+// NewBinaryInfoForm creates BinaryInfoForm object.
 func NewBinaryInfoForm(service AddSecretService, updateService UpdateRetrieveBinaryService) *BinaryInfoForm {
 	bin := &dto.BinaryInfo{}
 	form := tview.NewForm()
 	return &BinaryInfoForm{instance: bin, Form: *form, addService: service, retrieveUpdateService: updateService}
 }
 
+// AddInputs adds input fields to form.
 func (f *BinaryInfoForm) AddInputs() {
 	f.AddInputField("Name", f.instance.Name, 64, nil, func(name string) {
 		f.instance.Name = name
@@ -34,6 +37,7 @@ func (f *BinaryInfoForm) AddInputs() {
 	})
 }
 
+// Save performs operation with BinaryInfo when the save button is clicked.
 func (f *BinaryInfoForm) Save() error {
 	if f.binFilePath != "" {
 		binData, err := readBinaryFile(f.binFilePath)
@@ -52,10 +56,12 @@ func (f *BinaryInfoForm) Save() error {
 	return err
 }
 
+// AddBtn adds button with certain label and selected function.
 func (f *BinaryInfoForm) AddBtn(label string, selected func()) {
 	f.AddButton(label, selected)
 }
 
+// SetSecret associates specific BinaryInfo with form.
 func (f *BinaryInfoForm) SetSecret(id string) error {
 	bin, err := f.retrieveUpdateService.GetSecretByID(id)
 	f.instance = &bin

@@ -50,6 +50,7 @@ func NewAuthService(
 	}
 }
 
+// Register registers new user in remote storage.
 func (s *AuthService) Register(user *dto.User) error {
 	errorMsg := "error occurred on registering user: %s"
 
@@ -110,12 +111,15 @@ func (s *AuthService) loadUserData(email string) error {
 	return nil
 }
 
+// MetadataService - service for performing operations with grpc metadata.
 type MetadataService struct{}
 
+// NewMetadataService creates new MetadataService object.
 func NewMetadataService() *MetadataService {
 	return &MetadataService{}
 }
 
+// AddAuthMetadata adds authentication metadata (authorization token).
 func (s *MetadataService) AddAuthMetadata(ctx context.Context, token string) (context.Context, error) {
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
 	return ctx, nil

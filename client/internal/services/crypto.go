@@ -11,20 +11,24 @@ import (
 	"reflect"
 )
 
+// KeyStorage - local storage of user keys.
 type KeyStorage interface {
 	SaveUserKey([]byte) error
 	GetUserKey() ([]byte, error)
 }
 
+// CryptoService - service for encrypting and decrypting secrets.
 type CryptoService struct {
 	userKey    []byte
 	keyStorage KeyStorage
 }
 
+// NewCryptoService creates new CryptoService object.
 func NewCryptoService(keyStorage KeyStorage) *CryptoService {
 	return &CryptoService{keyStorage: keyStorage}
 }
 
+// CreateUserKey creates key for encryption from user password, then saves it in user keys storage.
 func (s *CryptoService) CreateUserKey(password string) error {
 	key := sha256.Sum256([]byte(password))
 	s.userKey = key[:]
@@ -36,6 +40,7 @@ func (s *CryptoService) CreateUserKey(password string) error {
 	return nil
 }
 
+// EncryptSecret encrypts provided secret.
 func (s *CryptoService) EncryptSecret(source any) error {
 	// todo: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)
@@ -121,6 +126,7 @@ func (s *CryptoService) getUserKey() ([]byte, error) {
 	return s.userKey, nil
 }
 
+// DecryptSecret decrypts provided secret.
 func (s *CryptoService) DecryptSecret(source any) error {
 	// TODO: check that pointers were passed
 	pSourceValue := reflect.ValueOf(source)

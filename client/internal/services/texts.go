@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
+// TextInstanceService - service to perform operations with single TextInfo instance.
 type TextInstanceService struct {
 	storageClient secrets.SecretsManagementClient
 	localStorage  LocalSecretsStorage
 }
 
+// GetSecretByID gets TextInfo specified by its id from remote storage.
 func (s *TextInstanceService) GetSecretByID(ctx context.Context, id string) (dto.TextInfo, error) {
 	request := secrets.GetSecretRequest{Id: id}
 	response, err := s.storageClient.GetTextByID(ctx, &request)
@@ -24,10 +26,12 @@ func (s *TextInstanceService) GetSecretByID(ctx context.Context, id string) (dto
 	return crdDest, nil
 }
 
+// GetLocalSecretByID gets TextInfo specified by its id from local storage.
 func (s *TextInstanceService) GetLocalSecretByID(id string, email string) (dto.TextInfo, error) {
 	return s.localStorage.GetTextById(context.Background(), id, email)
 }
 
+// UpdateSecret updates certain TextInfo in remote storage.
 func (s *TextInstanceService) UpdateSecret(ctx context.Context, txt dto.TextInfo) error {
 	txt.UpdatedAt = time.Now().UTC()
 	request := common.TextToProto(&txt)
@@ -35,6 +39,7 @@ func (s *TextInstanceService) UpdateSecret(ctx context.Context, txt dto.TextInfo
 	return err
 }
 
+// UpdateLocalSecret updates certain TextInfo in local storage.
 func (s *TextInstanceService) UpdateLocalSecret(txt dto.TextInfo) error {
 	txt.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateTextInfo(context.Background(), &txt)

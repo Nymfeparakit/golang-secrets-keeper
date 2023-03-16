@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// SecretsStorage - secrets storage.
 type SecretsStorage interface {
 	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) (string, error)
@@ -25,14 +26,17 @@ type SecretsStorage interface {
 	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
 }
 
+// BaseDBItemsStorage - storage of secrets in database.
 type BaseDBItemsStorage struct {
 	db *sqlx.DB
 }
 
+// NewBaseItemsStorage - creates new BaseDBItemsStorage object.
 func NewBaseItemsStorage(db *sqlx.DB) *BaseDBItemsStorage {
 	return &BaseDBItemsStorage{db: db}
 }
 
+// AddCredentials adds new LoginPassword object to database.
 func (s *BaseDBItemsStorage) AddCredentials(ctx context.Context, secret *dto.LoginPassword) (string, error) {
 	if secret.ID == "" {
 		secret.ID = uuid.New().String()
@@ -42,6 +46,7 @@ VALUES (:id, :name, :metadata, :user_email, :login, :password) RETURNING id`
 	return s.addSecret(ctx, query, &secret)
 }
 
+// AddTextInfo adds new TextInfo object to database.
 func (s *BaseDBItemsStorage) AddTextInfo(ctx context.Context, secret *dto.TextInfo) (string, error) {
 	if secret.ID == "" {
 		secret.ID = uuid.New().String()
@@ -50,6 +55,7 @@ func (s *BaseDBItemsStorage) AddTextInfo(ctx context.Context, secret *dto.TextIn
 	return s.addSecret(ctx, query, &secret)
 }
 
+// AddCardInfo adds new CardInfo object to database.
 func (s *BaseDBItemsStorage) AddCardInfo(ctx context.Context, secret *dto.CardInfo) (string, error) {
 	if secret.ID == "" {
 		secret.ID = uuid.New().String()
@@ -59,6 +65,7 @@ VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_mont
 	return s.addSecret(ctx, query, &secret)
 }
 
+// AddBinaryInfo adds new BinaryInfo object to database.
 func (s *BaseDBItemsStorage) AddBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) (string, error) {
 	if secret.ID == "" {
 		secret.ID = uuid.New().String()
@@ -83,6 +90,7 @@ func (s *BaseDBItemsStorage) addSecret(ctx context.Context, query string, queryA
 	return createdID, nil
 }
 
+// ListSecrets lists all secrets from database for specified user.
 func (s *BaseDBItemsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -195,6 +203,7 @@ func (s *BaseDBItemsStorage) listBinaryInfo(ctx context.Context, tx *sqlx.Tx, us
 	return secrets, nil
 }
 
+// GetCredentialsById returns LoginPassword with specified id.
 func (s *BaseDBItemsStorage) GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error) {
 	query := `SELECT * FROM login_pwd WHERE id=$1 AND user_email=$2`
 	var pwd dto.LoginPassword
@@ -206,6 +215,7 @@ func (s *BaseDBItemsStorage) GetCredentialsById(ctx context.Context, id string, 
 	return pwd, nil
 }
 
+// GetCardById returns CardInfo with specified id.
 func (s *BaseDBItemsStorage) GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error) {
 	query := `SELECT * FROM card_info WHERE id=$1 AND user_email=$2`
 	var crd dto.CardInfo
@@ -217,6 +227,7 @@ func (s *BaseDBItemsStorage) GetCardById(ctx context.Context, id string, user st
 	return crd, nil
 }
 
+// GetTextById returns TextInfo with specified id.
 func (s *BaseDBItemsStorage) GetTextById(ctx context.Context, id string, user string) (dto.TextInfo, error) {
 	query := `SELECT * FROM text_info WHERE id=$1 AND user_email=$2`
 	var txt dto.TextInfo
@@ -228,6 +239,7 @@ func (s *BaseDBItemsStorage) GetTextById(ctx context.Context, id string, user st
 	return txt, nil
 }
 
+// GetBinaryById returns BinaryInfo with specified id.
 func (s *BaseDBItemsStorage) GetBinaryById(ctx context.Context, id string, user string) (dto.BinaryInfo, error) {
 	query := `SELECT * FROM binary_info WHERE id=$1 AND user_email=$2`
 	var bin dto.BinaryInfo
@@ -247,12 +259,14 @@ func (s *BaseDBItemsStorage) getSecretByID(ctx context.Context, id string, user 
 	return err
 }
 
+// UpdateCredentials updates LoginPassword with specified id.
 func (s *BaseDBItemsStorage) UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error {
 	query := `UPDATE login_pwd SET name=:name, metadata=:metadata, login=:login, password=:password, updated_at=:updated_at
 WHERE text(id)=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &pwd)
 }
 
+// UpdateCardInfo updates CardInfo with specified id.
 func (s *BaseDBItemsStorage) UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error {
 	query := `UPDATE card_info SET name=:name, metadata=:metadata, card_number=:card_number, cvv=:cvv,
 	expiration_month=:expiration_month, expiration_year=:expiration_year, updated_at=:updated_at
@@ -260,18 +274,21 @@ WHERE text(id)=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &crd)
 }
 
+// UpdateTextInfo updates TextInfo with specified id.
 func (s *BaseDBItemsStorage) UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error {
 	query := `UPDATE text_info SET name=:name, metadata=:metadata, text=:text, updated_at=:updated_at
 WHERE text(id)=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &txt)
 }
 
+// UpdateBinaryInfo updates TextInfo with specified id.
 func (s *BaseDBItemsStorage) UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error {
 	query := `UPDATE binary_info SET name=:name, metadata=:metadata, data=:data, updated_at=:updated_at
 WHERE text(id)=:id AND updated_at < :updated_at`
 	return s.UpdateSecret(ctx, query, &crd)
 }
 
+// UpdateSecret updates secret.
 func (s *BaseDBItemsStorage) UpdateSecret(ctx context.Context, query string, arg interface{}) error {
 	_, err := s.db.NamedExecContext(ctx, query, arg)
 	if err == sql.ErrNoRows {

@@ -17,6 +17,7 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+// GetLocalStorageConnection creates database for local storage, and applies all migrations to it.
 func GetLocalStorageConnection() (*sqlx.DB, error) {
 	exPath, err := os.Executable()
 	if err != nil {

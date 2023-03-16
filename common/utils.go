@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// CredentialsToProto converts LoginPassword to proto Password message.
 func CredentialsToProto(pwd *dto.LoginPassword) *secrets.Password {
 	dest := secrets.Password{
 		Id:        pwd.ID,
@@ -20,6 +21,7 @@ func CredentialsToProto(pwd *dto.LoginPassword) *secrets.Password {
 	return &dest
 }
 
+// CardFromProto converts CardInfo proto message to CardInfo object.
 func CardFromProto(crd *secrets.CardInfo) dto.CardInfo {
 	itemDest := dto.BaseSecret{
 		ID:        crd.Id,
@@ -39,6 +41,7 @@ func CardFromProto(crd *secrets.CardInfo) dto.CardInfo {
 	return crdDest
 }
 
+// CardToProto converts CardInfo to proto CardInfo message.
 func CardToProto(crd *dto.CardInfo) *secrets.CardInfo {
 	crdDest := secrets.CardInfo{
 		Id:              crd.ID,
@@ -55,6 +58,7 @@ func CardToProto(crd *dto.CardInfo) *secrets.CardInfo {
 	return &crdDest
 }
 
+// TextFromProto converts TextInfo proto message to TextInfo object.
 func TextFromProto(txt *secrets.TextInfo) dto.TextInfo {
 	itemDest := dto.BaseSecret{
 		ID:        txt.Id,
@@ -71,6 +75,7 @@ func TextFromProto(txt *secrets.TextInfo) dto.TextInfo {
 	return txtDest
 }
 
+// TextToProto converts TextInfo to proto TextInfo message.
 func TextToProto(txt *dto.TextInfo) *secrets.TextInfo {
 	txtDest := secrets.TextInfo{
 		Id:        txt.ID,
@@ -84,6 +89,7 @@ func TextToProto(txt *dto.TextInfo) *secrets.TextInfo {
 	return &txtDest
 }
 
+// BinaryFromProto converts BinaryInfo proto message to BinaryInfo object.
 func BinaryFromProto(bin *secrets.BinaryInfo) dto.BinaryInfo {
 	itemDest := dto.BaseSecret{
 		ID:        bin.Id,
@@ -100,6 +106,7 @@ func BinaryFromProto(bin *secrets.BinaryInfo) dto.BinaryInfo {
 	return binDest
 }
 
+// BinaryToProto converts BinaryInfo to proto BinaryInfo message.
 func BinaryToProto(bin *dto.BinaryInfo) *secrets.BinaryInfo {
 	dest := secrets.BinaryInfo{
 		Id:        bin.ID,
@@ -113,6 +120,7 @@ func BinaryToProto(bin *dto.BinaryInfo) *secrets.BinaryInfo {
 	return &dest
 }
 
+// PasswordFromProto converts Password proto message to LoginPassword object.
 func PasswordFromProto(pwd *secrets.Password) dto.LoginPassword {
 	itemDest := dto.BaseSecret{
 		ID:        pwd.Id,

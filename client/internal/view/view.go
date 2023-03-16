@@ -5,11 +5,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// PagesView - view with multiple pages.
 type PagesView struct {
 	app   *tview.Application
 	pages *tview.Pages
 }
 
+// NewPagesView creates new PagesView object.
 func NewPagesView() *PagesView {
 	app := tview.NewApplication()
 	pages := tview.NewPages()
@@ -17,6 +19,7 @@ func NewPagesView() *PagesView {
 	return &PagesView{app: app, pages: pages}
 }
 
+// ResultPage shows page with description of certain operation result.
 func (v *PagesView) ResultPage(resultMsg string) {
 	resultView := tview.NewTextView().SetText(resultMsg)
 	v.pages.AddPage("Result", resultView, true, false)

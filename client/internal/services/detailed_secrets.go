@@ -7,11 +7,13 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 )
 
+// UpdateRetrieveDeleteSecretServiceInterface service to perform update/retrieve operations with local and remote storage.
 type UpdateRetrieveDeleteSecretServiceInterface[T dto.Secret] interface {
 	GetSecretByID(id string) (T, error)
 	UpdateSecret(secret T) error
 }
 
+// SecretInstanceService - service to perform operations with single secret instance.
 type SecretInstanceService[T dto.Secret] interface {
 	GetSecretByID(ctx context.Context, id string) (T, error)
 	GetLocalSecretByID(id string, email string) (T, error)
@@ -19,6 +21,7 @@ type SecretInstanceService[T dto.Secret] interface {
 	UpdateLocalSecret(secret T) error
 }
 
+// UpdateRetrieveDeleteSecretService - service to perform update/retrieve operations with local and remote storage.
 type UpdateRetrieveDeleteSecretService[T dto.Secret] struct {
 	secretInstanceService SecretInstanceService[T]
 	authService           AuthMetadataService
@@ -26,6 +29,7 @@ type UpdateRetrieveDeleteSecretService[T dto.Secret] struct {
 	userCredsStorage      UserCredentialsStorage
 }
 
+// NewUpdateRetrieveDeletePasswordService creates service to perform update/retrieve operations with LoginPassword instance.
 func NewUpdateRetrieveDeletePasswordService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
@@ -45,6 +49,7 @@ func NewUpdateRetrieveDeletePasswordService(
 	}
 }
 
+// NewUpdateRetrieveDeleteCardService creates service to perform update/retrieve operations with CardInfo instance.
 func NewUpdateRetrieveDeleteCardService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
@@ -64,6 +69,7 @@ func NewUpdateRetrieveDeleteCardService(
 	}
 }
 
+// NewUpdateRetrieveDeleteTextService creates service to perform update/retrieve operations with TextInfo instance.
 func NewUpdateRetrieveDeleteTextService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
@@ -83,6 +89,7 @@ func NewUpdateRetrieveDeleteTextService(
 	}
 }
 
+// NewUpdateRetrieveDeleteBinaryService creates service to perform update/retrieve operations with BinaryInfo instance.
 func NewUpdateRetrieveDeleteBinaryService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
@@ -102,6 +109,8 @@ func NewUpdateRetrieveDeleteBinaryService(
 	}
 }
 
+// GetSecretByID gets secret from remote and local storage, then compares them and returns the one with the latest
+// UpdatedAt timestamp.
 func (s *UpdateRetrieveDeleteSecretService[T]) GetSecretByID(id string) (T, error) {
 	var secret T
 
@@ -123,6 +132,7 @@ func (s *UpdateRetrieveDeleteSecretService[T]) GetSecretByID(id string) (T, erro
 	return secret, nil
 }
 
+// UpdateSecret updates secret in remote and local storage.
 func (s *UpdateRetrieveDeleteSecretService[T]) UpdateSecret(secret T) error {
 	err := s.cryptoService.EncryptSecret(&secret)
 	if err != nil {
