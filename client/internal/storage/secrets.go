@@ -5,7 +5,6 @@ import (
 	"context"
 	commonstorage "github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"strconv"
 )
@@ -18,57 +17,6 @@ type LocalDBSecretsStorage struct {
 func NewSecretsStorage(db *sqlx.DB) *LocalDBSecretsStorage {
 	baseStorage := commonstorage.NewBaseItemsStorage(db)
 	return &LocalDBSecretsStorage{db: db, BaseDBItemsStorage: *baseStorage}
-}
-
-func (s *LocalDBSecretsStorage) AddCredentials(ctx context.Context, password *dto.LoginPassword) error {
-	if password.ID == "" {
-		password.ID = uuid.New().String()
-	}
-	query := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password)
-VALUES (:id, :name, :metadata, :user_email, :login, :password)`
-	_, err := s.db.NamedExecContext(ctx, query, &password)
-	return err
-}
-
-func (s *LocalDBSecretsStorage) AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) error {
-	if textInfo.ID == "" {
-		textInfo.ID = uuid.New().String()
-	}
-	query := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES (:id, :name, :metadata, :user_email, :text)`
-	_, err := s.db.NamedExecContext(ctx, query, &textInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *LocalDBSecretsStorage) AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) error {
-	if cardInfo.ID == "" {
-		cardInfo.ID = uuid.New().String()
-	}
-	query := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
-VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year)`
-	_, err := s.db.NamedExecContext(ctx, query, &cardInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *LocalDBSecretsStorage) AddBinaryInfo(ctx context.Context, binInfo *dto.BinaryInfo) error {
-	if binInfo.ID == "" {
-		binInfo.ID = uuid.New().String()
-	}
-	query := `INSERT INTO binary_info (id, name, metadata, user_email, data)
-VALUES (:id, :name, :metadata, :user_email, :data)`
-	_, err := s.db.NamedExecContext(ctx, query, &binInfo)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.SecretsList) error {
@@ -93,7 +41,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	if len(secretsList.Cards) != 0 {
-		queryCards := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)`
+		queryCards := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year) VALUES`
 		var crdQueryArgs []interface{}
 		for _, crd := range secretsList.Cards {
 			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.ExpirationMonth, &crd.ExpirationYear)
@@ -107,7 +55,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	if len(secretsList.Texts) != 0 {
-		queryTxts := `INSERT INTO text_info (id, name, metadata, user_email, text)`
+		queryTxts := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES`
 		var txtQueryArgs []interface{}
 		for _, txt := range secretsList.Texts {
 			txtQueryArgs = append(txtQueryArgs, &txt.ID, &txt.Name, &txt.Metadata, &txt.User, &txt.Text)
@@ -115,6 +63,20 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 
 		queryTxts += s.createBulkInsertArgsString(len(secretsList.Texts), 5)
 		_, err = tx.ExecContext(ctx, queryTxts, txtQueryArgs...)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(secretsList.Bins) != 0 {
+		query := `INSERT INTO binary_info (id, name, metadata, user_email, data) VALUES`
+		var binQueryArgs []interface{}
+		for _, secret := range secretsList.Bins {
+			binQueryArgs = append(binQueryArgs, &secret.ID, &secret.Name, &secret.Metadata, &secret.User, &secret.Data)
+		}
+
+		query += s.createBulkInsertArgsString(len(secretsList.Texts), 5)
+		_, err = tx.ExecContext(ctx, query, binQueryArgs...)
 		if err != nil {
 			return err
 		}

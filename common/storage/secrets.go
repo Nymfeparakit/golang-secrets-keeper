@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Nymfeparakit/gophkeeper/dto"
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 )
@@ -30,6 +31,56 @@ type BaseDBItemsStorage struct {
 
 func NewBaseItemsStorage(db *sqlx.DB) *BaseDBItemsStorage {
 	return &BaseDBItemsStorage{db: db}
+}
+
+func (s *BaseDBItemsStorage) AddCredentials(ctx context.Context, secret *dto.LoginPassword) (string, error) {
+	if secret.ID == "" {
+		secret.ID = uuid.New().String()
+	}
+	query := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password)
+VALUES (:id, :name, :metadata, :user_email, :login, :password) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *BaseDBItemsStorage) AddTextInfo(ctx context.Context, secret *dto.TextInfo) (string, error) {
+	if secret.ID == "" {
+		secret.ID = uuid.New().String()
+	}
+	query := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES (:id, :name, :metadata, :user_email, :text) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *BaseDBItemsStorage) AddCardInfo(ctx context.Context, secret *dto.CardInfo) (string, error) {
+	if secret.ID == "" {
+		secret.ID = uuid.New().String()
+	}
+	query := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year)
+VALUES (:id, :name, :metadata, :user_email, :card_number, :cvv, :expiration_month, :expiration_year) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *BaseDBItemsStorage) AddBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) (string, error) {
+	if secret.ID == "" {
+		secret.ID = uuid.New().String()
+	}
+	query := `INSERT INTO binary_info (id, name, metadata, user_email, data)
+VALUES (:id, :name, :metadata, :user_email, :data) RETURNING id`
+	return s.addSecret(ctx, query, &secret)
+}
+
+func (s *BaseDBItemsStorage) addSecret(ctx context.Context, query string, queryArg interface{}) (string, error) {
+	stmt, err := s.db.PrepareNamedContext(ctx, query)
+	if err != nil {
+		return "", err
+	}
+
+	var createdID string
+	err = stmt.QueryRowxContext(ctx, queryArg).Scan(&createdID)
+	if err != nil {
+		return "", err
+	}
+
+	return createdID, nil
 }
 
 func (s *BaseDBItemsStorage) ListSecrets(ctx context.Context, user string) (dto.SecretsList, error) {
