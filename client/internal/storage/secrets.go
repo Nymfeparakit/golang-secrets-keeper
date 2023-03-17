@@ -47,7 +47,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 		queryCards := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year) VALUES`
 		var crdQueryArgs []interface{}
 		for _, crd := range secretsList.Cards {
-			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.ExpirationMonth, &crd.ExpirationYear)
+			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.CVV, &crd.ExpirationMonth, &crd.ExpirationYear)
 		}
 
 		queryCards += s.createBulkInsertArgsString(len(secretsList.Cards), 8)
