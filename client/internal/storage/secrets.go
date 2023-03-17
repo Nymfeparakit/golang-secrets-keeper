@@ -78,7 +78,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 			binQueryArgs = append(binQueryArgs, &secret.ID, &secret.Name, &secret.Metadata, &secret.User, &secret.Data)
 		}
 
-		query += s.createBulkInsertArgsString(len(secretsList.Texts), 5)
+		query += s.createBulkInsertArgsString(len(secretsList.Bins), 5)
 		_, err = tx.ExecContext(ctx, query, binQueryArgs...)
 		if err != nil {
 			return err
