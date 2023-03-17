@@ -108,6 +108,7 @@ func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string)
 	form, err := forms.FillSaveItemForm(form, forms.UPDATE, secretID, v.processSaveSecretResult)
 	if err != nil {
 		v.ResultPage(fmt.Sprintf("can't update secret: %v", err))
+		return
 	}
 	v.pages.AddPage("Update item", form, true, true)
 	err = v.app.Run()
