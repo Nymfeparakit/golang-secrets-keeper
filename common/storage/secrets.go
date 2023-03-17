@@ -24,6 +24,10 @@ type SecretsStorage interface {
 	UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error
 	UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error
 	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
+	DeleteCredentials(ctx context.Context, id string) error
+	DeleteTextInfo(ctx context.Context, id string) error
+	DeleteCardInfo(ctx context.Context, id string) error
+	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
 // BaseDBItemsStorage - storage of secrets in database.
@@ -295,4 +299,52 @@ func (s *BaseDBItemsStorage) UpdateSecret(ctx context.Context, query string, arg
 		return CantUpdateSecret
 	}
 	return err
+}
+
+func (s *BaseDBItemsStorage) DeleteCredentials(ctx context.Context, id string) error {
+	return s.deleteSecret(ctx, id, dto.PASSWORD)
+}
+
+func (s *BaseDBItemsStorage) DeleteTextInfo(ctx context.Context, id string) error {
+	return s.deleteSecret(ctx, id, dto.TEXT)
+}
+
+func (s *BaseDBItemsStorage) DeleteCardInfo(ctx context.Context, id string) error {
+	return s.deleteSecret(ctx, id, dto.CARD)
+}
+
+func (s *BaseDBItemsStorage) DeleteBinaryInfo(ctx context.Context, id string) error {
+	return s.deleteSecret(ctx, id, dto.BINARY)
+}
+
+func (s *BaseDBItemsStorage) deleteSecret(ctx context.Context, id string, secretType dto.SecretType) error {
+	tableName := s.GetTableNameBySecretType(secretType)
+
+	query := `UPDATE ` + tableName + ` SET deleted=true WHERE deleted=false AND id=$1`
+	result, err := s.db.ExecContext(ctx, query, &id)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrSecretDoesNotExistOrWasDeleted
+	}
+
+	return err
+}
+
+func (s *BaseDBItemsStorage) GetTableNameBySecretType(secretType dto.SecretType) string {
+	var tableName string
+	switch secretType {
+	case dto.PASSWORD:
+		tableName = "login_pwd"
+	case dto.CARD:
+		tableName = "card_info"
+	case dto.TEXT:
+		tableName = "text_info"
+	case dto.BINARY:
+		tableName = "binary_info"
+	}
+
+	return tableName
 }

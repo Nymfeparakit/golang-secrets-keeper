@@ -38,6 +38,7 @@ func SecretTypeFromString(s string) (SecretType, error) {
 type Secret interface {
 	GetUpdatedAt() time.Time
 	GetID() string
+	IsDeleted() bool
 }
 
 // BaseSecret - base secret object with common fields for all objects.
@@ -47,6 +48,7 @@ type BaseSecret struct {
 	User      string    `db:"user_email"`
 	Metadata  string    `db:"metadata"`
 	UpdatedAt time.Time `db:"updated_at"`
+	Deleted   bool      `db:"deleted"`
 }
 
 // GetUpdatedAt - returns the time when the object was last updated.
@@ -57,6 +59,10 @@ func (s BaseSecret) GetUpdatedAt() time.Time {
 // GetID - returns the unique ID of secret.
 func (s BaseSecret) GetID() string {
 	return s.ID
+}
+
+func (s BaseSecret) IsDeleted() bool {
+	return s.Deleted
 }
 
 // LoginPassword - stores the login and password data that the user uses in a particular service.

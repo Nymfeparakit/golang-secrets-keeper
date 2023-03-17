@@ -69,3 +69,19 @@ func (s *SecretsService) UpdateBinaryInfo(ctx context.Context, secret *dto.Binar
 func (s *SecretsService) UpdateCardInfo(ctx context.Context, secret *dto.CardInfo) error {
 	return s.storage.UpdateCardInfo(ctx, secret)
 }
+
+func (s *SecretsService) DeleteCredentials(ctx context.Context, id string) error {
+	return s.storage.DeleteCredentials(ctx, id)
+}
+
+func (s *SecretsService) DeleteTextInfo(ctx context.Context, id string) error {
+	return s.storage.DeleteTextInfo(ctx, id)
+}
+
+func (s *SecretsService) DeleteCardInfo(ctx context.Context, id string) error {
+	return s.storage.DeleteCardInfo(ctx, id)
+}
+
+func (s *SecretsService) DeleteBinaryInfo(ctx context.Context, id string) error {
+	return s.storage.DeleteBinaryInfo(ctx, id)
+}

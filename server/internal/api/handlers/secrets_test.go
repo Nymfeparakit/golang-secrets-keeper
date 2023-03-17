@@ -3,12 +3,15 @@ package handlers
 import (
 	"context"
 	"github.com/Nymfeparakit/gophkeeper/common"
+	commonstorage "github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	mock_handlers "github.com/Nymfeparakit/gophkeeper/server/internal/api/handlers/mocks"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
@@ -578,6 +581,133 @@ func TestSecretsServer_UpdateBinaryInfo(t *testing.T) {
 			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
 			_, err := secretsServer.UpdateBinaryInfo(context.Background(), tt.request)
 			require.NoError(t, err)
+		})
+	}
+}
+
+type deleteSecretTestCase struct {
+	name             string
+	setupMocks       func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService)
+	expError         error
+	callDeleteMethod func(server *SecretsServer) error
+}
+
+func TestSecretsServer_DeleteSecret(t *testing.T) {
+	id := "123"
+	tests := []deleteSecretTestCase{
+		{
+			name: "simple password test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteCredentials(context.Background(), id).Return(nil)
+			},
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteCredentials(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "password does not exist or was already deleted",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteCredentials(context.Background(), id).Return(commonstorage.ErrSecretDoesNotExistOrWasDeleted)
+			},
+			expError: status.Error(codes.FailedPrecondition, "Can't delete secret"),
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteCredentials(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "simple text info test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteTextInfo(context.Background(), id).Return(nil)
+			},
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteTextInfo(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "text info does not exist or was already deleted",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteTextInfo(context.Background(), id).Return(commonstorage.ErrSecretDoesNotExistOrWasDeleted)
+			},
+			expError: status.Error(codes.FailedPrecondition, "Can't delete secret"),
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteTextInfo(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "simple binary info test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteBinaryInfo(context.Background(), id).Return(nil)
+			},
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteBinaryInfo(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "binary info does not exist or was already deleted",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteBinaryInfo(context.Background(), id).Return(commonstorage.ErrSecretDoesNotExistOrWasDeleted)
+			},
+			expError: status.Error(codes.FailedPrecondition, "Can't delete secret"),
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteBinaryInfo(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "simple card info test",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteCardInfo(context.Background(), id).Return(nil)
+			},
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteCardInfo(context.Background(), request)
+				return err
+			},
+		},
+		{
+			name: "card info does not exist or was already deleted",
+			setupMocks: func(authMock *mock_handlers.MockAuthService, secretsMock *mock_handlers.MockSecretsService) {
+				authMock.EXPECT().GetUserFromContext(gomock.Any()).Return("test@mail.com", true)
+				secretsMock.EXPECT().DeleteCardInfo(context.Background(), id).Return(commonstorage.ErrSecretDoesNotExistOrWasDeleted)
+			},
+			expError: status.Error(codes.FailedPrecondition, "Can't delete secret"),
+			callDeleteMethod: func(server *SecretsServer) error {
+				request := &secrets.DeleteSecretRequest{Id: id}
+				_, err := server.DeleteCardInfo(context.Background(), request)
+				return err
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			secretsServer := initServerAndMocks(ctrl, tt.setupMocks)
+			err := tt.callDeleteMethod(secretsServer)
+			if tt.expError != nil {
+				assert.Equal(t, tt.expError, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

@@ -95,6 +95,62 @@ func (mr *MockSecretsServiceMockRecorder) AddTextInfo(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTextInfo", reflect.TypeOf((*MockSecretsService)(nil).AddTextInfo), arg0, arg1)
 }
 
+// DeleteBinaryInfo mocks base method.
+func (m *MockSecretsService) DeleteBinaryInfo(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteBinaryInfo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteBinaryInfo indicates an expected call of DeleteBinaryInfo.
+func (mr *MockSecretsServiceMockRecorder) DeleteBinaryInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBinaryInfo", reflect.TypeOf((*MockSecretsService)(nil).DeleteBinaryInfo), arg0, arg1)
+}
+
+// DeleteCardInfo mocks base method.
+func (m *MockSecretsService) DeleteCardInfo(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCardInfo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCardInfo indicates an expected call of DeleteCardInfo.
+func (mr *MockSecretsServiceMockRecorder) DeleteCardInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCardInfo", reflect.TypeOf((*MockSecretsService)(nil).DeleteCardInfo), arg0, arg1)
+}
+
+// DeleteCredentials mocks base method.
+func (m *MockSecretsService) DeleteCredentials(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCredentials", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCredentials indicates an expected call of DeleteCredentials.
+func (mr *MockSecretsServiceMockRecorder) DeleteCredentials(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCredentials", reflect.TypeOf((*MockSecretsService)(nil).DeleteCredentials), arg0, arg1)
+}
+
+// DeleteTextInfo mocks base method.
+func (m *MockSecretsService) DeleteTextInfo(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTextInfo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTextInfo indicates an expected call of DeleteTextInfo.
+func (mr *MockSecretsServiceMockRecorder) DeleteTextInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTextInfo", reflect.TypeOf((*MockSecretsService)(nil).DeleteTextInfo), arg0, arg1)
+}
+
 // GetBinaryById mocks base method.
 func (m *MockSecretsService) GetBinaryById(arg0 context.Context, arg1, arg2 string) (*dto.BinaryInfo, error) {
 	m.ctrl.T.Helper()

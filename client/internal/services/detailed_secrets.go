@@ -2,15 +2,20 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // UpdateRetrieveDeleteSecretServiceInterface service to perform update/retrieve operations with local and remote storage.
 type UpdateRetrieveDeleteSecretServiceInterface[T dto.Secret] interface {
 	GetSecretByID(id string) (T, error)
 	UpdateSecret(secret T) error
+	DeleteSecret(id string) error
 }
 
 // SecretInstanceService - service to perform operations with single secret instance.
@@ -19,6 +24,8 @@ type SecretInstanceService[T dto.Secret] interface {
 	GetLocalSecretByID(id string, email string) (T, error)
 	UpdateSecret(ctx context.Context, secret T) error
 	UpdateLocalSecret(secret T) error
+	DeleteSecret(ctx context.Context, id string) error
+	DeleteLocalSecret(id string) error
 }
 
 // UpdateRetrieveDeleteSecretService - service to perform update/retrieve operations with local and remote storage.
@@ -116,13 +123,43 @@ func (s *UpdateRetrieveDeleteSecretService[T]) GetSecretByID(id string) (T, erro
 
 	// first get secret from remote storage
 	secret, err := s.getSecretById(id)
-	if err != nil && !checkUnavailableError(err) {
-		return secret, err
+	gotSecretFromRemote := true
+	if err != nil {
+		if !checkUnavailableError(err) {
+			return secret, err
+		}
+		gotSecretFromRemote = false
+	}
+	// check that it wasn't deleted
+	if gotSecretFromRemote && secret.IsDeleted() {
+		return secret, ErrSecretDoesNotExist
 	}
 
 	// get secret from local storage
 	localSecret, err := s.getLocalSecretByID(id)
+	gotLocalSecret := true
+	if err != nil {
+		if err != storage.ErrSecretNotFound {
+			return secret, fmt.Errorf("can't get secret from local storage")
+		}
+		gotLocalSecret = false
+	}
+	// check that it wasn't deleted
+	if gotLocalSecret && localSecret.IsDeleted() {
+		return secret, ErrSecretDoesNotExist
+	}
 
+	// if there's no such secret on remote and in local storage
+	if !gotLocalSecret && !gotSecretFromRemote {
+		return secret, storage.ErrSecretNotFound
+	}
+	// if such a secret exists only in local storage
+	if !gotSecretFromRemote {
+		return localSecret, nil
+	}
+	if !gotLocalSecret {
+		return secret, nil
+	}
 	// compare updated_at timestamp
 	//return secret with the latest timestamp
 	if localSecret.GetUpdatedAt().After(secret.GetUpdatedAt()) {
@@ -154,6 +191,41 @@ func (s *UpdateRetrieveDeleteSecretService[T]) UpdateSecret(secret T) error {
 	err = s.secretInstanceService.UpdateLocalSecret(secret)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// DeleteSecret deletes secret in remote and local storage.
+func (s *UpdateRetrieveDeleteSecretService[T]) DeleteSecret(id string) error {
+	// try to delete in remote
+	ctx, err := s.authenticateContext(context.Background())
+	if err != nil {
+		return err
+	}
+	err = s.secretInstanceService.DeleteSecret(ctx, id)
+	st, ok := status.FromError(err)
+	deletedFromRemote := true
+	if err != nil {
+		deletedFromRemote = false
+		// failed precondition can be in case when secret was already deleted from remote
+		if ok && st.Code() != codes.FailedPrecondition && !checkUnavailableError(err) {
+			return err
+		}
+	}
+
+	// try to delete locally
+	deletedFromLocal := true
+	err = s.secretInstanceService.DeleteLocalSecret(id)
+	if err != nil {
+		deletedFromLocal = false
+		if !errors.Is(err, storage.ErrSecretDoesNotExistOrWasDeleted) {
+			return err
+		}
+	}
+
+	if !deletedFromRemote && !deletedFromLocal {
+		return fmt.Errorf("secret with provided id doesn't exist")
 	}
 
 	return nil

@@ -116,6 +116,86 @@ func (mr *MockSecretsManagementClientMockRecorder) AddTextInfo(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTextInfo", reflect.TypeOf((*MockSecretsManagementClient)(nil).AddTextInfo), varargs...)
 }
 
+// DeleteBinaryInfo mocks base method.
+func (m *MockSecretsManagementClient) DeleteBinaryInfo(arg0 context.Context, arg1 *secrets.DeleteSecretRequest, arg2 ...grpc.CallOption) (*secrets.ResponseWithError, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteBinaryInfo", varargs...)
+	ret0, _ := ret[0].(*secrets.ResponseWithError)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteBinaryInfo indicates an expected call of DeleteBinaryInfo.
+func (mr *MockSecretsManagementClientMockRecorder) DeleteBinaryInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBinaryInfo", reflect.TypeOf((*MockSecretsManagementClient)(nil).DeleteBinaryInfo), varargs...)
+}
+
+// DeleteCardInfo mocks base method.
+func (m *MockSecretsManagementClient) DeleteCardInfo(arg0 context.Context, arg1 *secrets.DeleteSecretRequest, arg2 ...grpc.CallOption) (*secrets.ResponseWithError, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteCardInfo", varargs...)
+	ret0, _ := ret[0].(*secrets.ResponseWithError)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteCardInfo indicates an expected call of DeleteCardInfo.
+func (mr *MockSecretsManagementClientMockRecorder) DeleteCardInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCardInfo", reflect.TypeOf((*MockSecretsManagementClient)(nil).DeleteCardInfo), varargs...)
+}
+
+// DeleteCredentials mocks base method.
+func (m *MockSecretsManagementClient) DeleteCredentials(arg0 context.Context, arg1 *secrets.DeleteSecretRequest, arg2 ...grpc.CallOption) (*secrets.ResponseWithError, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteCredentials", varargs...)
+	ret0, _ := ret[0].(*secrets.ResponseWithError)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteCredentials indicates an expected call of DeleteCredentials.
+func (mr *MockSecretsManagementClientMockRecorder) DeleteCredentials(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCredentials", reflect.TypeOf((*MockSecretsManagementClient)(nil).DeleteCredentials), varargs...)
+}
+
+// DeleteTextInfo mocks base method.
+func (m *MockSecretsManagementClient) DeleteTextInfo(arg0 context.Context, arg1 *secrets.DeleteSecretRequest, arg2 ...grpc.CallOption) (*secrets.ResponseWithError, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteTextInfo", varargs...)
+	ret0, _ := ret[0].(*secrets.ResponseWithError)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteTextInfo indicates an expected call of DeleteTextInfo.
+func (mr *MockSecretsManagementClientMockRecorder) DeleteTextInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTextInfo", reflect.TypeOf((*MockSecretsManagementClient)(nil).DeleteTextInfo), varargs...)
+}
+
 // GetBinaryByID mocks base method.
 func (m *MockSecretsManagementClient) GetBinaryByID(arg0 context.Context, arg1 *secrets.GetSecretRequest, arg2 ...grpc.CallOption) (*secrets.GetBinaryResponse, error) {
 	m.ctrl.T.Helper()

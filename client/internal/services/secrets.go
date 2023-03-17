@@ -31,16 +31,24 @@ type LocalSecretsStorage interface {
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) (string, error)
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) (string, error)
 	AddBinaryInfo(ctx context.Context, binInfo *dto.BinaryInfo) (string, error)
+
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 	AddSecrets(ctx context.Context, secretsList dto.SecretsList) error
+
 	GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error)
 	GetTextById(ctx context.Context, id string, user string) (dto.TextInfo, error)
 	GetBinaryById(ctx context.Context, id string, user string) (dto.BinaryInfo, error)
 	GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error)
+
 	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
 	UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error
 	UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error
 	UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error
+
+	DeleteCredentials(ctx context.Context, id string) error
+	DeleteTextInfo(ctx context.Context, id string) error
+	DeleteCardInfo(ctx context.Context, id string) error
+	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
 type UpdatePasswordsService interface{}
@@ -378,7 +386,9 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 	dataToSync := s.findAllAndUniqIDs(pwdID, localPwdID)
 
 	for _, ID := range dataToSync.localUniqID {
-		secretsList.Passwords = append(secretsList.Passwords, localSecrets.passwords[ID])
+		if !localSecrets.passwords[ID].IsDeleted() {
+			secretsList.Passwords = append(secretsList.Passwords, localSecrets.passwords[ID])
+		}
 		wg.Go(func() error {
 			request := common.CredentialsToProto(localSecrets.passwords[ID])
 			_, err := s.storageClient.AddCredentials(ctx, request)
@@ -386,14 +396,18 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for _, ID := range dataToSync.remoteUniqID {
-		secretsList.Passwords = append(secretsList.Passwords, secrets.passwords[ID])
+		if !secrets.passwords[ID].IsDeleted() {
+			secretsList.Passwords = append(secretsList.Passwords, secrets.passwords[ID])
+		}
 		wg.Go(func() error {
 			_, err := s.localStorage.AddCredentials(ctx, secrets.passwords[ID])
 			return err
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		secretsList.Passwords = append(secretsList.Passwords, secrets.passwords[ID])
+		if !secrets.passwords[ID].IsDeleted() {
+			secretsList.Passwords = append(secretsList.Passwords, secrets.passwords[ID])
+		}
 	}
 
 	txtID := make(map[string]bool, len(secrets.texts))
@@ -407,7 +421,9 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 	dataToSync = s.findAllAndUniqIDs(txtID, localTxtID)
 
 	for _, ID := range dataToSync.localUniqID {
-		secretsList.Texts = append(secretsList.Texts, localSecrets.texts[ID])
+		if !localSecrets.texts[ID].IsDeleted() {
+			secretsList.Texts = append(secretsList.Texts, localSecrets.texts[ID])
+		}
 		wg.Go(func() error {
 			request := common.TextToProto(localSecrets.texts[ID])
 			_, err := s.storageClient.AddTextInfo(ctx, request)
@@ -415,14 +431,18 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for _, ID := range dataToSync.remoteUniqID {
-		secretsList.Texts = append(secretsList.Texts, secrets.texts[ID])
+		if !secrets.texts[ID].IsDeleted() {
+			secretsList.Texts = append(secretsList.Texts, secrets.texts[ID])
+		}
 		wg.Go(func() error {
 			_, err := s.localStorage.AddTextInfo(ctx, secrets.texts[ID])
 			return err
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		secretsList.Texts = append(secretsList.Texts, secrets.texts[ID])
+		if !secrets.texts[ID].IsDeleted() {
+			secretsList.Texts = append(secretsList.Texts, secrets.texts[ID])
+		}
 	}
 
 	crdID := make(map[string]bool, len(secrets.cards))
@@ -436,7 +456,9 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 	dataToSync = s.findAllAndUniqIDs(crdID, localCrdID)
 
 	for _, ID := range dataToSync.localUniqID {
-		secretsList.Cards = append(secretsList.Cards, localSecrets.cards[ID])
+		if !localSecrets.cards[ID].IsDeleted() {
+			secretsList.Cards = append(secretsList.Cards, localSecrets.cards[ID])
+		}
 		wg.Go(func() error {
 			request := common.CardToProto(localSecrets.cards[ID])
 			_, err := s.storageClient.AddCardInfo(ctx, request)
@@ -444,14 +466,18 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for _, ID := range dataToSync.remoteUniqID {
-		secretsList.Cards = append(secretsList.Cards, secrets.cards[ID])
+		if !secrets.cards[ID].IsDeleted() {
+			secretsList.Cards = append(secretsList.Cards, secrets.cards[ID])
+		}
 		wg.Go(func() error {
 			_, err := s.localStorage.AddCardInfo(ctx, secrets.cards[ID])
 			return err
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		secretsList.Cards = append(secretsList.Cards, secrets.cards[ID])
+		if !secrets.cards[ID].IsDeleted() {
+			secretsList.Cards = append(secretsList.Cards, secrets.cards[ID])
+		}
 	}
 
 	binID := make(map[string]bool, len(secrets.bins))
@@ -465,7 +491,9 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 	dataToSync = s.findAllAndUniqIDs(binID, localBinID)
 
 	for _, ID := range dataToSync.localUniqID {
-		secretsList.Bins = append(secretsList.Bins, localSecrets.bins[ID])
+		if !localSecrets.bins[ID].IsDeleted() {
+			secretsList.Bins = append(secretsList.Bins, localSecrets.bins[ID])
+		}
 		wg.Go(func() error {
 			request := common.BinaryToProto(localSecrets.bins[ID])
 			_, err := s.storageClient.AddBinaryInfo(ctx, request)
@@ -473,14 +501,18 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for _, ID := range dataToSync.remoteUniqID {
-		secretsList.Bins = append(secretsList.Bins, secrets.bins[ID])
+		if !secrets.bins[ID].IsDeleted() {
+			secretsList.Bins = append(secretsList.Bins, secrets.bins[ID])
+		}
 		wg.Go(func() error {
 			_, err := s.localStorage.AddBinaryInfo(ctx, secrets.bins[ID])
 			return err
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		secretsList.Bins = append(secretsList.Bins, secrets.bins[ID])
+		if !secrets.bins[ID].IsDeleted() {
+			secretsList.Bins = append(secretsList.Bins, secrets.bins[ID])
+		}
 	}
 
 	if err := wg.Wait(); err != nil {

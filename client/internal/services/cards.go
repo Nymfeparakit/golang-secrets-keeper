@@ -44,3 +44,14 @@ func (s *CardInstanceService) UpdateLocalSecret(crd dto.CardInfo) error {
 	crd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCardInfo(context.Background(), &crd)
 }
+
+// DeleteSecret deletes certain CardInfo in remote storage.
+func (s *CardInstanceService) DeleteSecret(ctx context.Context, id string) error {
+	_, err := s.storageClient.DeleteCardInfo(ctx, &secrets.DeleteSecretRequest{Id: id})
+	return err
+}
+
+// DeleteLocalSecret deletes certain CardInfo in local storage.
+func (s *CardInstanceService) DeleteLocalSecret(id string) error {
+	return s.localStorage.DeleteCardInfo(context.Background(), id)
+}

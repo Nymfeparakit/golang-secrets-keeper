@@ -35,6 +35,10 @@ type SecretsManagementClient interface {
 	UpdateCardInfo(ctx context.Context, in *CardInfo, opts ...grpc.CallOption) (*EmptyResponse, error)
 	UpdateTextInfo(ctx context.Context, in *TextInfo, opts ...grpc.CallOption) (*EmptyResponse, error)
 	UpdateBinaryInfo(ctx context.Context, in *BinaryInfo, opts ...grpc.CallOption) (*EmptyResponse, error)
+	DeleteCredentials(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error)
+	DeleteCardInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error)
+	DeleteTextInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error)
+	DeleteBinaryInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error)
 }
 
 type secretsManagementClient struct {
@@ -162,6 +166,42 @@ func (c *secretsManagementClient) UpdateBinaryInfo(ctx context.Context, in *Bina
 	return out, nil
 }
 
+func (c *secretsManagementClient) DeleteCredentials(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error) {
+	out := new(ResponseWithError)
+	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/DeleteCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretsManagementClient) DeleteCardInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error) {
+	out := new(ResponseWithError)
+	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/DeleteCardInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretsManagementClient) DeleteTextInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error) {
+	out := new(ResponseWithError)
+	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/DeleteTextInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretsManagementClient) DeleteBinaryInfo(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*ResponseWithError, error) {
+	out := new(ResponseWithError)
+	err := c.cc.Invoke(ctx, "/proto.SecretsManagement/DeleteBinaryInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SecretsManagementServer is the server API for SecretsManagement service.
 // All implementations must embed UnimplementedSecretsManagementServer
 // for forward compatibility
@@ -179,6 +219,10 @@ type SecretsManagementServer interface {
 	UpdateCardInfo(context.Context, *CardInfo) (*EmptyResponse, error)
 	UpdateTextInfo(context.Context, *TextInfo) (*EmptyResponse, error)
 	UpdateBinaryInfo(context.Context, *BinaryInfo) (*EmptyResponse, error)
+	DeleteCredentials(context.Context, *DeleteSecretRequest) (*ResponseWithError, error)
+	DeleteCardInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error)
+	DeleteTextInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error)
+	DeleteBinaryInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error)
 	mustEmbedUnimplementedSecretsManagementServer()
 }
 
@@ -224,6 +268,18 @@ func (UnimplementedSecretsManagementServer) UpdateTextInfo(context.Context, *Tex
 }
 func (UnimplementedSecretsManagementServer) UpdateBinaryInfo(context.Context, *BinaryInfo) (*EmptyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBinaryInfo not implemented")
+}
+func (UnimplementedSecretsManagementServer) DeleteCredentials(context.Context, *DeleteSecretRequest) (*ResponseWithError, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCredentials not implemented")
+}
+func (UnimplementedSecretsManagementServer) DeleteCardInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCardInfo not implemented")
+}
+func (UnimplementedSecretsManagementServer) DeleteTextInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTextInfo not implemented")
+}
+func (UnimplementedSecretsManagementServer) DeleteBinaryInfo(context.Context, *DeleteSecretRequest) (*ResponseWithError, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteBinaryInfo not implemented")
 }
 func (UnimplementedSecretsManagementServer) mustEmbedUnimplementedSecretsManagementServer() {}
 
@@ -472,6 +528,78 @@ func _SecretsManagement_UpdateBinaryInfo_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SecretsManagement_DeleteCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretsManagementServer).DeleteCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SecretsManagement/DeleteCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretsManagementServer).DeleteCredentials(ctx, req.(*DeleteSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretsManagement_DeleteCardInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretsManagementServer).DeleteCardInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SecretsManagement/DeleteCardInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretsManagementServer).DeleteCardInfo(ctx, req.(*DeleteSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretsManagement_DeleteTextInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretsManagementServer).DeleteTextInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SecretsManagement/DeleteTextInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretsManagementServer).DeleteTextInfo(ctx, req.(*DeleteSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretsManagement_DeleteBinaryInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretsManagementServer).DeleteBinaryInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SecretsManagement/DeleteBinaryInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretsManagementServer).DeleteBinaryInfo(ctx, req.(*DeleteSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SecretsManagement_ServiceDesc is the grpc.ServiceDesc for SecretsManagement service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -530,6 +658,22 @@ var SecretsManagement_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBinaryInfo",
 			Handler:    _SecretsManagement_UpdateBinaryInfo_Handler,
+		},
+		{
+			MethodName: "DeleteCredentials",
+			Handler:    _SecretsManagement_DeleteCredentials_Handler,
+		},
+		{
+			MethodName: "DeleteCardInfo",
+			Handler:    _SecretsManagement_DeleteCardInfo_Handler,
+		},
+		{
+			MethodName: "DeleteTextInfo",
+			Handler:    _SecretsManagement_DeleteTextInfo_Handler,
+		},
+		{
+			MethodName: "DeleteBinaryInfo",
+			Handler:    _SecretsManagement_DeleteBinaryInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

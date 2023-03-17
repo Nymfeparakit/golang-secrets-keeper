@@ -30,10 +30,10 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	defer tx.Rollback()
 
 	if len(secretsList.Passwords) != 0 {
-		queryPwds := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password) VALUES`
+		queryPwds := `INSERT INTO login_pwd (id, name, metadata, user_email, login, password, deleted) VALUES`
 		var pwdQueryArgs []interface{}
 		for _, pwd := range secretsList.Passwords {
-			pwdQueryArgs = append(pwdQueryArgs, &pwd.ID, &pwd.Name, &pwd.Metadata, &pwd.User, &pwd.Login, &pwd.Password)
+			pwdQueryArgs = append(pwdQueryArgs, &pwd.ID, &pwd.Name, &pwd.Metadata, &pwd.User, &pwd.Login, &pwd.Password, &pwd.Deleted)
 		}
 
 		queryPwds += s.createBulkInsertArgsString(len(secretsList.Passwords), 6)
@@ -44,10 +44,10 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	if len(secretsList.Cards) != 0 {
-		queryCards := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year) VALUES`
+		queryCards := `INSERT INTO card_info (id, name, metadata, user_email, card_number, cvv, expiration_month, expiration_year, deleted) VALUES`
 		var crdQueryArgs []interface{}
 		for _, crd := range secretsList.Cards {
-			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.CVV, &crd.ExpirationMonth, &crd.ExpirationYear)
+			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.CVV, &crd.ExpirationMonth, &crd.ExpirationYear, &crd.Deleted)
 		}
 
 		queryCards += s.createBulkInsertArgsString(len(secretsList.Cards), 8)
@@ -58,10 +58,10 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	if len(secretsList.Texts) != 0 {
-		queryTxts := `INSERT INTO text_info (id, name, metadata, user_email, text) VALUES`
+		queryTxts := `INSERT INTO text_info (id, name, metadata, user_email, text, deleted) VALUES`
 		var txtQueryArgs []interface{}
 		for _, txt := range secretsList.Texts {
-			txtQueryArgs = append(txtQueryArgs, &txt.ID, &txt.Name, &txt.Metadata, &txt.User, &txt.Text)
+			txtQueryArgs = append(txtQueryArgs, &txt.ID, &txt.Name, &txt.Metadata, &txt.User, &txt.Text, &txt.Deleted)
 		}
 
 		queryTxts += s.createBulkInsertArgsString(len(secretsList.Texts), 5)
@@ -72,10 +72,10 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 	}
 
 	if len(secretsList.Bins) != 0 {
-		query := `INSERT INTO binary_info (id, name, metadata, user_email, data) VALUES`
+		query := `INSERT INTO binary_info (id, name, metadata, user_email, data, deleted) VALUES`
 		var binQueryArgs []interface{}
 		for _, secret := range secretsList.Bins {
-			binQueryArgs = append(binQueryArgs, &secret.ID, &secret.Name, &secret.Metadata, &secret.User, &secret.Data)
+			binQueryArgs = append(binQueryArgs, &secret.ID, &secret.Name, &secret.Metadata, &secret.User, &secret.Data, &secret.Deleted)
 		}
 
 		query += s.createBulkInsertArgsString(len(secretsList.Bins), 5)

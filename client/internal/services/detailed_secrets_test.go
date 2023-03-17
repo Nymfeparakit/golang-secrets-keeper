@@ -2,13 +2,17 @@ package services
 
 import (
 	"context"
+	"fmt"
 	mock_services "github.com/Nymfeparakit/gophkeeper/client/internal/services/mocks"
+	"github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
 	mock_secrets "github.com/Nymfeparakit/gophkeeper/server/proto/secrets/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
@@ -358,4 +362,208 @@ func TestUpdateRetrieveDeleteSecretService_UpdateBinary(t *testing.T) {
 	err := instanceService.UpdateSecret(secret)
 
 	require.NoError(t, err)
+}
+
+func deleteSetupMocks(
+	authService *mock_services.MockAuthMetadataService,
+	userStorage *mock_services.MockUserCredentialsStorage,
+) {
+	credentials := dto.UserCredentials{Email: "email", Token: "token"}
+	authService.EXPECT().AddAuthMetadata(gomock.Any(), credentials.Token).Return(context.Background(), nil)
+	userStorage.EXPECT().GetCredentials().Return(&credentials, nil).AnyTimes()
+}
+
+type deleteTestCase struct {
+	name      string
+	localErr  error
+	remoteErr error
+	expErr    error
+}
+
+func getDeleteTestCases() []deleteTestCase {
+	tests := []deleteTestCase{
+		{
+			name: "Simple test",
+		},
+		{
+			name:     "Secret was already deleted locally",
+			localErr: storage.ErrSecretDoesNotExistOrWasDeleted,
+		},
+		{
+			name:      "Secret was already deleted on remote",
+			remoteErr: status.Error(codes.FailedPrecondition, ""),
+		},
+		{
+			name:      "Secret was already deleted on remote and locally",
+			localErr:  storage.ErrSecretDoesNotExistOrWasDeleted,
+			remoteErr: status.Error(codes.FailedPrecondition, ""),
+			expErr:    fmt.Errorf("secret with provided id doesn't exist"),
+		},
+	}
+
+	return tests
+}
+
+func TestUpdateRetrieveDeleteSecretService_DeletePassword(t *testing.T) {
+	tests := getDeleteTestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			id := "123"
+
+			authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
+			userCredsMock := mock_services.NewMockUserCredentialsStorage(ctrl)
+			deleteSetupMocks(authServiceMock, userCredsMock)
+
+			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
+			expRequest := secrets.DeleteSecretRequest{Id: id}
+			response := &secrets.ResponseWithError{}
+			secretsClientMock.EXPECT().DeleteCredentials(gomock.Any(), &expRequest).Return(response, tt.remoteErr)
+
+			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
+
+			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
+			localStorageMock.EXPECT().DeleteCredentials(gomock.Any(), id).Return(tt.localErr)
+
+			pwdInstanceService := NewUpdateRetrieveDeletePasswordService(
+				authServiceMock,
+				itemCryptoMock,
+				userCredsMock,
+				localStorageMock,
+				secretsClientMock,
+			)
+			err := pwdInstanceService.DeleteSecret(id)
+
+			if tt.expErr != nil {
+				assert.Equal(t, tt.expErr, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateRetrieveDeleteSecretService_DeleteCardInfo(t *testing.T) {
+	tests := getDeleteTestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			id := "123"
+
+			authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
+			userCredsMock := mock_services.NewMockUserCredentialsStorage(ctrl)
+			deleteSetupMocks(authServiceMock, userCredsMock)
+
+			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
+			expRequest := secrets.DeleteSecretRequest{Id: id}
+			response := &secrets.ResponseWithError{}
+			secretsClientMock.EXPECT().DeleteCardInfo(gomock.Any(), &expRequest).Return(response, tt.remoteErr)
+
+			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
+
+			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
+			localStorageMock.EXPECT().DeleteCardInfo(gomock.Any(), id).Return(tt.localErr)
+
+			instanceService := NewUpdateRetrieveDeleteCardService(
+				authServiceMock,
+				itemCryptoMock,
+				userCredsMock,
+				localStorageMock,
+				secretsClientMock,
+			)
+			err := instanceService.DeleteSecret(id)
+
+			if tt.expErr != nil {
+				assert.Equal(t, tt.expErr, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateRetrieveDeleteSecretService_DeleteBinaryInfo(t *testing.T) {
+	tests := getDeleteTestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			id := "123"
+
+			authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
+			userCredsMock := mock_services.NewMockUserCredentialsStorage(ctrl)
+			deleteSetupMocks(authServiceMock, userCredsMock)
+
+			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
+			expRequest := secrets.DeleteSecretRequest{Id: id}
+			response := &secrets.ResponseWithError{}
+			secretsClientMock.EXPECT().DeleteBinaryInfo(gomock.Any(), &expRequest).Return(response, tt.remoteErr)
+
+			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
+
+			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
+			localStorageMock.EXPECT().DeleteBinaryInfo(gomock.Any(), id).Return(tt.localErr)
+
+			instanceService := NewUpdateRetrieveDeleteBinaryService(
+				authServiceMock,
+				itemCryptoMock,
+				userCredsMock,
+				localStorageMock,
+				secretsClientMock,
+			)
+			err := instanceService.DeleteSecret(id)
+
+			if tt.expErr != nil {
+				assert.Equal(t, tt.expErr, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateRetrieveDeleteSecretService_DeleteTextInfo(t *testing.T) {
+	tests := getDeleteTestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			id := "123"
+
+			authServiceMock := mock_services.NewMockAuthMetadataService(ctrl)
+			userCredsMock := mock_services.NewMockUserCredentialsStorage(ctrl)
+			deleteSetupMocks(authServiceMock, userCredsMock)
+
+			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
+			expRequest := secrets.DeleteSecretRequest{Id: id}
+			response := &secrets.ResponseWithError{}
+			secretsClientMock.EXPECT().DeleteTextInfo(gomock.Any(), &expRequest).Return(response, tt.remoteErr)
+
+			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
+
+			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
+			localStorageMock.EXPECT().DeleteTextInfo(gomock.Any(), id).Return(tt.localErr)
+
+			instanceService := NewUpdateRetrieveDeleteTextService(
+				authServiceMock,
+				itemCryptoMock,
+				userCredsMock,
+				localStorageMock,
+				secretsClientMock,
+			)
+			err := instanceService.DeleteSecret(id)
+
+			if tt.expErr != nil {
+				assert.Equal(t, tt.expErr, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

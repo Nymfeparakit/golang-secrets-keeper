@@ -46,3 +46,14 @@ func (s *PasswordInstanceService) UpdateLocalSecret(loginPwd dto.LoginPassword) 
 	loginPwd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCredentials(context.Background(), &loginPwd)
 }
+
+// DeleteSecret deletes certain LoginPassword in remote storage.
+func (s *PasswordInstanceService) DeleteSecret(ctx context.Context, id string) error {
+	_, err := s.storageClient.DeleteCredentials(ctx, &secrets.DeleteSecretRequest{Id: id})
+	return err
+}
+
+// DeleteLocalSecret deletes certain LoginPassword in local storage.
+func (s *PasswordInstanceService) DeleteLocalSecret(id string) error {
+	return s.localStorage.DeleteCredentials(context.Background(), id)
+}

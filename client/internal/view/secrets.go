@@ -25,24 +25,28 @@ type ListAddSecretsService interface {
 type UpdateRetrievePasswordService interface {
 	GetSecretByID(id string) (dto.LoginPassword, error)
 	UpdateSecret(secret dto.LoginPassword) error
+	DeleteSecret(id string) error
 }
 
 // UpdateRetrieveCardService - service for retrieving/updating certain CardInfo instance.
 type UpdateRetrieveCardService interface {
 	GetSecretByID(id string) (dto.CardInfo, error)
 	UpdateSecret(secret dto.CardInfo) error
+	DeleteSecret(id string) error
 }
 
 // UpdateRetrieveTextService - service for retrieving/updating certain TextInfo instance.
 type UpdateRetrieveTextService interface {
 	GetSecretByID(id string) (dto.TextInfo, error)
 	UpdateSecret(secret dto.TextInfo) error
+	DeleteSecret(id string) error
 }
 
 // UpdateRetrieveBinaryService - service for retrieving/updating certain BinaryInfo instance.
 type UpdateRetrieveBinaryService interface {
 	GetSecretByID(id string) (dto.BinaryInfo, error)
 	UpdateSecret(secret dto.BinaryInfo) error
+	DeleteSecret(id string) error
 }
 
 // NewFlexWithHint creates new flex with main view and text view with specified hint.
@@ -102,11 +106,34 @@ func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
 func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string) {
 	form := v.formFromSecretType(itemType)
 	form, err := forms.FillSaveItemForm(form, forms.UPDATE, secretID, v.processSaveSecretResult)
+	if err != nil {
+		v.ResultPage(fmt.Sprintf("can't update secret: %v", err))
+	}
 	v.pages.AddPage("Update item", form, true, true)
 	err = v.app.Run()
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+}
+
+// DeleteSecretPage deletes the secret and then shows to user result page.
+func (v *SecretsView) DeleteSecretPage(itemType dto.SecretType, secretID string) {
+	var err error
+	switch itemType {
+	case dto.PASSWORD:
+		err = v.pwdInstanceService.DeleteSecret(secretID)
+	case dto.TEXT:
+		err = v.txtInstanceService.DeleteSecret(secretID)
+	case dto.CARD:
+		err = v.crdInstanceService.DeleteSecret(secretID)
+	case dto.BINARY:
+		err = v.binInstanceService.DeleteSecret(secretID)
+	}
+	if err != nil {
+		v.ResultPage(fmt.Sprintf("Error on deleting secret: %v", err))
+		return
+	}
+	v.ResultPage(fmt.Sprintf("Successfully deleted secret!"))
 }
 
 // ListSecretsPage shows page to list all user's secrets.

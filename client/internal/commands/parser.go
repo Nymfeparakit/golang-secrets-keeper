@@ -15,6 +15,7 @@ type SecretsView interface {
 	ListSecretsPage()
 	AddSecretPage(itemType dto.SecretType)
 	UpdateSecretPage(itemType dto.SecretType, secretID string)
+	DeleteSecretPage(itemType dto.SecretType, secretID string)
 }
 
 // AuthView - view with pages to register new users and login existing ones.
@@ -68,6 +69,15 @@ func (p *CommandParser) initSecretsCommands(view SecretsView) error {
 		"Update secret",
 		"The update command updates certain item.",
 		updateCmd,
+	)
+	if err != nil {
+		return err
+	}
+	deleteCmd := NewDeleteCommand(view)
+	_, err = p.parser.AddCommand("delete",
+		"Delete secret",
+		"The delete command deletes certain secret.",
+		deleteCmd,
 	)
 	if err != nil {
 		return err

@@ -44,3 +44,14 @@ func (s *BinaryInstanceService) UpdateLocalSecret(bin dto.BinaryInfo) error {
 	bin.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateBinaryInfo(context.Background(), &bin)
 }
+
+// DeleteSecret deletes certain BinaryInfo in remote storage.
+func (s *BinaryInstanceService) DeleteSecret(ctx context.Context, id string) error {
+	_, err := s.storageClient.DeleteBinaryInfo(ctx, &secrets.DeleteSecretRequest{Id: id})
+	return err
+}
+
+// DeleteLocalSecret deletes certain BinaryInfo in local storage.
+func (s *BinaryInstanceService) DeleteLocalSecret(id string) error {
+	return s.localStorage.DeleteBinaryInfo(context.Background(), id)
+}

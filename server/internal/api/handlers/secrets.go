@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/common/storage"
 	"github.com/Nymfeparakit/gophkeeper/dto"
@@ -24,6 +25,11 @@ type SecretsService interface {
 	UpdateTextInfo(ctx context.Context, secret *dto.TextInfo) error
 	UpdateBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) error
 	UpdateCardInfo(ctx context.Context, secret *dto.CardInfo) error
+
+	DeleteCredentials(ctx context.Context, id string) error
+	DeleteTextInfo(ctx context.Context, id string) error
+	DeleteCardInfo(ctx context.Context, id string) error
+	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
 type SecretsServer struct {
@@ -298,6 +304,78 @@ func (s *SecretsServer) UpdateBinaryInfo(ctx context.Context, in *secrets.Binary
 	}
 
 	return &response, nil
+}
+
+func (s *SecretsServer) DeleteCredentials(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
+	var response secrets.ResponseWithError
+
+	_, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	err := s.secretsService.DeleteCredentials(ctx, in.Id)
+	if err = s.processDeleteSecretError(err); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) DeleteCardInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
+	var response secrets.ResponseWithError
+
+	_, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	err := s.secretsService.DeleteCardInfo(ctx, in.Id)
+	if err = s.processDeleteSecretError(err); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) DeleteBinaryInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
+	var response secrets.ResponseWithError
+
+	_, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	err := s.secretsService.DeleteBinaryInfo(ctx, in.Id)
+	if err = s.processDeleteSecretError(err); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) DeleteTextInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
+	var response secrets.ResponseWithError
+
+	_, ok := s.authService.GetUserFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "User is not authenticated")
+	}
+
+	err := s.secretsService.DeleteTextInfo(ctx, in.Id)
+	if err = s.processDeleteSecretError(err); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *SecretsServer) processDeleteSecretError(err error) error {
+	if err != nil && errors.Is(err, storage.ErrSecretDoesNotExistOrWasDeleted) {
+		return status.Error(codes.FailedPrecondition, "Can't delete secret")
+	}
+
+	return err
 }
 
 func (s *SecretsServer) processGetSecretError(err error) error {

@@ -44,3 +44,14 @@ func (s *TextInstanceService) UpdateLocalSecret(txt dto.TextInfo) error {
 	txt.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateTextInfo(context.Background(), &txt)
 }
+
+// DeleteSecret deletes certain CardInfo in remote storage.
+func (s *TextInstanceService) DeleteSecret(ctx context.Context, id string) error {
+	_, err := s.storageClient.DeleteTextInfo(ctx, &secrets.DeleteSecretRequest{Id: id})
+	return err
+}
+
+// DeleteLocalSecret deletes certain CardInfo in local storage.
+func (s *TextInstanceService) DeleteLocalSecret(id string) error {
+	return s.localStorage.DeleteTextInfo(context.Background(), id)
+}

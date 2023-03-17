@@ -16,6 +16,7 @@ func CredentialsToProto(pwd *dto.LoginPassword) *secrets.Password {
 		Login:     pwd.Login,
 		Password:  pwd.Password,
 		UpdatedAt: timestamppb.New(pwd.UpdatedAt),
+		Deleted:   pwd.Deleted,
 	}
 
 	return &dest
@@ -29,6 +30,7 @@ func CardFromProto(crd *secrets.CardInfo) dto.CardInfo {
 		Metadata:  crd.Metadata,
 		User:      crd.User,
 		UpdatedAt: crd.UpdatedAt.AsTime(),
+		Deleted:   crd.Deleted,
 	}
 	crdDest := dto.CardInfo{
 		BaseSecret:      itemDest,
@@ -53,6 +55,7 @@ func CardToProto(crd *dto.CardInfo) *secrets.CardInfo {
 		Metadata:        crd.Metadata,
 		User:            crd.User,
 		UpdatedAt:       timestamppb.New(crd.UpdatedAt),
+		Deleted:         crd.Deleted,
 	}
 
 	return &crdDest
@@ -66,6 +69,7 @@ func TextFromProto(txt *secrets.TextInfo) dto.TextInfo {
 		Metadata:  txt.Metadata,
 		User:      txt.User,
 		UpdatedAt: txt.UpdatedAt.AsTime(),
+		Deleted:   txt.Deleted,
 	}
 	txtDest := dto.TextInfo{
 		Text:       txt.Text,
@@ -84,6 +88,7 @@ func TextToProto(txt *dto.TextInfo) *secrets.TextInfo {
 		Metadata:  txt.Metadata,
 		User:      txt.User,
 		UpdatedAt: timestamppb.New(txt.UpdatedAt),
+		Deleted:   txt.Deleted,
 	}
 
 	return &txtDest
@@ -97,6 +102,7 @@ func BinaryFromProto(bin *secrets.BinaryInfo) dto.BinaryInfo {
 		Metadata:  bin.Metadata,
 		User:      bin.User,
 		UpdatedAt: bin.UpdatedAt.AsTime(),
+		Deleted:   bin.Deleted,
 	}
 	binDest := dto.BinaryInfo{
 		Data:       bin.Data,
@@ -115,6 +121,7 @@ func BinaryToProto(bin *dto.BinaryInfo) *secrets.BinaryInfo {
 		Metadata:  bin.Metadata,
 		UpdatedAt: timestamppb.New(bin.UpdatedAt),
 		User:      bin.User,
+		Deleted:   bin.Deleted,
 	}
 
 	return &dest
@@ -128,6 +135,7 @@ func PasswordFromProto(pwd *secrets.Password) dto.LoginPassword {
 		Metadata:  pwd.Metadata,
 		User:      pwd.User,
 		UpdatedAt: pwd.UpdatedAt.AsTime(),
+		Deleted:   pwd.Deleted,
 	}
 	dest := dto.LoginPassword{
 		Login:      pwd.Login,

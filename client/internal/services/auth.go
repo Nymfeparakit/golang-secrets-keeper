@@ -105,7 +105,7 @@ func (s *AuthService) loadUserData(email string) error {
 	}
 	err = s.secretsService.LoadSecrets(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to save user data in local storage: %s", err)
+		return fmt.Errorf("failed to load secrets in local storage: %s", err)
 	}
 
 	return nil
