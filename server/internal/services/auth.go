@@ -8,16 +8,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserStorage - storage of users.
 type UserStorage interface {
 	CreateUser(ctx context.Context, user *dto.User) error
 	GetUserByEmail(ctx context.Context, email string) (*dto.User, error)
 }
 
+// AuthService - service for performing authentication/authorization of users.
 type AuthService struct {
 	userStorage  UserStorage
 	tokenService *AuthJWTTokenService
 }
 
+// NewAuthService - creates new AuthService object.
 func NewAuthService(userStorage UserStorage, secretKey string) *AuthService {
 	tokenService := NewAuthJWTTokenService(secretKey)
 	return &AuthService{userStorage: userStorage, tokenService: tokenService}
@@ -31,7 +34,7 @@ func (a *AuthService) AddUserToContext(ctx context.Context, userEmail string) co
 	return context.WithValue(ctx, UserCtxKey("userEmail"), userEmail)
 }
 
-// GetUserFromContext возвращает id пользователя из контекста, если он в нем присутствует.
+// GetUserFromContext returns user's id from context, if there's such key.
 func (a *AuthService) GetUserFromContext(ctx context.Context) (string, bool) {
 	userValue := ctx.Value(UserCtxKey("userEmail"))
 	if userValue == nil {
@@ -45,6 +48,7 @@ func (a *AuthService) GetUserFromContext(ctx context.Context) (string, bool) {
 	return userEmail, true
 }
 
+// Register registers user with provided email and password.
 func (a *AuthService) Register(ctx context.Context, user *dto.User) error {
 	pwdHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	user.Password = string(pwdHash)
@@ -59,6 +63,7 @@ func (a *AuthService) Register(ctx context.Context, user *dto.User) error {
 	return nil
 }
 
+// Login checks user's password and if it's correct returns token for this user.
 func (a *AuthService) Login(ctx context.Context, email string, pwd string) (string, error) {
 	// находим пользователя по логину
 	existingUser, err := a.userStorage.GetUserByEmail(ctx, email)

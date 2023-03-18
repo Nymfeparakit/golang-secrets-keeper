@@ -11,16 +11,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// SecretsService - service for performing CRUD operations with secrets.
 type SecretsService interface {
 	AddCredentials(ctx context.Context, password *dto.LoginPassword) (string, error)
 	AddTextInfo(ctx context.Context, textInfo *dto.TextInfo) (string, error)
 	AddCardInfo(ctx context.Context, cardInfo *dto.CardInfo) (string, error)
 	AddBinaryInfo(ctx context.Context, binInfo *dto.BinaryInfo) (string, error)
+
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 	GetCredentialsById(ctx context.Context, id string, user string) (*dto.LoginPassword, error)
 	GetCardById(ctx context.Context, id string, user string) (*dto.CardInfo, error)
 	GetTextById(ctx context.Context, id string, user string) (*dto.TextInfo, error)
 	GetBinaryById(ctx context.Context, id string, user string) (*dto.BinaryInfo, error)
+
 	UpdateCredentials(ctx context.Context, password *dto.LoginPassword) error
 	UpdateTextInfo(ctx context.Context, secret *dto.TextInfo) error
 	UpdateBinaryInfo(ctx context.Context, secret *dto.BinaryInfo) error
@@ -32,16 +35,19 @@ type SecretsService interface {
 	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
+// SecretsServer - server with methods to perform CRUD operations with secrets.
 type SecretsServer struct {
 	secrets.UnimplementedSecretsManagementServer
 	authService    AuthService
 	secretsService SecretsService
 }
 
+// NewSecretsServer creates new SecretsServer object.
 func NewSecretsServer(secretsService SecretsService, authService AuthService) *SecretsServer {
 	return &SecretsServer{secretsService: secretsService, authService: authService}
 }
 
+// AddCredentials creates new credentials secret.
 func (s *SecretsServer) AddCredentials(ctx context.Context, in *secrets.Password) (*secrets.AddResponse, error) {
 	var response secrets.AddResponse
 
@@ -61,6 +67,7 @@ func (s *SecretsServer) AddCredentials(ctx context.Context, in *secrets.Password
 	return &response, nil
 }
 
+// AddTextInfo creates new text secret.
 func (s *SecretsServer) AddTextInfo(ctx context.Context, in *secrets.TextInfo) (*secrets.AddResponse, error) {
 	var response secrets.AddResponse
 
@@ -81,6 +88,7 @@ func (s *SecretsServer) AddTextInfo(ctx context.Context, in *secrets.TextInfo) (
 	return &response, nil
 }
 
+// AddCardInfo creates new card secret.
 func (s *SecretsServer) AddCardInfo(ctx context.Context, in *secrets.CardInfo) (*secrets.AddResponse, error) {
 	var response secrets.AddResponse
 
@@ -101,6 +109,7 @@ func (s *SecretsServer) AddCardInfo(ctx context.Context, in *secrets.CardInfo) (
 	return &response, nil
 }
 
+// AddBinaryInfo creates new binary secret.
 func (s *SecretsServer) AddBinaryInfo(ctx context.Context, in *secrets.BinaryInfo) (*secrets.AddResponse, error) {
 	var response secrets.AddResponse
 
@@ -121,6 +130,7 @@ func (s *SecretsServer) AddBinaryInfo(ctx context.Context, in *secrets.BinaryInf
 	return &response, nil
 }
 
+// ListSecrets lists all user's secrets.
 func (s *SecretsServer) ListSecrets(ctx context.Context, in *secrets.EmptyRequest) (*secrets.ListSecretResponse, error) {
 	var response secrets.ListSecretResponse
 
@@ -153,6 +163,7 @@ func (s *SecretsServer) ListSecrets(ctx context.Context, in *secrets.EmptyReques
 	return &response, nil
 }
 
+// GetCredentialsByID returns credentials secret with the specified id.
 func (s *SecretsServer) GetCredentialsByID(
 	ctx context.Context,
 	in *secrets.GetSecretRequest,
@@ -174,6 +185,7 @@ func (s *SecretsServer) GetCredentialsByID(
 	return &response, nil
 }
 
+// GetCardByID returns card secret with the specified id.
 func (s *SecretsServer) GetCardByID(
 	ctx context.Context,
 	in *secrets.GetSecretRequest,
@@ -195,6 +207,7 @@ func (s *SecretsServer) GetCardByID(
 	return &response, nil
 }
 
+// GetTextByID returns text secret with the specified id.
 func (s *SecretsServer) GetTextByID(
 	ctx context.Context,
 	in *secrets.GetSecretRequest,
@@ -216,6 +229,7 @@ func (s *SecretsServer) GetTextByID(
 	return &response, nil
 }
 
+// GetBinaryByID returns binary secret with the specified id.
 func (s *SecretsServer) GetBinaryByID(
 	ctx context.Context,
 	in *secrets.GetSecretRequest,
@@ -237,6 +251,7 @@ func (s *SecretsServer) GetBinaryByID(
 	return &response, nil
 }
 
+// UpdateCredentials updates specified by id credentials secret.
 func (s *SecretsServer) UpdateCredentials(ctx context.Context, in *secrets.Password) (*secrets.EmptyResponse, error) {
 	var response secrets.EmptyResponse
 
@@ -255,6 +270,7 @@ func (s *SecretsServer) UpdateCredentials(ctx context.Context, in *secrets.Passw
 	return &response, nil
 }
 
+// UpdateCardInfo updates specified by id card secret.
 func (s *SecretsServer) UpdateCardInfo(ctx context.Context, in *secrets.CardInfo) (*secrets.EmptyResponse, error) {
 	var response secrets.EmptyResponse
 
@@ -272,6 +288,7 @@ func (s *SecretsServer) UpdateCardInfo(ctx context.Context, in *secrets.CardInfo
 	return &response, nil
 }
 
+// UpdateTextInfo updates specified by id text secret.
 func (s *SecretsServer) UpdateTextInfo(ctx context.Context, in *secrets.TextInfo) (*secrets.EmptyResponse, error) {
 	var response secrets.EmptyResponse
 
@@ -289,6 +306,7 @@ func (s *SecretsServer) UpdateTextInfo(ctx context.Context, in *secrets.TextInfo
 	return &response, nil
 }
 
+// UpdateBinaryInfo updates specified by id binary secret.
 func (s *SecretsServer) UpdateBinaryInfo(ctx context.Context, in *secrets.BinaryInfo) (*secrets.EmptyResponse, error) {
 	var response secrets.EmptyResponse
 
@@ -306,6 +324,7 @@ func (s *SecretsServer) UpdateBinaryInfo(ctx context.Context, in *secrets.Binary
 	return &response, nil
 }
 
+// DeleteCredentials deletes specified by id credentials secret.
 func (s *SecretsServer) DeleteCredentials(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
 	var response secrets.ResponseWithError
 
@@ -322,6 +341,7 @@ func (s *SecretsServer) DeleteCredentials(ctx context.Context, in *secrets.Delet
 	return &response, nil
 }
 
+// DeleteCardInfo deletes specified by id card secret.
 func (s *SecretsServer) DeleteCardInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
 	var response secrets.ResponseWithError
 
@@ -338,6 +358,7 @@ func (s *SecretsServer) DeleteCardInfo(ctx context.Context, in *secrets.DeleteSe
 	return &response, nil
 }
 
+// DeleteBinaryInfo deletes specified by id binary secret.
 func (s *SecretsServer) DeleteBinaryInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
 	var response secrets.ResponseWithError
 
@@ -354,6 +375,7 @@ func (s *SecretsServer) DeleteBinaryInfo(ctx context.Context, in *secrets.Delete
 	return &response, nil
 }
 
+// DeleteTextInfo deletes specified by id text secret.
 func (s *SecretsServer) DeleteTextInfo(ctx context.Context, in *secrets.DeleteSecretRequest) (*secrets.ResponseWithError, error) {
 	var response secrets.ResponseWithError
 

@@ -17,11 +17,12 @@ type AuthorizationServerInterceptor struct {
 	authService handlers.AuthService
 }
 
-// NewAuthorizationServerInterceptor инициализирует AuthorizationServerInterceptor.
+// NewAuthorizationServerInterceptor creates new AuthorizationServerInterceptor object.
 func NewAuthorizationServerInterceptor(authService handlers.AuthService) *AuthorizationServerInterceptor {
 	return &AuthorizationServerInterceptor{authService: authService}
 }
 
+// Unary validates user's token and parses it to get user's email.
 func (i *AuthorizationServerInterceptor) Unary(
 	ctx context.Context,
 	req interface{},

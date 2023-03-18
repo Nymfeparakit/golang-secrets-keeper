@@ -2,15 +2,18 @@ package services
 
 import "github.com/golang-jwt/jwt/v5"
 
+// JWTClaims - stores claims in jwt token.
 type JWTClaims struct {
 	jwt.RegisteredClaims
 	Email string
 }
 
+// AuthJWTTokenService - service for performing operations with jwt tokens.
 type AuthJWTTokenService struct {
 	secretKey string
 }
 
+// NewAuthJWTTokenService creates new AuthJWTTokenService object.
 func NewAuthJWTTokenService(secretKey string) *AuthJWTTokenService {
 	return &AuthJWTTokenService{secretKey: secretKey}
 }

@@ -9,11 +9,13 @@ import (
 	"net"
 )
 
+// TLSServer - grpc server with tls.
 type TLSServer struct {
 	GRPCServer
 	tlsConfig *tls.Config
 }
 
+// NewTLSServer - creates new TLSServer object.
 func NewTLSServer(grpcOpts []grpc.ServerOption) (*TLSServer, error) {
 	tlsServer := &TLSServer{}
 
@@ -29,6 +31,7 @@ func NewTLSServer(grpcOpts []grpc.ServerOption) (*TLSServer, error) {
 	return tlsServer, nil
 }
 
+// Start starts serving grpc connection on provided address.
 func (s *TLSServer) Start(addr string) error {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {

@@ -6,10 +6,12 @@ import (
 	"net"
 )
 
+// HTTPServer - grpc server without tls.
 type HTTPServer struct {
 	GRPCServer
 }
 
+// NewHTTPServer creates new HTTPServer object.
 func NewHTTPServer(grpcOpts []grpc.ServerOption) *HTTPServer {
 	httpServer := &HTTPServer{}
 	server := grpc.NewServer(grpcOpts...)
@@ -17,6 +19,7 @@ func NewHTTPServer(grpcOpts []grpc.ServerOption) *HTTPServer {
 	return httpServer
 }
 
+// Start starts serving grpc connection on provided address.
 func (s *HTTPServer) Start(addr string) error {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {

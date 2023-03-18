@@ -8,12 +8,14 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Server - grpc server.
 type Server interface {
 	Start(addr string) error
 	Shutdown()
 	RegisterService(desc *grpc.ServiceDesc, impl interface{})
 }
 
+// NewServer - creates new grpc server object.
 func NewServer(enableHTTPS bool, authService handlers.AuthService, secretsService handlers.SecretsService) (Server, error) {
 	authInterceptor := interceptors.NewAuthorizationServerInterceptor(authService)
 	grpcOpts := []grpc.ServerOption{grpc.UnaryInterceptor(authInterceptor.Unary)}
@@ -37,14 +39,17 @@ func NewServer(enableHTTPS bool, authService handlers.AuthService, secretsServic
 	return server, nil
 }
 
+// GRPCServer - grpc server.
 type GRPCServer struct {
 	grpcServer *grpc.Server
 }
 
+// RegisterService register provided service in grpc server.
 func (s *GRPCServer) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
 	s.grpcServer.RegisterService(desc, impl)
 }
 
+// Shutdown - stop grpc server.
 func (s *GRPCServer) Shutdown() {
 	s.grpcServer.GracefulStop()
 }

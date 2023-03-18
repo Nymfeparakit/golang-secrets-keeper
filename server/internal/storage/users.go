@@ -10,14 +10,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// UsersStorage - storage of users in database.
 type UsersStorage struct {
 	db *sqlx.DB
 }
 
+// NewUsersStorage - creates new UsersStorage object.
 func NewUsersStorage(db *sqlx.DB) *UsersStorage {
 	return &UsersStorage{db: db}
 }
 
+// CreateUser creates new user in database.
 func (s *UsersStorage) CreateUser(ctx context.Context, user *dto.User) error {
 	query := `INSERT INTO auth_user (email, password) VALUES ($1, $2)`
 	_, err := s.db.ExecContext(ctx, query, user.Email, user.Password)
@@ -35,6 +38,7 @@ func (s *UsersStorage) CreateUser(ctx context.Context, user *dto.User) error {
 	return nil
 }
 
+// GetUserByEmail returns the user by email if the one exists.
 func (s *UsersStorage) GetUserByEmail(ctx context.Context, email string) (*dto.User, error) {
 	query := `SELECT email, password FROM auth_user WHERE email=$1`
 	var existingUser dto.User
