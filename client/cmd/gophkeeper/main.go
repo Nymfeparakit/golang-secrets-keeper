@@ -21,6 +21,18 @@ import (
 	"os"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
+func printBuildInfo() {
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
+}
+
 func ConnectToServer(enableHTTPs bool, serverAddr string) (*grpc.ClientConn, error) {
 	if enableHTTPs {
 		pemServerCA, err := ioutil.ReadFile("cert.pem")
@@ -46,6 +58,7 @@ func ConnectToServer(enableHTTPs bool, serverAddr string) (*grpc.ClientConn, err
 }
 
 func main() {
+	printBuildInfo()
 	cfg := &config.Config{}
 	err := commonconfig.InitConfig(cfg)
 	if err != nil {
