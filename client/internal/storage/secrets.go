@@ -36,7 +36,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 			pwdQueryArgs = append(pwdQueryArgs, &pwd.ID, &pwd.Name, &pwd.Metadata, &pwd.User, &pwd.Login, &pwd.Password, &pwd.Deleted)
 		}
 
-		queryPwds += s.createBulkInsertArgsString(len(secretsList.Passwords), 6)
+		queryPwds += s.createBulkInsertArgsString(len(secretsList.Passwords), 7)
 		_, err = tx.ExecContext(ctx, queryPwds, pwdQueryArgs...)
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 			crdQueryArgs = append(crdQueryArgs, &crd.ID, &crd.Name, &crd.Metadata, &crd.User, &crd.Number, &crd.CVV, &crd.ExpirationMonth, &crd.ExpirationYear, &crd.Deleted)
 		}
 
-		queryCards += s.createBulkInsertArgsString(len(secretsList.Cards), 8)
+		queryCards += s.createBulkInsertArgsString(len(secretsList.Cards), 9)
 		_, err = tx.ExecContext(ctx, queryCards, crdQueryArgs...)
 		if err != nil {
 			return err
@@ -64,7 +64,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 			txtQueryArgs = append(txtQueryArgs, &txt.ID, &txt.Name, &txt.Metadata, &txt.User, &txt.Text, &txt.Deleted)
 		}
 
-		queryTxts += s.createBulkInsertArgsString(len(secretsList.Texts), 5)
+		queryTxts += s.createBulkInsertArgsString(len(secretsList.Texts), 6)
 		_, err = tx.ExecContext(ctx, queryTxts, txtQueryArgs...)
 		if err != nil {
 			return err
@@ -78,7 +78,7 @@ func (s *LocalDBSecretsStorage) AddSecrets(ctx context.Context, secretsList dto.
 			binQueryArgs = append(binQueryArgs, &secret.ID, &secret.Name, &secret.Metadata, &secret.User, &secret.Data, &secret.Deleted)
 		}
 
-		query += s.createBulkInsertArgsString(len(secretsList.Bins), 5)
+		query += s.createBulkInsertArgsString(len(secretsList.Bins), 6)
 		_, err = tx.ExecContext(ctx, query, binQueryArgs...)
 		if err != nil {
 			return err
