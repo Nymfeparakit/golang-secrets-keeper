@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
@@ -38,7 +39,7 @@ func (f *BinaryInfoForm) AddInputs() {
 }
 
 // Save performs operation with BinaryInfo when the save button is clicked.
-func (f *BinaryInfoForm) Save() error {
+func (f *BinaryInfoForm) Save(ctx context.Context) error {
 	if f.binFilePath != "" {
 		binData, err := readBinaryFile(f.binFilePath)
 		if err != nil {
@@ -49,9 +50,9 @@ func (f *BinaryInfoForm) Save() error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.retrieveUpdateService.UpdateSecret(*f.instance)
+		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
-		err = f.addService.AddBinaryInfo(f.instance)
+		err = f.addService.AddBinaryInfo(ctx, f.instance)
 	}
 	return err
 }
@@ -62,8 +63,8 @@ func (f *BinaryInfoForm) AddBtn(label string, selected func()) {
 }
 
 // SetSecret associates specific BinaryInfo with form.
-func (f *BinaryInfoForm) SetSecret(id string) error {
-	bin, err := f.retrieveUpdateService.GetSecretByID(id)
+func (f *BinaryInfoForm) SetSecret(ctx context.Context, id string) error {
+	bin, err := f.retrieveUpdateService.GetSecretByID(ctx, id)
 	f.instance = &bin
 	return err
 }

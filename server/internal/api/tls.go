@@ -16,10 +16,10 @@ type TLSServer struct {
 }
 
 // NewTLSServer - creates new TLSServer object.
-func NewTLSServer(grpcOpts []grpc.ServerOption) (*TLSServer, error) {
+func NewTLSServer(grpcOpts []grpc.ServerOption, certFile string, keyFile string) (*TLSServer, error) {
 	tlsServer := &TLSServer{}
 
-	err := tlsServer.loadTLSConfig()
+	err := tlsServer.loadTLSConfig(certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (s *TLSServer) Start(addr string) error {
 	return nil
 }
 
-func (s *TLSServer) loadTLSConfig() error {
-	serverCert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+func (s *TLSServer) loadTLSConfig(certFile string, keyFile string) error {
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return fmt.Errorf("can't load certificate for server: %v", err)
 	}

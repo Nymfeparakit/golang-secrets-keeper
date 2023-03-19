@@ -24,31 +24,41 @@ func getSetupMocks(
 	cryptoService *mock_services.MockSecretCryptoService,
 ) {
 	credentials := dto.UserCredentials{Email: "email", Token: "token"}
-	authService.EXPECT().AddAuthMetadata(gomock.Any(), credentials.Token).Return(context.Background(), nil)
+	authService.EXPECT().AddAuthMetadata(gomock.Any(), credentials.Token).Return(context.Background(), nil).AnyTimes()
 	userStorage.EXPECT().GetCredentials().Return(&credentials, nil).AnyTimes()
 	cryptoService.EXPECT().DecryptSecret(gomock.Any()).Return(nil).AnyTimes()
+	cryptoService.EXPECT().EncryptSecret(gomock.Any()).Return(nil).AnyTimes()
 }
 
 func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 	remoteLogin := "remote login"
 	localLogin := "local login"
+	now := time.Now().UTC()
+	nowHourLater := now.Add(time.Hour * 1)
 	tests := []struct {
-		name        string
-		remotePwd   *secrets.Password
-		localSecret *dto.BaseSecret
-		expLogin    string
+		name           string
+		remotePwd      *secrets.Password
+		localSecret    *dto.BaseSecret
+		expLogin       string
+		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
 	}{
 		{
 			name:        "Return pwd from server",
-			localSecret: &dto.BaseSecret{UpdatedAt: time.Now()},
-			remotePwd:   &secrets.Password{Login: remoteLogin, UpdatedAt: timestamppb.New(time.Now().Add(time.Hour * 1))},
+			localSecret: &dto.BaseSecret{UpdatedAt: now},
+			remotePwd:   &secrets.Password{Login: remoteLogin, UpdatedAt: timestamppb.New(nowHourLater)},
 			expLogin:    remoteLogin,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				localStorageMock.EXPECT().UpdateCredentials(gomock.Any(), gomock.Any()).Return(nil)
+			},
 		},
 		{
 			name:        "Return pwd from local storage",
-			localSecret: &dto.BaseSecret{UpdatedAt: time.Now().Add(time.Hour * 1)},
-			remotePwd:   &secrets.Password{Login: remoteLogin, UpdatedAt: timestamppb.New(time.Now())},
+			localSecret: &dto.BaseSecret{UpdatedAt: nowHourLater},
+			remotePwd:   &secrets.Password{Login: remoteLogin, UpdatedAt: timestamppb.New(now)},
 			expLogin:    localLogin,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				clientMock.EXPECT().UpdateCredentials(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
+			},
 		},
 	}
 
@@ -69,6 +79,7 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetCredentialsById(gomock.Any(), id, "email").Return(localPwd, nil)
 			getSetupMocks(authServiceMock, userCredsMock, itemCryptoMock)
+			tt.setupTestMocks(localStorageMock, secretsClientMock)
 
 			pwdInstanceService := NewUpdateRetrieveDeletePasswordService(
 				authServiceMock,
@@ -77,7 +88,7 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			result, err := pwdInstanceService.GetSecretByID(id)
+			result, err := pwdInstanceService.GetSecretByID(context.Background(), id)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expLogin, result.Login)
@@ -88,23 +99,32 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 	remoteName := "remote name"
 	localName := "local name"
+	now := time.Now().UTC()
+	nowHourLater := now.Add(time.Hour * 1)
 	tests := []struct {
-		name         string
-		remoteSecret *secrets.CardInfo
-		localSecret  *dto.BaseSecret
-		expName      string
+		name           string
+		remoteSecret   *secrets.CardInfo
+		localSecret    *dto.BaseSecret
+		expName        string
+		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
 	}{
 		{
 			name:         "Return secret from server",
-			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now()},
-			remoteSecret: &secrets.CardInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now().Add(time.Hour * 1))},
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: now},
+			remoteSecret: &secrets.CardInfo{Name: remoteName, UpdatedAt: timestamppb.New(nowHourLater)},
 			expName:      remoteName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				localStorageMock.EXPECT().UpdateCardInfo(gomock.Any(), gomock.Any()).Return(nil)
+			},
 		},
 		{
 			name:         "Return secret from local storage",
-			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now().Add(time.Hour * 1)},
-			remoteSecret: &secrets.CardInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now())},
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: nowHourLater},
+			remoteSecret: &secrets.CardInfo{Name: remoteName, UpdatedAt: timestamppb.New(now)},
 			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				clientMock.EXPECT().UpdateCardInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
+			},
 		},
 	}
 
@@ -125,6 +145,7 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetCardById(gomock.Any(), id, "email").Return(localCard, nil)
 			getSetupMocks(authServiceMock, userCredsMock, itemCryptoMock)
+			tt.setupTestMocks(localStorageMock, secretsClientMock)
 
 			instanceService := NewUpdateRetrieveDeleteCardService(
 				authServiceMock,
@@ -133,7 +154,7 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			result, err := instanceService.GetSecretByID(id)
+			result, err := instanceService.GetSecretByID(context.Background(), id)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expName, result.Name)
@@ -144,23 +165,32 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 	remoteName := "remote name"
 	localName := "local name"
+	now := time.Now().UTC()
+	nowHourLater := now.Add(time.Hour * 1)
 	tests := []struct {
-		name         string
-		remoteSecret *secrets.TextInfo
-		localSecret  *dto.BaseSecret
-		expName      string
+		name           string
+		remoteSecret   *secrets.TextInfo
+		localSecret    *dto.BaseSecret
+		expName        string
+		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
 	}{
 		{
 			name:         "Return secret from server",
-			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now()},
-			remoteSecret: &secrets.TextInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now().Add(time.Hour * 1))},
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: now},
+			remoteSecret: &secrets.TextInfo{Name: remoteName, UpdatedAt: timestamppb.New(nowHourLater)},
 			expName:      remoteName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				localStorageMock.EXPECT().UpdateTextInfo(gomock.Any(), gomock.Any()).Return(nil)
+			},
 		},
 		{
 			name:         "Return secret from local storage",
-			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now().Add(time.Hour * 1)},
-			remoteSecret: &secrets.TextInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now())},
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: nowHourLater},
+			remoteSecret: &secrets.TextInfo{Name: remoteName, UpdatedAt: timestamppb.New(now)},
 			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				clientMock.EXPECT().UpdateTextInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
+			},
 		},
 	}
 
@@ -181,6 +211,7 @@ func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetTextById(gomock.Any(), id, "email").Return(localCard, nil)
 			getSetupMocks(authServiceMock, userCredsMock, itemCryptoMock)
+			tt.setupTestMocks(localStorageMock, secretsClientMock)
 
 			instanceService := NewUpdateRetrieveDeleteTextService(
 				authServiceMock,
@@ -189,7 +220,7 @@ func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			result, err := instanceService.GetSecretByID(id)
+			result, err := instanceService.GetSecretByID(context.Background(), id)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expName, result.Name)
@@ -201,22 +232,29 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 	remoteName := "remote name"
 	localName := "local name"
 	tests := []struct {
-		name         string
-		remoteSecret *secrets.BinaryInfo
-		localSecret  *dto.BaseSecret
-		expName      string
+		name           string
+		remoteSecret   *secrets.BinaryInfo
+		localSecret    *dto.BaseSecret
+		expName        string
+		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
 	}{
 		{
 			name:         "Return secret from server",
 			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now()},
 			remoteSecret: &secrets.BinaryInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now().Add(time.Hour * 1))},
 			expName:      remoteName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				localStorageMock.EXPECT().UpdateBinaryInfo(gomock.Any(), gomock.Any()).Return(nil)
+			},
 		},
 		{
 			name:         "Return secret from local storage",
 			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now().Add(time.Hour * 1)},
 			remoteSecret: &secrets.BinaryInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now())},
 			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+				clientMock.EXPECT().UpdateBinaryInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
+			},
 		},
 	}
 
@@ -237,6 +275,7 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetBinaryById(gomock.Any(), id, "email").Return(localBin, nil)
 			getSetupMocks(authServiceMock, userCredsMock, itemCryptoMock)
+			tt.setupTestMocks(localStorageMock, secretsClientMock)
 
 			instanceService := NewUpdateRetrieveDeleteBinaryService(
 				authServiceMock,
@@ -245,7 +284,7 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			result, err := instanceService.GetSecretByID(id)
+			result, err := instanceService.GetSecretByID(context.Background(), id)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expName, result.Name)
@@ -284,7 +323,7 @@ func TestUpdateRetrieveDeleteSecretService_UpdatePassword(t *testing.T) {
 		localStorageMock,
 		secretsClientMock,
 	)
-	err := pwdInstanceService.UpdateSecret(pwd)
+	err := pwdInstanceService.UpdateSecret(context.Background(), pwd)
 
 	require.NoError(t, err)
 }
@@ -309,7 +348,7 @@ func TestUpdateRetrieveDeleteSecretService_UpdateText(t *testing.T) {
 		localStorageMock,
 		secretsClientMock,
 	)
-	err := instanceService.UpdateSecret(secret)
+	err := instanceService.UpdateSecret(context.Background(), secret)
 
 	require.NoError(t, err)
 }
@@ -334,7 +373,7 @@ func TestUpdateRetrieveDeleteSecretService_UpdateCard(t *testing.T) {
 		localStorageMock,
 		secretsClientMock,
 	)
-	err := instanceService.UpdateSecret(secret)
+	err := instanceService.UpdateSecret(context.Background(), secret)
 
 	require.NoError(t, err)
 }
@@ -359,7 +398,7 @@ func TestUpdateRetrieveDeleteSecretService_UpdateBinary(t *testing.T) {
 		localStorageMock,
 		secretsClientMock,
 	)
-	err := instanceService.UpdateSecret(secret)
+	err := instanceService.UpdateSecret(context.Background(), secret)
 
 	require.NoError(t, err)
 }
@@ -434,7 +473,7 @@ func TestUpdateRetrieveDeleteSecretService_DeletePassword(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			err := pwdInstanceService.DeleteSecret(id)
+			err := pwdInstanceService.DeleteSecret(context.Background(), id)
 
 			if tt.expErr != nil {
 				assert.Equal(t, tt.expErr, err)
@@ -475,7 +514,7 @@ func TestUpdateRetrieveDeleteSecretService_DeleteCardInfo(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			err := instanceService.DeleteSecret(id)
+			err := instanceService.DeleteSecret(context.Background(), id)
 
 			if tt.expErr != nil {
 				assert.Equal(t, tt.expErr, err)
@@ -516,7 +555,7 @@ func TestUpdateRetrieveDeleteSecretService_DeleteBinaryInfo(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			err := instanceService.DeleteSecret(id)
+			err := instanceService.DeleteSecret(context.Background(), id)
 
 			if tt.expErr != nil {
 				assert.Equal(t, tt.expErr, err)
@@ -557,7 +596,7 @@ func TestUpdateRetrieveDeleteSecretService_DeleteTextInfo(t *testing.T) {
 				localStorageMock,
 				secretsClientMock,
 			)
-			err := instanceService.DeleteSecret(id)
+			err := instanceService.DeleteSecret(context.Background(), id)
 
 			if tt.expErr != nil {
 				assert.Equal(t, tt.expErr, err)

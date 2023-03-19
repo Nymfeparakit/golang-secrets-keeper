@@ -45,7 +45,10 @@ func TestSecretsService_AddCredentials(t *testing.T) {
 	localPwd.ID = "123"
 	localPwd.User = credentials.Email
 	localStorageMock.EXPECT().AddCredentials(gomock.Any(), &localPwd).Return("123", nil)
-	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
+	updatePwdMock := mock_services.NewMockUpdateDeletePasswordService(ctrl)
+	updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
+	updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
+	updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
 
 	itemsService := NewSecretsService(
 		secretsClientMock,
@@ -54,8 +57,11 @@ func TestSecretsService_AddCredentials(t *testing.T) {
 		localStorageMock,
 		userCredsMock,
 		updatePwdMock,
+		updateCrdMock,
+		updateTxtMock,
+		updateBinMock,
 	)
-	err := itemsService.AddCredentials(&pwd)
+	err := itemsService.AddCredentials(context.Background(), &pwd)
 
 	require.NoError(t, err)
 }
@@ -90,7 +96,10 @@ func TestSecretsService_AddTextInfo(t *testing.T) {
 	localTextInfo.ID = "123"
 	localTextInfo.User = credentials.Email
 	localStorageMock.EXPECT().AddTextInfo(gomock.Any(), &localTextInfo).Return("123", nil)
-	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
+	updatePwdMock := mock_services.NewMockUpdateDeletePasswordService(ctrl)
+	updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
+	updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
+	updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
 
 	itemsService := NewSecretsService(
 		secretsClientMock,
@@ -99,8 +108,11 @@ func TestSecretsService_AddTextInfo(t *testing.T) {
 		localStorageMock,
 		userCredsMock,
 		updatePwdMock,
+		updateCrdMock,
+		updateTxtMock,
+		updateBinMock,
 	)
-	err := itemsService.AddTextInfo(&textInfo)
+	err := itemsService.AddTextInfo(context.Background(), &textInfo)
 
 	require.NoError(t, err)
 }
@@ -135,7 +147,10 @@ func TestSecretsService_AddCardInfo(t *testing.T) {
 	localCardInfo.ID = "123"
 	localCardInfo.User = credentials.Email
 	localStorageMock.EXPECT().AddCardInfo(gomock.Any(), &localCardInfo).Return("123", nil)
-	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
+	updatePwdMock := mock_services.NewMockUpdateDeletePasswordService(ctrl)
+	updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
+	updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
+	updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
 
 	itemsService := NewSecretsService(
 		secretsClientMock,
@@ -144,8 +159,11 @@ func TestSecretsService_AddCardInfo(t *testing.T) {
 		localStorageMock,
 		userCredsMock,
 		updatePwdMock,
+		updateCrdMock,
+		updateTxtMock,
+		updateBinMock,
 	)
-	err := itemsService.AddCardInfo(&cardInfo)
+	err := itemsService.AddCardInfo(context.Background(), &cardInfo)
 
 	require.NoError(t, err)
 }
@@ -180,7 +198,10 @@ func TestSecretsService_AddBinaryInfo(t *testing.T) {
 	localBinInfo.ID = "123"
 	localBinInfo.User = credentials.Email
 	localStorageMock.EXPECT().AddBinaryInfo(gomock.Any(), &localBinInfo).Return("123", nil)
-	updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
+	updatePwdMock := mock_services.NewMockUpdateDeletePasswordService(ctrl)
+	updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
+	updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
+	updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
 
 	itemsService := NewSecretsService(
 		secretsClientMock,
@@ -189,8 +210,11 @@ func TestSecretsService_AddBinaryInfo(t *testing.T) {
 		localStorageMock,
 		userCredsMock,
 		updatePwdMock,
+		updateCrdMock,
+		updateTxtMock,
+		updateBinMock,
 	)
-	err := itemsService.AddBinaryInfo(&binInfo)
+	err := itemsService.AddBinaryInfo(context.Background(), &binInfo)
 
 	require.NoError(t, err)
 }
@@ -347,7 +371,10 @@ func TestSecretsService_ListSecrets(t *testing.T) {
 			itemCryptoMock.EXPECT().DecryptSecret(gomock.Any()).Return(nil).AnyTimes()
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().ListSecrets(gomock.Any(), "email").Return(tt.localSecrets, nil)
-			updatePwdMock := mock_services.NewMockUpdatePasswordsService(ctrl)
+			updatePwdMock := mock_services.NewMockUpdateDeletePasswordService(ctrl)
+			updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
+			updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
+			updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
 			tt.setupMocks(secretsClientMock, localStorageMock)
 
 			itemsService := NewSecretsService(
@@ -357,8 +384,11 @@ func TestSecretsService_ListSecrets(t *testing.T) {
 				localStorageMock,
 				userCredsMock,
 				updatePwdMock,
+				updateCrdMock,
+				updateTxtMock,
+				updateBinMock,
 			)
-			result, err := itemsService.ListSecrets()
+			result, err := itemsService.ListSecrets(context.Background())
 
 			require.NoError(t, err)
 			for _, expSecret := range tt.expResult.Passwords {

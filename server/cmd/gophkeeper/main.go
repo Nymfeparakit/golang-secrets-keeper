@@ -33,7 +33,7 @@ func main() {
 	itemsService := services.NewSecretsService(itemsStorage)
 	// todo: get secret key from env
 	authService := services.NewAuthService(userStorage, "123")
-	server, err := api.NewServer(cfg.EnableHTTPS, authService, itemsService)
+	server, err := api.NewServer(cfg.EnableHTTPS, authService, itemsService, cfg.CertFile, cfg.TLSKey)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server:")
 		return

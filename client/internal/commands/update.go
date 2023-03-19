@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/jessevdk/go-flags"
+	"os/signal"
 )
 
 // UpdateCommand is a command to update existing secret.
@@ -33,6 +35,14 @@ func (c *UpdateCommand) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	c.view.UpdateSecretPage(itemType, secretID)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	go func() {
+		c.view.UpdateSecretPage(ctx, itemType, secretID)
+	}()
+	<-notifyCtx.Done()
+	stop()
+	cancel()
 	return nil
 }

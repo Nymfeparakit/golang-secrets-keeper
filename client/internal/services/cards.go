@@ -27,8 +27,8 @@ func (s *CardInstanceService) GetSecretByID(ctx context.Context, id string) (dto
 }
 
 // GetLocalSecretByID gets CardInfo specified by its id from local storage.
-func (s *CardInstanceService) GetLocalSecretByID(id string, email string) (dto.CardInfo, error) {
-	return s.localStorage.GetCardById(context.Background(), id, email)
+func (s *CardInstanceService) GetLocalSecretByID(ctx context.Context, id string, email string) (dto.CardInfo, error) {
+	return s.localStorage.GetCardById(ctx, id, email)
 }
 
 // UpdateSecret updates certain CardInfo in remote storage.
@@ -40,9 +40,9 @@ func (s *CardInstanceService) UpdateSecret(ctx context.Context, crd dto.CardInfo
 }
 
 // UpdateLocalSecret updates certain CardInfo in local storage.
-func (s *CardInstanceService) UpdateLocalSecret(crd dto.CardInfo) error {
+func (s *CardInstanceService) UpdateLocalSecret(ctx context.Context, crd dto.CardInfo) error {
 	crd.UpdatedAt = time.Now().UTC()
-	return s.localStorage.UpdateCardInfo(context.Background(), &crd)
+	return s.localStorage.UpdateCardInfo(ctx, &crd)
 }
 
 // DeleteSecret deletes certain CardInfo in remote storage.
@@ -52,6 +52,6 @@ func (s *CardInstanceService) DeleteSecret(ctx context.Context, id string) error
 }
 
 // DeleteLocalSecret deletes certain CardInfo in local storage.
-func (s *CardInstanceService) DeleteLocalSecret(id string) error {
-	return s.localStorage.DeleteCardInfo(context.Background(), id)
+func (s *CardInstanceService) DeleteLocalSecret(ctx context.Context, id string) error {
+	return s.localStorage.DeleteCardInfo(ctx, id)
 }

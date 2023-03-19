@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/jessevdk/go-flags"
+	"github.com/rs/zerolog/log"
+	"os/signal"
 )
 
 // DeleteCommand is a command to update existing secret.
@@ -29,10 +32,17 @@ func (c *DeleteCommand) Execute(args []string) error {
 
 	secretID := args[0]
 
-	itemType, err := dto.SecretTypeFromString(c.Type)
-	if err != nil {
-		return err
-	}
-	c.view.DeleteSecretPage(itemType, secretID)
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	go func() {
+		itemType, err := dto.SecretTypeFromString(c.Type)
+		if err != nil {
+			log.Fatal().Err(err).Msg("")
+		}
+		c.view.DeleteSecretPage(ctx, itemType, secretID)
+	}()
+	<-notifyCtx.Done()
+	stop()
+	cancel()
 	return nil
 }

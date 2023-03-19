@@ -1,6 +1,7 @@
 package view
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -14,39 +15,39 @@ import (
 
 // ListAddSecretsService - service for adding and listing secrets.
 type ListAddSecretsService interface {
-	ListSecrets() (dto.SecretsList, error)
-	AddCredentials(password *dto.LoginPassword) error
-	AddTextInfo(text *dto.TextInfo) error
-	AddCardInfo(card *dto.CardInfo) error
-	AddBinaryInfo(bin *dto.BinaryInfo) error
+	ListSecrets(ctx context.Context) (dto.SecretsList, error)
+	AddCredentials(ctx context.Context, password *dto.LoginPassword) error
+	AddTextInfo(ctx context.Context, text *dto.TextInfo) error
+	AddCardInfo(ctx context.Context, card *dto.CardInfo) error
+	AddBinaryInfo(ctx context.Context, bin *dto.BinaryInfo) error
 }
 
 // UpdateRetrievePasswordService - service for retrieving/updating certain LoginPassword instance.
 type UpdateRetrievePasswordService interface {
-	GetSecretByID(id string) (dto.LoginPassword, error)
-	UpdateSecret(secret dto.LoginPassword) error
-	DeleteSecret(id string) error
+	GetSecretByID(ctx context.Context, id string) (dto.LoginPassword, error)
+	UpdateSecret(ctx context.Context, secret dto.LoginPassword) error
+	DeleteSecret(ctx context.Context, id string) error
 }
 
 // UpdateRetrieveCardService - service for retrieving/updating certain CardInfo instance.
 type UpdateRetrieveCardService interface {
-	GetSecretByID(id string) (dto.CardInfo, error)
-	UpdateSecret(secret dto.CardInfo) error
-	DeleteSecret(id string) error
+	GetSecretByID(ctx context.Context, id string) (dto.CardInfo, error)
+	UpdateSecret(ctx context.Context, secret dto.CardInfo) error
+	DeleteSecret(ctx context.Context, id string) error
 }
 
 // UpdateRetrieveTextService - service for retrieving/updating certain TextInfo instance.
 type UpdateRetrieveTextService interface {
-	GetSecretByID(id string) (dto.TextInfo, error)
-	UpdateSecret(secret dto.TextInfo) error
-	DeleteSecret(id string) error
+	GetSecretByID(ctx context.Context, id string) (dto.TextInfo, error)
+	UpdateSecret(ctx context.Context, secret dto.TextInfo) error
+	DeleteSecret(ctx context.Context, id string) error
 }
 
 // UpdateRetrieveBinaryService - service for retrieving/updating certain BinaryInfo instance.
 type UpdateRetrieveBinaryService interface {
-	GetSecretByID(id string) (dto.BinaryInfo, error)
-	UpdateSecret(secret dto.BinaryInfo) error
-	DeleteSecret(id string) error
+	GetSecretByID(ctx context.Context, id string) (dto.BinaryInfo, error)
+	UpdateSecret(ctx context.Context, secret dto.BinaryInfo) error
+	DeleteSecret(ctx context.Context, id string) error
 }
 
 // NewFlexWithHint creates new flex with main view and text view with specified hint.
@@ -89,9 +90,9 @@ func NewSecretsView(
 }
 
 // AddSecretPage shows page to add new secret.
-func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
+func (v *SecretsView) AddSecretPage(ctx context.Context, itemType dto.SecretType) {
 	form := v.formFromSecretType(itemType)
-	form, err := forms.FillSaveItemForm(form, forms.CREATE, "", v.processSaveSecretResult)
+	form, err := forms.FillSaveItemForm(ctx, form, forms.CREATE, "", v.processSaveSecretResult)
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
@@ -103,9 +104,9 @@ func (v *SecretsView) AddSecretPage(itemType dto.SecretType) {
 }
 
 // UpdateSecretPage shows page to update exising secret.
-func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string) {
+func (v *SecretsView) UpdateSecretPage(ctx context.Context, itemType dto.SecretType, secretID string) {
 	form := v.formFromSecretType(itemType)
-	form, err := forms.FillSaveItemForm(form, forms.UPDATE, secretID, v.processSaveSecretResult)
+	form, err := forms.FillSaveItemForm(ctx, form, forms.UPDATE, secretID, v.processSaveSecretResult)
 	if err != nil {
 		v.ResultPage(fmt.Sprintf("can't update secret: %v", err))
 		return
@@ -118,17 +119,17 @@ func (v *SecretsView) UpdateSecretPage(itemType dto.SecretType, secretID string)
 }
 
 // DeleteSecretPage deletes the secret and then shows to user result page.
-func (v *SecretsView) DeleteSecretPage(itemType dto.SecretType, secretID string) {
+func (v *SecretsView) DeleteSecretPage(ctx context.Context, itemType dto.SecretType, secretID string) {
 	var err error
 	switch itemType {
 	case dto.PASSWORD:
-		err = v.pwdInstanceService.DeleteSecret(secretID)
+		err = v.pwdInstanceService.DeleteSecret(ctx, secretID)
 	case dto.TEXT:
-		err = v.txtInstanceService.DeleteSecret(secretID)
+		err = v.txtInstanceService.DeleteSecret(ctx, secretID)
 	case dto.CARD:
-		err = v.crdInstanceService.DeleteSecret(secretID)
+		err = v.crdInstanceService.DeleteSecret(ctx, secretID)
 	case dto.BINARY:
-		err = v.binInstanceService.DeleteSecret(secretID)
+		err = v.binInstanceService.DeleteSecret(ctx, secretID)
 	}
 	if err != nil {
 		v.ResultPage(fmt.Sprintf("Error on deleting secret: %v", err))
@@ -138,8 +139,8 @@ func (v *SecretsView) DeleteSecretPage(itemType dto.SecretType, secretID string)
 }
 
 // ListSecretsPage shows page to list all user's secrets.
-func (v *SecretsView) ListSecretsPage() {
-	resultSecrets, err := v.secretsService.ListSecrets()
+func (v *SecretsView) ListSecretsPage(ctx context.Context) {
+	resultSecrets, err := v.secretsService.ListSecrets(ctx)
 	if errors.Is(err, services.ErrTokenNotFound) {
 		v.ResultPage("You are not authenticated - use 'login' command to set credentials")
 		return

@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
 )
@@ -44,13 +45,13 @@ func (f *CardInfoForm) AddInputs() {
 }
 
 // Save performs operation with CardInfo when the save button is clicked.
-func (f *CardInfoForm) Save() error {
+func (f *CardInfoForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.retrieveUpdateService.UpdateSecret(*f.cardInfo)
+		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.cardInfo)
 	case CREATE:
-		err = f.itemService.AddCardInfo(f.cardInfo)
+		err = f.itemService.AddCardInfo(ctx, f.cardInfo)
 	}
 	return err
 }
@@ -61,8 +62,8 @@ func (f *CardInfoForm) AddBtn(label string, selected func()) {
 }
 
 // SetSecret associates specific CardInfo with form.
-func (f *CardInfoForm) SetSecret(id string) error {
-	crd, err := f.retrieveUpdateService.GetSecretByID(id)
+func (f *CardInfoForm) SetSecret(ctx context.Context, id string) error {
+	crd, err := f.retrieveUpdateService.GetSecretByID(ctx, id)
 	f.cardInfo = &crd
 	return err
 }

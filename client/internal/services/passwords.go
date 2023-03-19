@@ -29,8 +29,8 @@ func (s *PasswordInstanceService) GetSecretByID(ctx context.Context, id string) 
 }
 
 // GetLocalSecretByID gets LoginPassword specified by its id from local storage.
-func (s *PasswordInstanceService) GetLocalSecretByID(id string, email string) (dto.LoginPassword, error) {
-	return s.localStorage.GetCredentialsById(context.Background(), id, email)
+func (s *PasswordInstanceService) GetLocalSecretByID(ctx context.Context, id string, email string) (dto.LoginPassword, error) {
+	return s.localStorage.GetCredentialsById(ctx, id, email)
 }
 
 // UpdateSecret updates certain LoginPassword in remote storage.
@@ -42,9 +42,9 @@ func (s *PasswordInstanceService) UpdateSecret(ctx context.Context, loginPwd dto
 }
 
 // UpdateLocalSecret updates certain LoginPassword in local storage.
-func (s *PasswordInstanceService) UpdateLocalSecret(loginPwd dto.LoginPassword) error {
+func (s *PasswordInstanceService) UpdateLocalSecret(ctx context.Context, loginPwd dto.LoginPassword) error {
 	loginPwd.UpdatedAt = time.Now().UTC()
-	return s.localStorage.UpdateCredentials(context.Background(), &loginPwd)
+	return s.localStorage.UpdateCredentials(ctx, &loginPwd)
 }
 
 // DeleteSecret deletes certain LoginPassword in remote storage.
@@ -54,6 +54,6 @@ func (s *PasswordInstanceService) DeleteSecret(ctx context.Context, id string) e
 }
 
 // DeleteLocalSecret deletes certain LoginPassword in local storage.
-func (s *PasswordInstanceService) DeleteLocalSecret(id string) error {
-	return s.localStorage.DeleteCredentials(context.Background(), id)
+func (s *PasswordInstanceService) DeleteLocalSecret(ctx context.Context, id string) error {
+	return s.localStorage.DeleteCredentials(ctx, id)
 }

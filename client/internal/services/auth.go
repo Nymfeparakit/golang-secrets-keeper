@@ -51,14 +51,14 @@ func NewAuthService(
 }
 
 // Register registers new user in remote storage.
-func (s *AuthService) Register(user *dto.User) error {
+func (s *AuthService) Register(ctx context.Context, user *dto.User) error {
 	errorMsg := "error occurred on registering user: %s"
 
 	request := auth.SignUpRequest{
 		Login:    user.Email,
 		Password: user.Password,
 	}
-	response, err := s.storageClient.SignUp(context.Background(), &request)
+	response, err := s.storageClient.SignUp(ctx, &request)
 	if err != nil {
 		return fmt.Errorf(errorMsg, err)
 	}
@@ -70,14 +70,14 @@ func (s *AuthService) Register(user *dto.User) error {
 }
 
 // Login saves user credentials (such as access token) in local storage.
-func (s *AuthService) Login(email string, pwd string) error {
+func (s *AuthService) Login(ctx context.Context, email string, pwd string) error {
 	errorMsg := "error occurred during user login: %s"
 
 	request := auth.LoginRequest{
 		Login:    email,
 		Password: pwd,
 	}
-	response, err := s.storageClient.Login(context.Background(), &request)
+	response, err := s.storageClient.Login(ctx, &request)
 	if err != nil {
 		return fmt.Errorf(errorMsg, err)
 	}
@@ -95,15 +95,15 @@ func (s *AuthService) Login(email string, pwd string) error {
 		return fmt.Errorf("failed to save user credentials in local storage: %s", err)
 	}
 
-	return s.loadUserData(email)
+	return s.loadUserData(ctx, email)
 }
 
-func (s *AuthService) loadUserData(email string) error {
-	err := s.localUsersStorage.CreateUser(context.Background(), email)
+func (s *AuthService) loadUserData(ctx context.Context, email string) error {
+	err := s.localUsersStorage.CreateUser(ctx, email)
 	if err != nil {
 		return fmt.Errorf("failed to save user data in local storage: %s", err)
 	}
-	err = s.secretsService.LoadSecrets(context.Background())
+	err = s.secretsService.LoadSecrets(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to load secrets in local storage: %s", err)
 	}

@@ -1,5 +1,10 @@
 package commands
 
+import (
+	"context"
+	"os/signal"
+)
+
 // RegisterCommand is a command to register new user.
 type RegisterCommand struct {
 	view AuthView
@@ -12,6 +17,13 @@ func NewRegisterCommand(view AuthView) *RegisterCommand {
 
 // Execute performs logic to execute register command.
 func (c *RegisterCommand) Execute(args []string) error {
-	c.view.RegisterUserPage()
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	go func() {
+		c.view.RegisterUserPage(ctx)
+	}()
+	<-notifyCtx.Done()
+	stop()
+	cancel()
 	return nil
 }

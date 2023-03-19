@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
 )
@@ -43,13 +44,13 @@ func (f *LoginPasswordForm) AddInputs() {
 }
 
 // Save performs operation with LoginPassword when the save button is clicked.
-func (f *LoginPasswordForm) Save() error {
+func (f *LoginPasswordForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.retrieveUpdateService.UpdateSecret(*f.loginPwd)
+		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.loginPwd)
 	case CREATE:
-		err = f.addService.AddCredentials(f.loginPwd)
+		err = f.addService.AddCredentials(ctx, f.loginPwd)
 	}
 	return err
 }
@@ -60,8 +61,8 @@ func (f *LoginPasswordForm) AddBtn(label string, selected func()) {
 }
 
 // SetSecret associates specific LoginPassword with form.
-func (f *LoginPasswordForm) SetSecret(id string) error {
-	pwd, err := f.retrieveUpdateService.GetSecretByID(id)
+func (f *LoginPasswordForm) SetSecret(ctx context.Context, id string) error {
+	pwd, err := f.retrieveUpdateService.GetSecretByID(ctx, id)
 	f.loginPwd = &pwd
 	return err
 }

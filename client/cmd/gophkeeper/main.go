@@ -33,9 +33,9 @@ func printBuildInfo() {
 	fmt.Printf("Build commit: %s\n", buildCommit)
 }
 
-func ConnectToServer(enableHTTPs bool, serverAddr string) (*grpc.ClientConn, error) {
+func ConnectToServer(certFile string, enableHTTPs bool, serverAddr string) (*grpc.ClientConn, error) {
 	if enableHTTPs {
-		pemServerCA, err := ioutil.ReadFile("cert.pem")
+		pemServerCA, err := ioutil.ReadFile(certFile)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func main() {
 		log.Fatal().Err(err).Msg("can not initialize config")
 	}
 
-	conn, err := ConnectToServer(cfg.EnableHTTPS, cfg.ServerAddress)
+	conn, err := ConnectToServer(cfg.CertFile, cfg.EnableHTTPS, cfg.ServerAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to connect to server")
 	}
@@ -97,6 +97,9 @@ func main() {
 		localStorage,
 		credentialStorage,
 		pwdInstanceService,
+		crdInstanceService,
+		txtInstanceService,
+		binInstanceService,
 	)
 	authService := services.NewAuthService(authClient, credentialStorage, cryptoService, usersLocalStorage, secretsService)
 

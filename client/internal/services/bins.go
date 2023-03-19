@@ -27,8 +27,8 @@ func (s *BinaryInstanceService) GetSecretByID(ctx context.Context, id string) (d
 }
 
 // GetLocalSecretByID gets BinaryInfo specified by its id from local storage.
-func (s *BinaryInstanceService) GetLocalSecretByID(id string, email string) (dto.BinaryInfo, error) {
-	return s.localStorage.GetBinaryById(context.Background(), id, email)
+func (s *BinaryInstanceService) GetLocalSecretByID(ctx context.Context, id string, email string) (dto.BinaryInfo, error) {
+	return s.localStorage.GetBinaryById(ctx, id, email)
 }
 
 // UpdateSecret updates certain BinaryInfo in remote storage.
@@ -40,9 +40,9 @@ func (s *BinaryInstanceService) UpdateSecret(ctx context.Context, bin dto.Binary
 }
 
 // UpdateLocalSecret updates certain BinaryInfo in local storage.
-func (s *BinaryInstanceService) UpdateLocalSecret(bin dto.BinaryInfo) error {
+func (s *BinaryInstanceService) UpdateLocalSecret(ctx context.Context, bin dto.BinaryInfo) error {
 	bin.UpdatedAt = time.Now().UTC()
-	return s.localStorage.UpdateBinaryInfo(context.Background(), &bin)
+	return s.localStorage.UpdateBinaryInfo(ctx, &bin)
 }
 
 // DeleteSecret deletes certain BinaryInfo in remote storage.
@@ -52,6 +52,6 @@ func (s *BinaryInstanceService) DeleteSecret(ctx context.Context, id string) err
 }
 
 // DeleteLocalSecret deletes certain BinaryInfo in local storage.
-func (s *BinaryInstanceService) DeleteLocalSecret(id string) error {
-	return s.localStorage.DeleteBinaryInfo(context.Background(), id)
+func (s *BinaryInstanceService) DeleteLocalSecret(ctx context.Context, id string) error {
+	return s.localStorage.DeleteBinaryInfo(ctx, id)
 }

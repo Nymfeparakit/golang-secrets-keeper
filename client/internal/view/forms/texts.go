@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
 )
@@ -35,13 +36,13 @@ func (f *TextInfoForm) AddInputs() {
 }
 
 // Save performs operation with TextInfo when the save button is clicked.
-func (f *TextInfoForm) Save() error {
+func (f *TextInfoForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		err = f.retrieveUpdateService.UpdateSecret(*f.instance)
+		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
-		err = f.itemService.AddTextInfo(f.instance)
+		err = f.itemService.AddTextInfo(ctx, f.instance)
 	}
 	return err
 }
@@ -52,8 +53,8 @@ func (f *TextInfoForm) AddBtn(label string, selected func()) {
 }
 
 // SetSecret associates specific TextInfo with form.
-func (f *TextInfoForm) SetSecret(id string) error {
-	txt, err := f.retrieveUpdateService.GetSecretByID(id)
+func (f *TextInfoForm) SetSecret(ctx context.Context, id string) error {
+	txt, err := f.retrieveUpdateService.GetSecretByID(ctx, id)
 	f.instance = &txt
 	return err
 }

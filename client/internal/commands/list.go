@@ -1,5 +1,10 @@
 package commands
 
+import (
+	"context"
+	"os/signal"
+)
+
 // ListCommand is a command to list all secrets.
 type ListCommand struct {
 	view SecretsView
@@ -12,6 +17,13 @@ func NewListCommand(view SecretsView) *ListCommand {
 
 // Execute performs logic to execute list command.
 func (c *ListCommand) Execute(args []string) error {
-	c.view.ListSecretsPage()
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	go func() {
+		c.view.ListSecretsPage(ctx)
+	}()
+	<-notifyCtx.Done()
+	stop()
+	cancel()
 	return nil
 }

@@ -1,7 +1,10 @@
 package commands
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
+	"github.com/rs/zerolog/log"
+	"os/signal"
 )
 
 // AddCommand is a command to add new secret.
@@ -17,10 +20,17 @@ func NewAddCommand(view SecretsView) *AddCommand {
 
 // Execute performs logic to execute add command.
 func (c *AddCommand) Execute(args []string) error {
-	itemType, err := dto.SecretTypeFromString(c.Type)
-	if err != nil {
-		return err
-	}
-	c.view.AddSecretPage(itemType)
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	go func() {
+		itemType, err := dto.SecretTypeFromString(c.Type)
+		if err != nil {
+			log.Fatal().Err(err).Msg("")
+		}
+		c.view.AddSecretPage(ctx, itemType)
+	}()
+	<-notifyCtx.Done()
+	stop()
+	cancel()
 	return nil
 }

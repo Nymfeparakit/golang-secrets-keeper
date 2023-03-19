@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/jessevdk/go-flags"
+	"os"
+	"syscall"
 )
 
 type Options struct {
@@ -10,18 +13,20 @@ type Options struct {
 
 var options Options
 
+var interruptSignals = []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT}
+
 // SecretsView - view with pages for secrets, with page to list secrets, add and update them.
 type SecretsView interface {
-	ListSecretsPage()
-	AddSecretPage(itemType dto.SecretType)
-	UpdateSecretPage(itemType dto.SecretType, secretID string)
-	DeleteSecretPage(itemType dto.SecretType, secretID string)
+	ListSecretsPage(ctx context.Context)
+	AddSecretPage(ctx context.Context, itemType dto.SecretType)
+	UpdateSecretPage(ctx context.Context, itemType dto.SecretType, secretID string)
+	DeleteSecretPage(ctx context.Context, itemType dto.SecretType, secretID string)
 }
 
 // AuthView - view with pages to register new users and login existing ones.
 type AuthView interface {
-	RegisterUserPage()
-	LoginUserPage()
+	RegisterUserPage(ctx context.Context)
+	LoginUserPage(ctx context.Context)
 }
 
 // CommandParser - parser of command line commands.

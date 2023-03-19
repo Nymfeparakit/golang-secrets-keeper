@@ -1,8 +1,11 @@
 package view
 
 import (
+	"context"
 	"github.com/rivo/tview"
 	"github.com/rs/zerolog/log"
+	"os/signal"
+	"syscall"
 )
 
 // PagesView - view with multiple pages.
@@ -28,4 +31,15 @@ func (v *PagesView) ResultPage(resultMsg string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+}
+
+func (v *PagesView) GetContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	notifyCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		<-notifyCtx.Done()
+		stop()
+		cancel()
+	}()
+	return ctx
 }

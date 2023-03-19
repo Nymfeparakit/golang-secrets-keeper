@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	mock_services "github.com/Nymfeparakit/gophkeeper/client/internal/services/mocks"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/auth"
@@ -32,7 +33,7 @@ func TestAuthService_Register(t *testing.T) {
 	secretLoadMock := mock_services.NewMockSecretsLoadingService(ctrl)
 	authService := NewAuthService(authClientMock, credsStorageMock, userCryptoMock, userStorageMock, secretLoadMock)
 
-	err := authService.Register(user)
+	err := authService.Register(context.Background(), user)
 
 	require.NoError(t, err)
 }
@@ -63,7 +64,7 @@ func TestAuthService_Login(t *testing.T) {
 	userStorageMock.EXPECT().CreateUser(gomock.Any(), email).Return(nil)
 	secretLoadMock.EXPECT().LoadSecrets(gomock.Any()).Return(nil)
 
-	err := authService.Login(email, pwd)
+	err := authService.Login(context.Background(), email, pwd)
 
 	require.NoError(t, err)
 }

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"context"
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
@@ -9,8 +10,8 @@ import (
 
 // AuthService - service to register and login users.
 type AuthService interface {
-	Register(user *dto.User) error
-	Login(email string, pwd string) error
+	Register(ctx context.Context, user *dto.User) error
+	Login(ctx context.Context, email string, pwd string) error
 }
 
 // AuthView - view with pages for authentication operations.
@@ -26,7 +27,7 @@ func NewAuthView(authService AuthService) *AuthView {
 }
 
 // RegisterUserPage shows page to perform user registration.
-func (v *AuthView) RegisterUserPage() {
+func (v *AuthView) RegisterUserPage(ctx context.Context) {
 	var user dto.User
 	form := tview.NewForm()
 	emailInput := v.newEmailInput().SetChangedFunc(func(email string) {
@@ -38,7 +39,7 @@ func (v *AuthView) RegisterUserPage() {
 	})
 	form.AddFormItem(pwdInput)
 	form.AddButton("Sign up", func() {
-		err := v.authService.Register(&user)
+		err := v.authService.Register(ctx, &user)
 		resultMsg := "New user has been successfully registered"
 		if err != nil {
 			resultMsg = fmt.Sprintf("An error occurred during registration: %v", err)
@@ -53,7 +54,7 @@ func (v *AuthView) RegisterUserPage() {
 }
 
 // LoginUserPage shows page to perform user login.
-func (v *AuthView) LoginUserPage() {
+func (v *AuthView) LoginUserPage(ctx context.Context) {
 	var userEmail string
 	var userPwd string
 	form := tview.NewForm()
@@ -66,7 +67,7 @@ func (v *AuthView) LoginUserPage() {
 	})
 	form.AddFormItem(pwdInput)
 	form.AddButton("Login", func() {
-		err := v.authService.Login(userEmail, userPwd)
+		err := v.authService.Login(ctx, userEmail, userPwd)
 		resultMsg := "User credentials saved"
 		if err != nil {
 			resultMsg = fmt.Sprintf("An error occurred during login: %v", err)

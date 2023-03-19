@@ -27,8 +27,8 @@ func (s *TextInstanceService) GetSecretByID(ctx context.Context, id string) (dto
 }
 
 // GetLocalSecretByID gets TextInfo specified by its id from local storage.
-func (s *TextInstanceService) GetLocalSecretByID(id string, email string) (dto.TextInfo, error) {
-	return s.localStorage.GetTextById(context.Background(), id, email)
+func (s *TextInstanceService) GetLocalSecretByID(ctx context.Context, id string, email string) (dto.TextInfo, error) {
+	return s.localStorage.GetTextById(ctx, id, email)
 }
 
 // UpdateSecret updates certain TextInfo in remote storage.
@@ -40,9 +40,9 @@ func (s *TextInstanceService) UpdateSecret(ctx context.Context, txt dto.TextInfo
 }
 
 // UpdateLocalSecret updates certain TextInfo in local storage.
-func (s *TextInstanceService) UpdateLocalSecret(txt dto.TextInfo) error {
+func (s *TextInstanceService) UpdateLocalSecret(ctx context.Context, txt dto.TextInfo) error {
 	txt.UpdatedAt = time.Now().UTC()
-	return s.localStorage.UpdateTextInfo(context.Background(), &txt)
+	return s.localStorage.UpdateTextInfo(ctx, &txt)
 }
 
 // DeleteSecret deletes certain CardInfo in remote storage.
@@ -52,6 +52,6 @@ func (s *TextInstanceService) DeleteSecret(ctx context.Context, id string) error
 }
 
 // DeleteLocalSecret deletes certain CardInfo in local storage.
-func (s *TextInstanceService) DeleteLocalSecret(id string) error {
-	return s.localStorage.DeleteTextInfo(context.Background(), id)
+func (s *TextInstanceService) DeleteLocalSecret(ctx context.Context, id string) error {
+	return s.localStorage.DeleteTextInfo(ctx, id)
 }

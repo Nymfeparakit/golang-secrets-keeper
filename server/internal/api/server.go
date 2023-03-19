@@ -16,14 +16,14 @@ type Server interface {
 }
 
 // NewServer - creates new grpc server object.
-func NewServer(enableHTTPS bool, authService handlers.AuthService, secretsService handlers.SecretsService) (Server, error) {
+func NewServer(enableHTTPS bool, authService handlers.AuthService, secretsService handlers.SecretsService, tlsCertFile string, tlsKeyFile string) (Server, error) {
 	authInterceptor := interceptors.NewAuthorizationServerInterceptor(authService)
 	grpcOpts := []grpc.ServerOption{grpc.UnaryInterceptor(authInterceptor.Unary)}
 
 	var server Server
 	var err error
 	if enableHTTPS {
-		server, err = NewTLSServer(grpcOpts)
+		server, err = NewTLSServer(grpcOpts, tlsCertFile, tlsKeyFile)
 		if err != nil {
 			return nil, err
 		}

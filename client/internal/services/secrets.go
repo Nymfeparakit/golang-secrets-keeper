@@ -51,7 +51,37 @@ type LocalSecretsStorage interface {
 	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
-type UpdatePasswordsService interface{}
+// UpdateDeletePasswordService - service for updating LoginPassword instance.
+type UpdateDeletePasswordService interface {
+	UpdateRemoteSecret(ctx context.Context, secret dto.LoginPassword) error
+	UpdateLocalSecret(ctx context.Context, secret dto.LoginPassword) error
+	DeleteRemoteSecret(ctx context.Context, id string) error
+	DeleteLocalSecret(ctx context.Context, id string) error
+}
+
+// UpdateDeleteCardService - service for updating CardInfo instance.
+type UpdateDeleteCardService interface {
+	UpdateRemoteSecret(ctx context.Context, secret dto.CardInfo) error
+	UpdateLocalSecret(ctx context.Context, secret dto.CardInfo) error
+	DeleteRemoteSecret(ctx context.Context, id string) error
+	DeleteLocalSecret(ctx context.Context, id string) error
+}
+
+// UpdateDeleteTextService - service for updating TextInfo instance.
+type UpdateDeleteTextService interface {
+	UpdateRemoteSecret(ctx context.Context, secret dto.TextInfo) error
+	UpdateLocalSecret(ctx context.Context, secret dto.TextInfo) error
+	DeleteRemoteSecret(ctx context.Context, id string) error
+	DeleteLocalSecret(ctx context.Context, id string) error
+}
+
+// UpdateDeleteBinaryService - service for updating BinaryInfo instance.
+type UpdateDeleteBinaryService interface {
+	UpdateRemoteSecret(ctx context.Context, secret dto.BinaryInfo) error
+	UpdateLocalSecret(ctx context.Context, secret dto.BinaryInfo) error
+	DeleteRemoteSecret(ctx context.Context, id string) error
+	DeleteLocalSecret(ctx context.Context, id string) error
+}
 
 // DataToSync - data to sync between remote and local storage.
 type DataToSync struct {
@@ -67,7 +97,10 @@ type SecretsService struct {
 	cryptoService      SecretCryptoService
 	localStorage       LocalSecretsStorage
 	userCredsStorage   UserCredentialsStorage
-	pwdInstanceService UpdatePasswordsService
+	pwdInstanceService UpdateDeletePasswordService
+	crdInstanceService UpdateDeleteCardService
+	txtInstanceService UpdateDeleteTextService
+	binInstanceService UpdateDeleteBinaryService
 }
 
 // NewSecretsService creates new SecretsService object.
@@ -77,7 +110,10 @@ func NewSecretsService(
 	cryptoService SecretCryptoService,
 	localStorage LocalSecretsStorage,
 	userCredsStorage UserCredentialsStorage,
-	pwdInstanceService UpdatePasswordsService,
+	pwdInstanceService UpdateDeletePasswordService,
+	crdInstanceService UpdateDeleteCardService,
+	txtInstanceService UpdateDeleteTextService,
+	binInstanceService UpdateDeleteBinaryService,
 ) *SecretsService {
 	return &SecretsService{
 		storageClient:      client,
@@ -86,17 +122,19 @@ func NewSecretsService(
 		localStorage:       localStorage,
 		userCredsStorage:   userCredsStorage,
 		pwdInstanceService: pwdInstanceService,
+		crdInstanceService: crdInstanceService,
+		txtInstanceService: txtInstanceService,
+		binInstanceService: binInstanceService,
 	}
 }
 
 // AddCredentials adds LoginPwd to remote and local storage.
-func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
-	// todo: context should be passed from argument
+func (s *SecretsService) AddCredentials(ctx context.Context, loginPwd *dto.LoginPassword) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
 	}
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return err
 	}
@@ -122,12 +160,12 @@ func (s *SecretsService) AddCredentials(loginPwd *dto.LoginPassword) error {
 }
 
 // AddTextInfo adds TextInfo to remote and local storage.
-func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
+func (s *SecretsService) AddTextInfo(ctx context.Context, text *dto.TextInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
 	}
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return err
 	}
@@ -153,13 +191,13 @@ func (s *SecretsService) AddTextInfo(text *dto.TextInfo) error {
 }
 
 // AddCardInfo adds CardInfo to remote and local storage.
-func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
+func (s *SecretsService) AddCardInfo(ctx context.Context, card *dto.CardInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
 	}
 
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return err
 	}
@@ -184,13 +222,13 @@ func (s *SecretsService) AddCardInfo(card *dto.CardInfo) error {
 }
 
 // AddBinaryInfo adds BinaryInfo to remote and local storage.
-func (s *SecretsService) AddBinaryInfo(bin *dto.BinaryInfo) error {
+func (s *SecretsService) AddBinaryInfo(ctx context.Context, bin *dto.BinaryInfo) error {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return err
 	}
 
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return err
 	}
@@ -223,19 +261,19 @@ type SecretsMap struct {
 
 // ListSecrets syncs all secrets for current user between local and remote storage, and then returns synchronized
 // secrets list.
-func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
+func (s *SecretsService) ListSecrets(ctx context.Context) (dto.SecretsList, error) {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return dto.SecretsList{}, err
 	}
 
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return dto.SecretsList{}, err
 	}
 
 	// get secrets from remote
-	secretsListRemote, err := s.listSecrets()
+	secretsListRemote, err := s.listSecrets(ctx)
 	if err != nil && !checkUnavailableError(err) {
 		return dto.SecretsList{}, err
 	}
@@ -321,7 +359,7 @@ func (s *SecretsService) ListSecrets() (dto.SecretsList, error) {
 // LoadSecrets gets all user secrets from remote and then adds them to local storage.
 func (s *SecretsService) LoadSecrets(ctx context.Context) error {
 	// load secrets from remote
-	secretsList, err := s.listSecrets()
+	secretsList, err := s.listSecrets(ctx)
 	if err != nil {
 		return err
 	}
@@ -329,13 +367,13 @@ func (s *SecretsService) LoadSecrets(ctx context.Context) error {
 	return s.localStorage.AddSecrets(ctx, secretsList)
 }
 
-func (s *SecretsService) listSecrets() (dto.SecretsList, error) {
+func (s *SecretsService) listSecrets(ctx context.Context) (dto.SecretsList, error) {
 	credentials, err := s.userCredsStorage.GetCredentials()
 	if err != nil {
 		return dto.SecretsList{}, err
 	}
 
-	ctx, err := s.authService.AddAuthMetadata(context.Background(), credentials.Token)
+	ctx, err = s.authService.AddAuthMetadata(ctx, credentials.Token)
 	if err != nil {
 		return dto.SecretsList{}, err
 	}
@@ -405,9 +443,19 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		if !secrets.passwords[ID].IsDeleted() {
-			secretsList.Passwords = append(secretsList.Passwords, secrets.passwords[ID])
-		}
+		secret := secrets.passwords[ID]
+		localSecret := localSecrets.passwords[ID]
+		s.syncIntersectingSecrets(
+			wg,
+			*secret,
+			*localSecret,
+			func() error { return s.pwdInstanceService.DeleteLocalSecret(ctx, ID) },
+			func() error { return s.pwdInstanceService.DeleteRemoteSecret(ctx, ID) },
+			func() error { return s.pwdInstanceService.UpdateLocalSecret(ctx, *secret) },
+			func() error { return s.pwdInstanceService.UpdateRemoteSecret(ctx, *localSecret) },
+			func() { secretsList.Passwords = append(secretsList.Passwords, localSecret) },
+			func() { secretsList.Passwords = append(secretsList.Passwords, secret) },
+		)
 	}
 
 	txtID := make(map[string]bool, len(secrets.texts))
@@ -440,9 +488,19 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		if !secrets.texts[ID].IsDeleted() {
-			secretsList.Texts = append(secretsList.Texts, secrets.texts[ID])
-		}
+		secret := secrets.texts[ID]
+		localSecret := localSecrets.texts[ID]
+		s.syncIntersectingSecrets(
+			wg,
+			*secret,
+			*localSecret,
+			func() error { return s.txtInstanceService.DeleteLocalSecret(ctx, ID) },
+			func() error { return s.txtInstanceService.DeleteRemoteSecret(ctx, ID) },
+			func() error { return s.txtInstanceService.UpdateLocalSecret(ctx, *secret) },
+			func() error { return s.txtInstanceService.UpdateRemoteSecret(ctx, *localSecret) },
+			func() { secretsList.Texts = append(secretsList.Texts, localSecret) },
+			func() { secretsList.Texts = append(secretsList.Texts, secret) },
+		)
 	}
 
 	crdID := make(map[string]bool, len(secrets.cards))
@@ -475,9 +533,19 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		if !secrets.cards[ID].IsDeleted() {
-			secretsList.Cards = append(secretsList.Cards, secrets.cards[ID])
-		}
+		secret := secrets.cards[ID]
+		localSecret := localSecrets.cards[ID]
+		s.syncIntersectingSecrets(
+			wg,
+			*secret,
+			*localSecret,
+			func() error { return s.crdInstanceService.DeleteLocalSecret(ctx, ID) },
+			func() error { return s.crdInstanceService.DeleteRemoteSecret(ctx, ID) },
+			func() error { return s.crdInstanceService.UpdateLocalSecret(ctx, *secret) },
+			func() error { return s.crdInstanceService.UpdateRemoteSecret(ctx, *localSecret) },
+			func() { secretsList.Cards = append(secretsList.Cards, localSecret) },
+			func() { secretsList.Cards = append(secretsList.Cards, secret) },
+		)
 	}
 
 	binID := make(map[string]bool, len(secrets.bins))
@@ -510,9 +578,19 @@ func (s *SecretsService) syncSecrets(ctx context.Context, secrets SecretsMap, lo
 		})
 	}
 	for ID := range dataToSync.intersectionID {
-		if !secrets.bins[ID].IsDeleted() {
-			secretsList.Bins = append(secretsList.Bins, secrets.bins[ID])
-		}
+		secret := secrets.bins[ID]
+		localSecret := localSecrets.bins[ID]
+		s.syncIntersectingSecrets(
+			wg,
+			*secret,
+			*localSecret,
+			func() error { return s.binInstanceService.DeleteLocalSecret(ctx, ID) },
+			func() error { return s.binInstanceService.DeleteRemoteSecret(ctx, ID) },
+			func() error { return s.binInstanceService.UpdateLocalSecret(ctx, *secret) },
+			func() error { return s.binInstanceService.UpdateRemoteSecret(ctx, *localSecret) },
+			func() { secretsList.Bins = append(secretsList.Bins, localSecret) },
+			func() { secretsList.Bins = append(secretsList.Bins, secret) },
+		)
 	}
 
 	if err := wg.Wait(); err != nil {
@@ -542,5 +620,35 @@ func (s *SecretsService) findAllAndUniqIDs(secrets map[string]bool, localSecrets
 		localUniqID:    localUniqID,
 		remoteUniqID:   remoteUniqID,
 		intersectionID: interIDs,
+	}
+}
+
+func (s *SecretsService) syncIntersectingSecrets(
+	wg *errgroup.Group,
+	secret dto.Secret,
+	localSecret dto.Secret,
+	deleteLocalSecretFunc func() error,
+	deleteRemoteSecretFunc func() error,
+	updateLocalSecretFunc func() error,
+	updateRemoteSecretFunc func() error,
+	appendLocalSecretFunc func(),
+	appendRemoteSecretFunc func(),
+) {
+	if secret.IsDeleted() && !localSecret.IsDeleted() {
+		wg.Go(deleteLocalSecretFunc)
+		return
+	}
+	if localSecret.IsDeleted() && !secret.IsDeleted() {
+		wg.Go(deleteRemoteSecretFunc)
+		return
+	}
+	if secret.GetUpdatedAt().After(localSecret.GetUpdatedAt()) {
+		wg.Go(updateLocalSecretFunc)
+		appendRemoteSecretFunc()
+	} else if localSecret.GetUpdatedAt().After(secret.GetUpdatedAt()) {
+		wg.Go(updateRemoteSecretFunc)
+		appendLocalSecretFunc()
+	} else {
+		appendRemoteSecretFunc()
 	}
 }
