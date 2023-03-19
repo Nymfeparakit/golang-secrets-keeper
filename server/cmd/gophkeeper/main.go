@@ -46,4 +46,5 @@ func main() {
 	notifyCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	<-notifyCtx.Done()
 	stop()
+	server.Shutdown()
 }
