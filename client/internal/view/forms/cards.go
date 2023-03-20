@@ -47,10 +47,10 @@ func (f *CardInfoForm) AddInputs() {
 
 // Save performs operation with CardInfo when the save button is clicked.
 func (f *CardInfoForm) Save(ctx context.Context) error {
+	f.cardInfo.UpdatedAt = time.Now().UTC()
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		f.cardInfo.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.cardInfo)
 	case CREATE:
 		err = f.itemService.AddCardInfo(ctx, f.cardInfo)

@@ -38,10 +38,10 @@ func (f *TextInfoForm) AddInputs() {
 
 // Save performs operation with TextInfo when the save button is clicked.
 func (f *TextInfoForm) Save(ctx context.Context) error {
+	f.instance.UpdatedAt = time.Now().UTC()
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		f.instance.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
 		err = f.itemService.AddTextInfo(ctx, f.instance)

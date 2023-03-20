@@ -48,10 +48,10 @@ func (f *BinaryInfoForm) Save(ctx context.Context) error {
 		}
 		f.instance.Data = base64.StdEncoding.EncodeToString(binData)
 	}
+	f.instance.UpdatedAt = time.Now().UTC()
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		f.instance.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
 		err = f.addService.AddBinaryInfo(ctx, f.instance)

@@ -46,10 +46,10 @@ func (f *LoginPasswordForm) AddInputs() {
 
 // Save performs operation with LoginPassword when the save button is clicked.
 func (f *LoginPasswordForm) Save(ctx context.Context) error {
+	f.loginPwd.UpdatedAt = time.Now().UTC()
 	var err error
 	switch f.saveAction {
 	case UPDATE:
-		f.loginPwd.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.loginPwd)
 	case CREATE:
 		err = f.addService.AddCredentials(ctx, f.loginPwd)
