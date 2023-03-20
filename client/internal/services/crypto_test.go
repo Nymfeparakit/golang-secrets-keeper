@@ -3,6 +3,7 @@ package services
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/sha256"
 	"encoding/base64"
 	mock_services "github.com/Nymfeparakit/gophkeeper/client/internal/services/mocks"
 	"github.com/Nymfeparakit/gophkeeper/dto"
@@ -80,4 +81,19 @@ func TestCryptoService_DecryptSecret(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, pwd.Login, encryptedPwd.Login)
 	assert.Equal(t, pwd.Password, encryptedPwd.Password)
+}
+
+func TestCryptoService_CreateUserKey(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	pwd := "123123"
+	key := sha256.Sum256([]byte(pwd))
+	userKey := key[:]
+	keyStorageMock := mock_services.NewMockKeyStorage(ctrl)
+	keyStorageMock.EXPECT().SaveUserKey(userKey).Return(nil)
+	cryptoService := NewCryptoService(keyStorageMock)
+
+	err := cryptoService.CreateUserKey(pwd)
+
+	require.NoError(t, err)
 }

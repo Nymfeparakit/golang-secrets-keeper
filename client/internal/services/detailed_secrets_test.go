@@ -41,6 +41,7 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 		localSecret    *dto.BaseSecret
 		expLogin       string
 		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
+		expRemoteError error
 	}{
 		{
 			name:        "Return pwd from server",
@@ -60,6 +61,15 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 				clientMock.EXPECT().UpdateCredentials(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
 			},
 		},
+		{
+			name:        "Remote storage unavailable",
+			localSecret: &dto.BaseSecret{UpdatedAt: now},
+			remotePwd:   &secrets.Password{Login: remoteLogin, UpdatedAt: timestamppb.New(nowHourLater)},
+			expLogin:    localLogin,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+			},
+			expRemoteError: status.Error(codes.Unavailable, ""),
+		},
 	}
 
 	for _, tt := range tests {
@@ -74,7 +84,7 @@ func TestUpdateRetrieveDeleteSecretService_GetPasswordByID(t *testing.T) {
 			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
 			expRequest := secrets.GetSecretRequest{Id: id}
 			response := &secrets.GetCredentialsResponse{Password: tt.remotePwd}
-			secretsClientMock.EXPECT().GetCredentialsByID(gomock.Any(), &expRequest).Return(response, nil)
+			secretsClientMock.EXPECT().GetCredentialsByID(gomock.Any(), &expRequest).Return(response, tt.expRemoteError)
 			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetCredentialsById(gomock.Any(), id, "email").Return(localPwd, nil)
@@ -107,6 +117,7 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 		localSecret    *dto.BaseSecret
 		expName        string
 		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
+		expRemoteError error
 	}{
 		{
 			name:         "Return secret from server",
@@ -126,6 +137,15 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 				clientMock.EXPECT().UpdateCardInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
 			},
 		},
+		{
+			name:         "Remote storage unavailable",
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: now},
+			remoteSecret: &secrets.CardInfo{Name: remoteName, UpdatedAt: timestamppb.New(nowHourLater)},
+			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+			},
+			expRemoteError: status.Error(codes.Unavailable, ""),
+		},
 	}
 
 	for _, tt := range tests {
@@ -140,7 +160,7 @@ func TestUpdateRetrieveDeleteSecretService_GetCardByID(t *testing.T) {
 			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
 			expRequest := secrets.GetSecretRequest{Id: id}
 			response := &secrets.GetCardResponse{Card: tt.remoteSecret}
-			secretsClientMock.EXPECT().GetCardByID(gomock.Any(), &expRequest).Return(response, nil)
+			secretsClientMock.EXPECT().GetCardByID(gomock.Any(), &expRequest).Return(response, tt.expRemoteError)
 			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetCardById(gomock.Any(), id, "email").Return(localCard, nil)
@@ -173,6 +193,7 @@ func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 		localSecret    *dto.BaseSecret
 		expName        string
 		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
+		expRemoteError error
 	}{
 		{
 			name:         "Return secret from server",
@@ -192,6 +213,15 @@ func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 				clientMock.EXPECT().UpdateTextInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
 			},
 		},
+		{
+			name:         "Remote storage unavailable",
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: now},
+			remoteSecret: &secrets.TextInfo{Name: remoteName, UpdatedAt: timestamppb.New(nowHourLater)},
+			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+			},
+			expRemoteError: status.Error(codes.Unavailable, ""),
+		},
 	}
 
 	for _, tt := range tests {
@@ -206,7 +236,7 @@ func TestUpdateRetrieveDeleteSecretService_GetTextByID(t *testing.T) {
 			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
 			expRequest := secrets.GetSecretRequest{Id: id}
 			response := &secrets.GetTextResponse{Text: tt.remoteSecret}
-			secretsClientMock.EXPECT().GetTextByID(gomock.Any(), &expRequest).Return(response, nil)
+			secretsClientMock.EXPECT().GetTextByID(gomock.Any(), &expRequest).Return(response, tt.expRemoteError)
 			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetTextById(gomock.Any(), id, "email").Return(localCard, nil)
@@ -237,6 +267,7 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 		localSecret    *dto.BaseSecret
 		expName        string
 		setupTestMocks func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient)
+		expRemoteError error
 	}{
 		{
 			name:         "Return secret from server",
@@ -256,6 +287,15 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 				clientMock.EXPECT().UpdateBinaryInfo(gomock.Any(), gomock.Any()).Return(&secrets.EmptyResponse{}, nil)
 			},
 		},
+		{
+			name:         "Remote storage unavailable",
+			localSecret:  &dto.BaseSecret{Name: localName, UpdatedAt: time.Now()},
+			remoteSecret: &secrets.BinaryInfo{Name: remoteName, UpdatedAt: timestamppb.New(time.Now().Add(time.Hour * 1))},
+			expName:      localName,
+			setupTestMocks: func(localStorageMock *mock_services.MockLocalSecretsStorage, clientMock *mock_secrets.MockSecretsManagementClient) {
+			},
+			expRemoteError: status.Error(codes.Unavailable, ""),
+		},
 	}
 
 	for _, tt := range tests {
@@ -270,7 +310,7 @@ func TestUpdateRetrieveDeleteSecretService_GetBinaryByID(t *testing.T) {
 			secretsClientMock := mock_secrets.NewMockSecretsManagementClient(ctrl)
 			expRequest := secrets.GetSecretRequest{Id: id}
 			response := &secrets.GetBinaryResponse{Bin: tt.remoteSecret}
-			secretsClientMock.EXPECT().GetBinaryByID(gomock.Any(), &expRequest).Return(response, nil)
+			secretsClientMock.EXPECT().GetBinaryByID(gomock.Any(), &expRequest).Return(response, tt.expRemoteError)
 			itemCryptoMock := mock_services.NewMockSecretCryptoService(ctrl)
 			localStorageMock := mock_services.NewMockLocalSecretsStorage(ctrl)
 			localStorageMock.EXPECT().GetBinaryById(gomock.Any(), id, "email").Return(localBin, nil)
