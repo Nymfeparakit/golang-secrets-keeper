@@ -5,13 +5,18 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
-	"time"
 )
+
+type CredentialsLocalStorage interface {
+	GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error)
+	UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error
+	DeleteCredentials(ctx context.Context, id string) error
+}
 
 // PasswordInstanceService - service to perform operations with single LoginPassword instance.
 type PasswordInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalSecretsStorage
+	localStorage  CredentialsLocalStorage
 }
 
 // GetSecretByID gets LoginPassword specified by its id from remote storage.
@@ -35,7 +40,6 @@ func (s *PasswordInstanceService) GetLocalSecretByID(ctx context.Context, id str
 
 // UpdateSecret updates certain LoginPassword in remote storage.
 func (s *PasswordInstanceService) UpdateSecret(ctx context.Context, loginPwd dto.LoginPassword) error {
-	loginPwd.UpdatedAt = time.Now().UTC()
 	request := common.CredentialsToProto(&loginPwd)
 	_, err := s.storageClient.UpdateCredentials(ctx, request)
 	return err
@@ -43,7 +47,6 @@ func (s *PasswordInstanceService) UpdateSecret(ctx context.Context, loginPwd dto
 
 // UpdateLocalSecret updates certain LoginPassword in local storage.
 func (s *PasswordInstanceService) UpdateLocalSecret(ctx context.Context, loginPwd dto.LoginPassword) error {
-	loginPwd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCredentials(ctx, &loginPwd)
 }
 

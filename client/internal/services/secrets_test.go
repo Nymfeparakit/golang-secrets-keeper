@@ -221,12 +221,20 @@ func TestSecretsService_AddBinaryInfo(t *testing.T) {
 
 func TestSecretsService_ListSecrets(t *testing.T) {
 	now := time.Now().UTC()
+	nowHourLater := now.Add(time.Hour * 1)
 	tests := []struct {
 		name          string
 		remoteSecrets *secrets.ListSecretResponse
 		localSecrets  dto.SecretsList
 		expResult     dto.SecretsList
-		setupMocks    func(remoteStorage *mock_secrets.MockSecretsManagementClient, localStorage *mock_services.MockLocalSecretsStorage)
+		setupMocks    func(
+			remoteStorage *mock_secrets.MockSecretsManagementClient,
+			localStorage *mock_services.MockLocalSecretsStorage,
+			updatePwdService *mock_services.MockUpdateDeletePasswordService,
+			updateCrdService *mock_services.MockUpdateDeleteCardService,
+			updateTxtService *mock_services.MockUpdateDeleteTextService,
+			updateBinService *mock_services.MockUpdateDeleteBinaryService,
+		)
 	}{
 		{
 			name: "all ids are in sync",
@@ -287,7 +295,127 @@ func TestSecretsService_ListSecrets(t *testing.T) {
 			setupMocks: func(
 				remoteStorage *mock_secrets.MockSecretsManagementClient,
 				localStorage *mock_services.MockLocalSecretsStorage,
+				updatePwdService *mock_services.MockUpdateDeletePasswordService,
+				updateCrdService *mock_services.MockUpdateDeleteCardService,
+				updateTxtService *mock_services.MockUpdateDeleteTextService,
+				updateBinService *mock_services.MockUpdateDeleteBinaryService,
 			) {
+			},
+		},
+		{
+			name: "all ids are in sync, remote secrets were updated later",
+			remoteSecrets: &secrets.ListSecretResponse{
+				Passwords: []*secrets.Password{
+					{Id: "pwd1", Login: "remote login1", UpdatedAt: timestamppb.New(nowHourLater)},
+				},
+				Texts: []*secrets.TextInfo{
+					{Id: "txt1", Text: "remote text1", UpdatedAt: timestamppb.New(nowHourLater)},
+				},
+				Cards: []*secrets.CardInfo{
+					{Id: "crd1", Number: "remote 123", UpdatedAt: timestamppb.New(nowHourLater)},
+				},
+				Bins: []*secrets.BinaryInfo{
+					{Id: "bin1", Data: "remote data1", UpdatedAt: timestamppb.New(nowHourLater)},
+				},
+			},
+			localSecrets: dto.SecretsList{
+				Passwords: []*dto.LoginPassword{
+					{BaseSecret: dto.BaseSecret{ID: "pwd1", UpdatedAt: now}, Login: "login1"},
+				},
+				Texts: []*dto.TextInfo{
+					{BaseSecret: dto.BaseSecret{ID: "txt1", UpdatedAt: now}, Text: "text1"},
+				},
+				Cards: []*dto.CardInfo{
+					{BaseSecret: dto.BaseSecret{ID: "crd1", UpdatedAt: now}, Number: "123"},
+				},
+				Bins: []*dto.BinaryInfo{
+					{BaseSecret: dto.BaseSecret{ID: "bin1", UpdatedAt: now}, Data: "data1"},
+				},
+			},
+			expResult: dto.SecretsList{
+				Passwords: []*dto.LoginPassword{
+					{BaseSecret: dto.BaseSecret{ID: "pwd1", UpdatedAt: nowHourLater}, Login: "remote login1"},
+				},
+				Texts: []*dto.TextInfo{
+					{BaseSecret: dto.BaseSecret{ID: "txt1", UpdatedAt: nowHourLater}, Text: "remote text1"},
+				},
+				Cards: []*dto.CardInfo{
+					{BaseSecret: dto.BaseSecret{ID: "crd1", UpdatedAt: nowHourLater}, Number: "remote 123"},
+				},
+				Bins: []*dto.BinaryInfo{
+					{BaseSecret: dto.BaseSecret{ID: "bin1", UpdatedAt: nowHourLater}, Data: "remote data1"},
+				},
+			},
+			setupMocks: func(
+				remoteStorage *mock_secrets.MockSecretsManagementClient,
+				localStorage *mock_services.MockLocalSecretsStorage,
+				updatePwdService *mock_services.MockUpdateDeletePasswordService,
+				updateCrdService *mock_services.MockUpdateDeleteCardService,
+				updateTxtService *mock_services.MockUpdateDeleteTextService,
+				updateBinService *mock_services.MockUpdateDeleteBinaryService,
+			) {
+				updatePwdService.EXPECT().UpdateLocalSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateCrdService.EXPECT().UpdateLocalSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateTxtService.EXPECT().UpdateLocalSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateBinService.EXPECT().UpdateLocalSecret(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "all ids are in sync, local secrets were updated later",
+			remoteSecrets: &secrets.ListSecretResponse{
+				Passwords: []*secrets.Password{
+					{Id: "pwd1", Login: "remote login1", UpdatedAt: timestamppb.New(now)},
+				},
+				Texts: []*secrets.TextInfo{
+					{Id: "txt1", Text: "remote text1", UpdatedAt: timestamppb.New(now)},
+				},
+				Cards: []*secrets.CardInfo{
+					{Id: "crd1", Number: "remote 123", UpdatedAt: timestamppb.New(now)},
+				},
+				Bins: []*secrets.BinaryInfo{
+					{Id: "bin1", Data: "remote data1", UpdatedAt: timestamppb.New(now)},
+				},
+			},
+			localSecrets: dto.SecretsList{
+				Passwords: []*dto.LoginPassword{
+					{BaseSecret: dto.BaseSecret{ID: "pwd1", UpdatedAt: nowHourLater}, Login: "local login1"},
+				},
+				Texts: []*dto.TextInfo{
+					{BaseSecret: dto.BaseSecret{ID: "txt1", UpdatedAt: nowHourLater}, Text: "local text1"},
+				},
+				Cards: []*dto.CardInfo{
+					{BaseSecret: dto.BaseSecret{ID: "crd1", UpdatedAt: nowHourLater}, Number: "local 123"},
+				},
+				Bins: []*dto.BinaryInfo{
+					{BaseSecret: dto.BaseSecret{ID: "bin1", UpdatedAt: nowHourLater}, Data: "local data1"},
+				},
+			},
+			expResult: dto.SecretsList{
+				Passwords: []*dto.LoginPassword{
+					{BaseSecret: dto.BaseSecret{ID: "pwd1", UpdatedAt: nowHourLater}, Login: "local login1"},
+				},
+				Texts: []*dto.TextInfo{
+					{BaseSecret: dto.BaseSecret{ID: "txt1", UpdatedAt: nowHourLater}, Text: "local text1"},
+				},
+				Cards: []*dto.CardInfo{
+					{BaseSecret: dto.BaseSecret{ID: "crd1", UpdatedAt: nowHourLater}, Number: "local 123"},
+				},
+				Bins: []*dto.BinaryInfo{
+					{BaseSecret: dto.BaseSecret{ID: "bin1", UpdatedAt: nowHourLater}, Data: "local data1"},
+				},
+			},
+			setupMocks: func(
+				remoteStorage *mock_secrets.MockSecretsManagementClient,
+				localStorage *mock_services.MockLocalSecretsStorage,
+				updatePwdService *mock_services.MockUpdateDeletePasswordService,
+				updateCrdService *mock_services.MockUpdateDeleteCardService,
+				updateTxtService *mock_services.MockUpdateDeleteTextService,
+				updateBinService *mock_services.MockUpdateDeleteBinaryService,
+			) {
+				updatePwdService.EXPECT().UpdateRemoteSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateCrdService.EXPECT().UpdateRemoteSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateTxtService.EXPECT().UpdateRemoteSecret(gomock.Any(), gomock.Any()).Return(nil)
+				updateBinService.EXPECT().UpdateRemoteSecret(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
 		{
@@ -341,6 +469,10 @@ func TestSecretsService_ListSecrets(t *testing.T) {
 			setupMocks: func(
 				remoteStorage *mock_secrets.MockSecretsManagementClient,
 				localStorage *mock_services.MockLocalSecretsStorage,
+				updatePwdService *mock_services.MockUpdateDeletePasswordService,
+				updateCrdService *mock_services.MockUpdateDeleteCardService,
+				updateTxtService *mock_services.MockUpdateDeleteTextService,
+				updateBinService *mock_services.MockUpdateDeleteBinaryService,
 			) {
 				response := &secrets.AddResponse{Id: "123"}
 				remoteStorage.EXPECT().AddBinaryInfo(gomock.Any(), gomock.Any()).Return(response, nil)
@@ -375,7 +507,7 @@ func TestSecretsService_ListSecrets(t *testing.T) {
 			updateCrdMock := mock_services.NewMockUpdateDeleteCardService(ctrl)
 			updateTxtMock := mock_services.NewMockUpdateDeleteTextService(ctrl)
 			updateBinMock := mock_services.NewMockUpdateDeleteBinaryService(ctrl)
-			tt.setupMocks(secretsClientMock, localStorageMock)
+			tt.setupMocks(secretsClientMock, localStorageMock, updatePwdMock, updateCrdMock, updateTxtMock, updateBinMock)
 
 			itemsService := NewSecretsService(
 				secretsClientMock,

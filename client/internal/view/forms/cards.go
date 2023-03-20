@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
+	"time"
 )
 
 // CardInfoForm - form to perform save operations with certain CardInfo.
@@ -49,6 +50,7 @@ func (f *CardInfoForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
+		f.cardInfo.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.cardInfo)
 	case CREATE:
 		err = f.itemService.AddCardInfo(ctx, f.cardInfo)

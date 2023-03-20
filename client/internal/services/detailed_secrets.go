@@ -45,7 +45,7 @@ func NewUpdateRetrieveDeletePasswordService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalSecretsStorage,
+	localStorage CredentialsLocalStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.LoginPassword] {
 	secretInstanceService := &PasswordInstanceService{
@@ -65,7 +65,7 @@ func NewUpdateRetrieveDeleteCardService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalSecretsStorage,
+	localStorage CardsLocalStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.CardInfo] {
 	secretInstanceService := &CardInstanceService{
@@ -85,7 +85,7 @@ func NewUpdateRetrieveDeleteTextService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalSecretsStorage,
+	localStorage TextLocalStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.TextInfo] {
 	secretInstanceService := &TextInstanceService{
@@ -105,7 +105,7 @@ func NewUpdateRetrieveDeleteBinaryService(
 	authService AuthMetadataService,
 	cryptoService SecretCryptoService,
 	userCredsStorage UserCredentialsStorage,
-	localStorage LocalSecretsStorage,
+	localStorage BinaryLocalStorage,
 	client secrets.SecretsManagementClient,
 ) UpdateRetrieveDeleteSecretServiceInterface[dto.BinaryInfo] {
 	secretInstanceService := &BinaryInstanceService{
@@ -182,7 +182,7 @@ func (s *UpdateRetrieveDeleteSecretService[T]) GetSecretByID(ctx context.Context
 		}
 	}
 
-	err = s.cryptoService.DecryptSecret(secret)
+	err = s.cryptoService.DecryptSecret(&secret)
 	if err != nil {
 		return secret, err
 	}

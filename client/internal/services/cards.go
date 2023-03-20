@@ -5,13 +5,18 @@ import (
 	"github.com/Nymfeparakit/gophkeeper/common"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/Nymfeparakit/gophkeeper/server/proto/secrets"
-	"time"
 )
+
+type CardsLocalStorage interface {
+	GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error)
+	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
+	DeleteCardInfo(ctx context.Context, id string) error
+}
 
 // CardInstanceService - service to perform operations with single CardInfo instance.
 type CardInstanceService struct {
 	storageClient secrets.SecretsManagementClient
-	localStorage  LocalSecretsStorage
+	localStorage  CardsLocalStorage
 }
 
 // GetSecretByID gets secret specified by its id from remote storage.
@@ -33,7 +38,6 @@ func (s *CardInstanceService) GetLocalSecretByID(ctx context.Context, id string,
 
 // UpdateSecret updates certain CardInfo in remote storage.
 func (s *CardInstanceService) UpdateSecret(ctx context.Context, crd dto.CardInfo) error {
-	crd.UpdatedAt = time.Now().UTC()
 	request := common.CardToProto(&crd)
 	_, err := s.storageClient.UpdateCardInfo(ctx, request)
 	return err
@@ -41,7 +45,6 @@ func (s *CardInstanceService) UpdateSecret(ctx context.Context, crd dto.CardInfo
 
 // UpdateLocalSecret updates certain CardInfo in local storage.
 func (s *CardInstanceService) UpdateLocalSecret(ctx context.Context, crd dto.CardInfo) error {
-	crd.UpdatedAt = time.Now().UTC()
 	return s.localStorage.UpdateCardInfo(ctx, &crd)
 }
 

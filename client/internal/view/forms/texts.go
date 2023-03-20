@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
+	"time"
 )
 
 // TextInfoForm - form to perform save operations with certain TextInfo.
@@ -40,6 +41,7 @@ func (f *TextInfoForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
+		f.instance.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
 		err = f.itemService.AddTextInfo(ctx, f.instance)

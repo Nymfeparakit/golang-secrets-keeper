@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Nymfeparakit/gophkeeper/dto"
 	"github.com/rivo/tview"
+	"time"
 )
 
 // BinaryInfoForm - form to perform save operations with certain BinaryInfo.
@@ -50,6 +51,7 @@ func (f *BinaryInfoForm) Save(ctx context.Context) error {
 	var err error
 	switch f.saveAction {
 	case UPDATE:
+		f.instance.UpdatedAt = time.Now().UTC()
 		err = f.retrieveUpdateService.UpdateSecret(ctx, *f.instance)
 	case CREATE:
 		err = f.addService.AddBinaryInfo(ctx, f.instance)

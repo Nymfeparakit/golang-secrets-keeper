@@ -34,21 +34,6 @@ type LocalSecretsStorage interface {
 
 	ListSecrets(ctx context.Context, user string) (dto.SecretsList, error)
 	AddSecrets(ctx context.Context, secretsList dto.SecretsList) error
-
-	GetCredentialsById(ctx context.Context, id string, user string) (dto.LoginPassword, error)
-	GetTextById(ctx context.Context, id string, user string) (dto.TextInfo, error)
-	GetBinaryById(ctx context.Context, id string, user string) (dto.BinaryInfo, error)
-	GetCardById(ctx context.Context, id string, user string) (dto.CardInfo, error)
-
-	UpdateCardInfo(ctx context.Context, crd *dto.CardInfo) error
-	UpdateTextInfo(ctx context.Context, txt *dto.TextInfo) error
-	UpdateCredentials(ctx context.Context, pwd *dto.LoginPassword) error
-	UpdateBinaryInfo(ctx context.Context, crd *dto.BinaryInfo) error
-
-	DeleteCredentials(ctx context.Context, id string) error
-	DeleteTextInfo(ctx context.Context, id string) error
-	DeleteCardInfo(ctx context.Context, id string) error
-	DeleteBinaryInfo(ctx context.Context, id string) error
 }
 
 // UpdateDeletePasswordService - service for updating LoginPassword instance.
